@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Даниил — Frontend & Python разработчик</title>
+  <meta name="description" content="Лендинги, вёрстка, парсинг и Telegram-боты. HTML/CSS/JS, PHP, Python.">
+  <link rel="icon" type="image/jpeg" href="assets/avatar.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --border: #1f1f1f;
+      --border-hover: #2a2a2a;
+      --text: #ededed;
+      --muted: #888888;
+      --dim: #555555;
+      --accent: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font: 15px/1.6 'Geist', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      letter-spacing: -0.011em;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.15s; }
+    a:hover { border-bottom-color: var(--text); }
+    a.bare { border-bottom: none; }
+    a.bare:hover { border-bottom: 1px solid var(--text); }
+    code, .mono { font-family: 'Geist Mono', 'SF Mono', Menlo, monospace; font-size: 13px; }
+
+    /* NAV */
+    nav { padding: 20px 0; border-bottom: 1px solid var(--border); }
+    nav .container { display: flex; justify-content: space-between; align-items: center; }
+    nav .logo { font-weight: 600; letter-spacing: -0.02em; }
+    nav .links a { margin-left: 24px; font-size: 14px; color: var(--muted); }
+
+    /* HERO */
+    .hero { padding: 80px 0 60px; }
+    .hero-inner { display: flex; gap: 40px; align-items: center; }
+    .hero img.avatar {
+      width: 96px; height: 96px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .hero-text .greeting {
+      font-size: 13px; color: var(--muted); margin-bottom: 12px;
+      text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500;
+    }
+    .hero-text h1 {
+      font-size: 42px; font-weight: 600; letter-spacing: -0.03em;
+      line-height: 1.1; margin-bottom: 16px;
+    }
+    .hero-text .tag {
+      color: var(--muted); font-size: 17px; margin-bottom: 24px;
+      max-width: 560px; line-height: 1.5;
+    }
+    .hero-text .contacts { display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px; }
+    .hero-text .contacts a { color: var(--muted); }
+    .hero-text .contacts a:hover { color: var(--text); }
+
+    /* SECTION */
+    section { padding: 64px 0; border-top: 1px solid var(--border); }
+    .section-label {
+      font-size: 12px; color: var(--dim); text-transform: uppercase;
+      letter-spacing: 0.1em; font-weight: 500; margin-bottom: 32px;
+    }
+    h2 { display: none; }
+
+    /* STACK */
+    .stack { display: flex; flex-wrap: wrap; gap: 8px; }
+    .stack span {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 6px;
+      font-size: 13px; color: var(--text);
+    }
+
+    /* SERVICES */
+    .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .service { background: var(--bg); padding: 24px; }
+    .service h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+    .service p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    /* PROJECTS */
+    .project {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: border-color 0.15s;
+    }
+    .project:hover { border-color: var(--border-hover); }
+    .project img {
+      width: 100%; height: 240px; object-fit: cover; object-position: top;
+      display: block; border-bottom: 1px solid var(--border);
+    }
+    .project-body { padding: 20px 24px; }
+    .project h3 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+    .project p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+    .project .links { display: flex; gap: 20px; font-size: 13px; }
+    .project .links a { color: var(--muted); }
+
+    /* FOOTER */
+    footer { padding: 40px 0 60px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; color: var(--dim); }
+
+    /* MOBILE */
+    @media (max-width: 600px) {
+      .hero { padding: 48px 0 32px; }
+      .hero-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
+      .hero img.avatar { width: 72px; height: 72px; }
+      .hero-text h1 { font-size: 32px; }
+      .hero-text .tag { font-size: 15px; }
+      section { padding: 40px 0; }
+      .project img { height: 180px; }
+      nav .links a { margin-left: 16px; }
+      footer { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="#" class="logo bare">daniil.dev</a>
+      <div class="links">
+        <a href="#work" class="bare">Работы</a>
+        <a href="#services" class="bare">Услуги</a>
+        <a href="https://t.me/durov" class="bare">Telegram</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container hero-inner">
+      <img src="assets/avatar_round.png" alt="Даниил" class="avatar">
+      <div class="hero-text">
+        <div class="greeting">Привет 👋</div>
+        <h1>Я делаю сайты, лендинги и ботов</h1>
+        <p class="tag">Frontend-разработчик и Python-автоматизатор. HTML/CSS/JS, PHP, парсинг, Telegram-боты. Быстро, по фикс-цене, на совесть.</p>
+        <div class="contacts">
+          <a href="https://t.me/durov">Telegram</a>
+          <a href="mailto:your@email.com">Email</a>
+          <a href="https://github.com/yourname">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="services">
+    <div class="container">
+      <div class="section-label">Стек</div>
+      <div class="stack">
+        <span>HTML5 / CSS3</span>
+        <span>JavaScript (ES6+)</span>
+        <span>PHP</span>
+        <span>Python</span>
+        <span>MySQL / SQL</span>
+        <span>Git / GitHub</span>
+        <span>Figma → вёрстка</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-label">Что делаю</div>
+      <div class="services">
+        <div class="service">
+          <h3>Лендинги под ключ</h3>
+          <p>Одностраничник на HTML+CSS+JS с адаптивом, формой и анимацией. 2–3 дня.</p>
+        </div>
+        <div class="service">
+          <h3>Вёрстка по макету</h3>
+          <p>Figma / Photoshop → чистый семантический HTML+CSS, mobile-first.</p>
+        </div>
+        <div class="service">
+          <h3>Парсинг данных</h3>
+          <p>Соберу данные с любого сайта в Excel / CSV / Google Sheets.</p>
+        </div>
+        <div class="service">
+          <h3>Telegram-боты</h3>
+          <p>Бот на Python (aiogram) — от эхо-бота до интеграции с CRM и API.</p>
+        </div>
+        <div class="service">
+          <h3>Правки PHP-сайтов</h3>
+          <p>Доработка и баг-фикс на Битриксе, Laravel, самописных CMS. Почасовая ставка.</p>
+        </div>
+        <div class="service">
+          <h3>Автоматизация</h3>
+          <p>Скрипты, которые экономят время: рассылки, интеграции, обработка Excel.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="work">
+    <div class="container">
+      <div class="section-label">Проекты</div>
+
+      <div class="project">
+        <img src="assets/projects/elovpark.jpg" alt="Еловый парк">
+        <div class="project-body">
+          <h3>Еловый парк — лендинг базы отдыха</h3>
+          <p>Вёрстка и JS-интерактив: галерея, модалки, плавный скролл, форма бронирования. Адаптив, тёмная тема.</p>
+          <div class="links">
+            <a href="https://elovpark.ru/" target="_blank" rel="noopener">elovpark.ru →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="project">
+        <img src="assets/projects/sibstalker.jpg" alt="Сибсталкер">
+        <div class="project-body">
+          <h3>Сибсталкер — портал о Сибири</h3>
+          <p>Дизайн, вёрстка и фронтенд. Многостраничник с каталогом маршрутов, картой, фотогалереей и формой обратной связи.</p>
+          <div class="links">
+            <a href="https://sibstalker.ru/" target="_blank" rel="noopener">sibstalker.ru →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container" style="display: flex; justify-content: space-between; width: 100%;">
+      <span>© 2026 Даниил</span>
+      <span>Связь — <a href="https://t.me/durov">Telegram</a></span>
+    </div>
+  </footer>
+</body>
+</html>
