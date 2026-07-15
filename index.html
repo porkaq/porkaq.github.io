@@ -45,9 +45,11 @@
     .hero { padding: 80px 0 60px; }
     .hero-inner { display: flex; gap: 40px; align-items: center; }
     .hero img.avatar {
-      width: 96px; height: 96px; border-radius: 50%;
-      object-fit: cover; flex-shrink: 0;
-      border: 1px solid var(--border);
+      width: 96px !important; height: 96px !important; min-width: 96px; max-width: 96px;
+      min-height: 96px; max-height: 96px;
+      border-radius: 50%; object-fit: cover; object-position: center;
+      flex-shrink: 0; aspect-ratio: 1/1;
+      border: 1px solid var(--border); display: block;
     }
     .hero-text .greeting {
       font-size: 13px; color: var(--muted); margin-bottom: 12px;
@@ -114,7 +116,7 @@
     @media (max-width: 600px) {
       .hero { padding: 48px 0 32px; }
       .hero-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
-      .hero img.avatar { width: 72px; height: 72px; }
+      .hero img.avatar { width: 72px !important; height: 72px !important; min-width: 72px; max-width: 72px; min-height: 72px; max-height: 72px; }
       .hero-text h1 { font-size: 32px; }
       .hero-text .tag { font-size: 15px; }
       section { padding: 40px 0; }
