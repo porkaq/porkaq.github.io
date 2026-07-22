@@ -158,9 +158,26 @@
       text-transform: uppercase;
       color: var(--accent);
       margin-top: 0.5em;
-      border-top: var(--bw-bold) solid var(--accent);
       padding-top: 0.4em;
+      position: relative;
       white-space: nowrap;
+    }
+    /* Красная полоса над «Разработчик». Анимируется scaleX(0)→scaleX(1)
+       слева направо 600ms linear после scramble (см. JS handler ниже). */
+    .hero-title-role::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: var(--bw-bold);
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 600ms linear;
+    }
+    .hero-title-role.is-revealed::before {
+      transform: scaleX(1);
     }
 
     @media (max-width: 768px) {
@@ -855,6 +872,10 @@
       .hero-underline-mark {
         width: calc(100% + 4px) !important;
       }
+      .hero-title-role::before {
+        transform: none !important;
+        transition: none !important;
+      }
       .contact-label .char {
         transform: none !important;
       }
@@ -1158,6 +1179,7 @@
   }
 
   var UNDERLINE_REVEAL_DELAY_MS = 800;
+  var ROLE_RULE_REVEAL_DELAY_MS = 1000;
 
   /* ---------- 2) Hero underline grow ---------- */
   var heroUnderline = document.getElementById('hero-underline');
@@ -1168,6 +1190,20 @@
       setTimeout(function () {
         heroUnderline.classList.add('is-revealed');
       }, UNDERLINE_REVEAL_DELAY_MS);
+    }
+  }
+
+  /* ---------- 2a) Hero title-role rule grow — красная полоса над «Разработчик».
+     Стартует после scramble (≈1100ms) и underline-grow (800ms), чтобы три
+     reveal не накладывались. 600ms linear — тот же темп что у curtain. */
+  var heroRole = document.querySelector('.hero-title-role');
+  if (heroRole) {
+    if (reduced) {
+      heroRole.classList.add('is-revealed');
+    } else {
+      setTimeout(function () {
+        heroRole.classList.add('is-revealed');
+      }, ROLE_RULE_REVEAL_DELAY_MS);
     }
   }
 
