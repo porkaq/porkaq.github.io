@@ -210,6 +210,8 @@
     .terminal-body {
       padding: 20px 18px 22px;
       min-height: 380px;
+      display: flex;
+      flex-direction: column;
     }
 
     .term-line {
@@ -258,6 +260,12 @@
     .shell-output:empty::before {
       content: 'Введите help и нажмите Enter';
       color: var(--dim);
+    }
+    .terminal-body.is-shell-active .hero-static { display: none; }
+    .terminal-body.is-shell-active .shell-output {
+      height: auto;
+      min-height: 0;
+      flex: 1 1 auto;
     }
     .shell-entry { margin: 0 0 7px; }
     .shell-entry-command { color: var(--muted); }
@@ -667,6 +675,7 @@
 
           <div class="terminal-body" id="heroBody">
 
+            <div class="hero-static" id="heroStatic">
             <!-- prompt + whoami -->
             <div class="term-line">
               <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
@@ -699,6 +708,7 @@ drwxr-xr-x  porkaq.github.io</pre>
               <pre class="term-result">PHP · 1С-Битрикс · HTML/CSS/JS · Python · Telegram
 4 yrs IRNITU prod · Irkutsk · remote-ready from 27 July
 Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
+            </div>
             </div>
 
             <div class="shell-output" id="shellOutput" role="log" aria-live="polite" aria-relevant="additions"></div>
@@ -1117,6 +1127,7 @@ fast yes, careful yes.
           if (event.key === 'Enter') {
             event.preventDefault();
             const command = shellInput.value;
+            if (command.trim()) document.getElementById('heroBody').classList.add('is-shell-active');
             if (command.trim()) { history.push(command); historyIndex = history.length; }
             run(command);
             shellInput.value = '';
