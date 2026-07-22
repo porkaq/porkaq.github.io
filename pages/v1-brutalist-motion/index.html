@@ -650,6 +650,13 @@
     .section-contact .contact-intro {
       color: var(--paper);
     }
+    /* Contact section: curtain — единственный reveal. Красная черта и
+       char-scramble отключены — иначе при появлении секции 3 анимации
+       стартуют одновременно и заголовки дёргаются. Черта статична. */
+    .section-contact .section-heading::before {
+      width: 8px;
+      transition: none;
+    }
 
     .contact-intro {
       font-family: var(--font-mono);
@@ -1020,21 +1027,21 @@
 
         <div class="contact-rows">
           <div class="contact-row">
-            <div class="contact-label" data-char-scramble>TELEGRAM</div>
+            <div class="contact-label">TELEGRAM</div>
             <div class="contact-value">
               <a class="cta-magnetic" href="https://t.me/porkaqq" rel="noopener" data-magnetic>@porkaqq</a>
             </div>
           </div>
 
           <div class="contact-row">
-            <div class="contact-label" data-char-scramble>EMAIL</div>
+            <div class="contact-label">EMAIL</div>
             <div class="contact-value">
               <a href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
             </div>
           </div>
 
           <div class="contact-row">
-            <div class="contact-label" data-char-scramble>GITHUB</div>
+            <div class="contact-label">GITHUB</div>
             <div class="contact-value">
               <a href="https://github.com/porkaq" target="_blank" rel="noopener">github.com/porkaq</a>
             </div>
