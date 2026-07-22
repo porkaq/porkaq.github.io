@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Даниил — каталог портфолио</title>
-  <meta name="description" content="Каталог активных вариантов портфолио Даниила (V1 Brutalist / V3 Terminal / V4 Minimalist). V2 Editorial, V5 Swiss и V6 Playful выведены в inactive.">
+  <meta name="description" content="Каталог активных вариантов портфолио Даниила: V1 Brutalist (3 варианта — base, scroll, wow), V3 Terminal (base, scroll-typing), V4 Minimalist (base, hover). V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -35,8 +35,8 @@
     /* --- header --- */
     header { padding: 56px 0 32px; border-bottom: 1px solid var(--border); }
     header .eyebrow { font: 500 12px/1 'Geist Mono', ui-monospace, monospace; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 16px; }
-    header h1 { font: 500 56px/1.05 'Geist', system-ui; letter-spacing: -0.025em; max-width: 14ch; margin-bottom: 24px; }
-    header .lede { font-size: 17px; line-height: 1.55; color: var(--muted); max-width: 60ch; }
+    header h1 { font: 500 56px/1.05 'Geist', system-ui; letter-spacing: -0.025em; max-width: 18ch; margin-bottom: 24px; }
+    header .lede { font-size: 17px; line-height: 1.55; color: var(--muted); max-width: 64ch; }
     header .note {
       margin-top: 20px;
       padding: 14px 18px;
@@ -46,7 +46,7 @@
       font: 500 13px/1.5 'Geist Mono', monospace;
       color: var(--ink);
       letter-spacing: 0.01em;
-      max-width: 60ch;
+      max-width: 64ch;
     }
     header .note strong { color: var(--accent); }
     @media (max-width: 720px) { header h1 { font-size: 40px; } }
@@ -58,7 +58,8 @@
     /* --- catalog grid --- */
     main { padding: 64px 0 96px; }
     .catalog { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 32px; }
-    @media (max-width: 960px) { .catalog { grid-template-columns: 1fr; } }
+    @media (max-width: 960px) { .catalog { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .catalog { grid-template-columns: 1fr; } }
 
     .card { display: flex; flex-direction: column; gap: 16px; }
     .card .thumb {
@@ -71,10 +72,20 @@
     }
     .card:hover .thumb { transform: translateY(-2px); border-color: var(--ink); }
     .card .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-    .card .meta-line { display: flex; align-items: baseline; gap: 12px; }
+    .card .meta-line { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
     .card .num { font: 500 13px/1 'Geist Mono', monospace; color: var(--muted); letter-spacing: 0.04em; }
     .card h2 { font: 500 22px/1.15 'Geist'; letter-spacing: -0.015em; }
     .card .tag { font: 500 11px/1 'Geist Mono', monospace; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 4px; }
+    /* animated tag — выделение вариантов с анимацией */
+    .card .tag-anim {
+      font: 500 11px/1 'Geist Mono', monospace;
+      color: #0A0A0A;
+      background: #FFEB3B;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
     .card .desc { font-size: 15px; line-height: 1.55; color: var(--muted); }
     .card .open { font: 500 13px/1 'Geist Mono', monospace; color: var(--ink); margin-top: 4px; letter-spacing: 0.02em; }
     .card a:hover .open { color: var(--accent); }
@@ -93,11 +104,11 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="eyebrow">CATALOG · 22 JULY 2026 · 3 ACTIVE VARIANTS</div>
-      <h1>Один Даниил — три активных эстетики.</h1>
-      <p class="lede">Три standalone-страницы одного портфолио. Контент, контакты и проекты одинаковые. Тон, типографика, цвет и анимации — разные. Это каталог для выбора финального варианта, не финальный сайт.</p>
+      <div class="eyebrow">CATALOG · 22 JULY 2026 · 7 VARIANTS · 3 BASE + 4 ANIMATED</div>
+      <h1>Один Даниил — три эстетики, семь живых страниц.</h1>
+      <p class="lede">Три standalone-страницы одного портфолио. Контент, контакты и проекты одинаковые. Тон, типографика, цвет и анимации — разные. К каждой базовой странице есть animated-вариант: scroll-эффекты, hover-микро-анимации, scroll-typing, scramble, magnetic. Это каталог для выбора финального варианта, не финальный сайт.</p>
       <div class="note">
-        V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive 22 июля 2026 — «не попадание по настроению полное». Файлы страниц и спеки <strong>сохранены</strong> в репо как negative references.
+        V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive 22 июля 2026 — «не попадание по настроению полное». Файлы страниц и спеки <strong>сохранены</strong> в репо как negative references. V1 Brutalist имеет <strong>три варианта</strong>: base (статика), scroll (clip-path curtain), wow (scramble + magnetic).
       </div>
     </header>
 
@@ -113,37 +124,85 @@
     <main>
       <div class="catalog">
 
+        <!-- V1 BRUTALIST · BASE (статика) -->
         <article class="card">
           <a href="pages/v1-brutalist/index.html">
-            <div class="thumb"><img src="assets/previews/v1-brutalist-hero.jpg" alt="V1 Brutalist hero preview" loading="lazy"></div>
+            <div class="thumb"><img src="assets/previews/v1-brutalist-hero.jpg" alt="V1 Brutalist hero preview — чёрный фон, имя ДАНИИЛ 200px" loading="lazy"></div>
             <div class="meta-line">
-              <span class="num">V1</span>
+              <span class="num">V1 · BASE</span>
               <span class="tag">Brutalist</span>
             </div>
             <h2>Бетон и манифест</h2>
-            <p class="desc">Чёрный фон, белая типографика, красный акцент. «ДАНИИЛ» 200px, рубленый тон, без анимаций. Эстетика Bloomberg Businessweek и брутализма 2010-х.</p>
+            <p class="desc">Чёрный фон, белая типографика, красный акцент. «ДАНИИЛ» 200px, рубленый тон, без анимаций — статика как statement. Эстетика Bloomberg Businessweek и брутализма 2010-х.</p>
             <span class="open">→ Открыть v1-brutalist</span>
           </a>
         </article>
 
+        <!-- V1 BRUTALIST · SCROLL (clip-path curtain) -->
+        <article class="card">
+          <a href="pages/v1-brutalist-scroll/index.html">
+            <div class="thumb"><img src="assets/previews/v1-brutalist-scroll-hero.jpg" alt="V1 Brutalist scroll — clip-path curtain reveal секций при скролле" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V1 · SCROLL</span>
+              <span class="tag">Brutalist</span>
+              <span class="tag-anim">scroll</span>
+            </div>
+            <h2>Brutalist · scroll-clip</h2>
+            <p class="desc">Та же палитра и типографика, что в base. Жёсткие шторы clip-path на секциях, translate3d на h1 при скролле. Никакого fade, никакого easing — линейный механический scroll.</p>
+            <span class="open">→ Открыть v1-brutalist-scroll</span>
+          </a>
+        </article>
+
+        <!-- V1 BRUTALIST · WOW (scramble + magnetic) -->
+        <article class="card">
+          <a href="pages/v1-brutalist-wow/index.html">
+            <div class="thumb"><img src="assets/previews/v1-brutalist-wow-hero.jpg" alt="V1 Brutalist wow — scramble имени, magnetic CTA, draw-underline" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V1 · WOW</span>
+              <span class="tag">Brutalist</span>
+              <span class="tag-anim">wow</span>
+            </div>
+            <h2>Brutalist · анимация + вау</h2>
+            <p class="desc">Брутализм с анимацией. Scramble «ДАНИИЛ» при загрузке, красный underline вырастает под «РАБОТАЕТ», magnetic-CTA на Telegram-ссылке, char-flip на TELEGRAM/EMAIL/GITHUB. Палитра и типографика сохранены.</p>
+            <span class="open">→ Открыть v1-brutalist-wow</span>
+          </a>
+        </article>
+
+        <!-- V3 TERMINAL · BASE -->
         <article class="card">
           <a href="pages/v3-terminal/index.html">
-            <div class="thumb"><img src="assets/previews/v3-terminal-hero.jpg" alt="V3 Terminal hero preview" loading="lazy"></div>
+            <div class="thumb"><img src="assets/previews/v3-terminal-hero.jpg" alt="V3 Terminal hero preview — JetBrains Mono, prompt daniil@irkutsk" loading="lazy"></div>
             <div class="meta-line">
-              <span class="num">V3</span>
+              <span class="num">V3 · BASE</span>
               <span class="tag">Terminal</span>
             </div>
             <h2>Чёрный экран и зелёный текст</h2>
-            <p class="desc">JetBrains Mono ВЕЗДЕ, prompt `$ daniil@irkutsk:~$`, вывод реальных команд (whoami, ls, cat, tree). Typing через rAF, cursor blink, fade-up через IO. Не Matrix rain — серьёзный dev-tool.</p>
+            <p class="desc">JetBrains Mono ВЕЗДЕ, prompt `$ daniil@irkutsk:~$`, вывод реальных команд (whoami, ls, cat, tree). Typing в hero через rAF, cursor blink, fade-up через IO. Не Matrix rain — серьёзный dev-tool.</p>
             <span class="open">→ Открыть v3-terminal</span>
           </a>
         </article>
 
+        <!-- V3 TERMINAL · TYPING -->
+        <article class="card">
+          <a href="pages/v3-terminal-typing/index.html">
+            <div class="thumb"><img src="assets/previews/v3-terminal-typing-hero.jpg" alt="V3 Terminal typing — посимвольная печать pre.term-output при скролле" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V3 · TYPING</span>
+              <span class="tag">Terminal</span>
+              <span class="tag-anim">scroll</span>
+            </div>
+            <h2>Terminal · scroll-typing</h2>
+            <p class="desc">Все 11 блоков (cat about.txt, skills, ls, tree, uptime, contact, man daniil) печатаются посимвольно при попадании в viewport. Очередь через IntersectionObserver + rAF, мигающий курсор на каждом блоке. Похоже на реальный CLI-сеанс.</p>
+            <span class="open">→ Открыть v3-terminal-typing</span>
+          </a>
+        </article>
+
+        <!-- V4 MINIMALIST · BASE -->
         <article class="card">
           <a href="pages/v4-minimalist/index.html">
-            <div class="thumb"><img src="assets/previews/v4-minimalist-hero.jpg" alt="V4 Minimalist hero preview" loading="lazy"></div>
+            <div class="thumb"><img src="assets/previews/v4-minimalist-hero.jpg" alt="V4 Minimalist hero preview — off-white, Geist Sans, moss accent" loading="lazy"></div>
             <div class="meta-line">
-              <span class="num">V4</span>
+              <span class="num">V4 · BASE</span>
               <span class="tag">Minimalist</span>
             </div>
             <h2>Apple product page, Linear.app</h2>
@@ -152,11 +211,26 @@
           </a>
         </article>
 
+        <!-- V4 MINIMALIST · HOVER -->
+        <article class="card">
+          <a href="pages/v4-minimalist-hover/index.html">
+            <div class="thumb"><img src="assets/previews/v4-minimalist-hover-hero.jpg" alt="V4 Minimalist hover — lift карточек, magnetic CTA, split h1" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V4 · HOVER</span>
+              <span class="tag">Minimalist</span>
+              <span class="tag-anim">hover</span>
+            </div>
+            <h2>Minimalist · hover-жизнь</h2>
+            <p class="desc">«Даниил» собирается посимвольно (split-chars), CTA магнитится за курсором через rAF, карточки приподнимаются с accent-rail. Pill-stagger на тегах, underline-slide на ссылках. Сохраняет лимит тени ≤0.08 и палитру moss.</p>
+            <span class="open">→ Открыть v4-minimalist-hover</span>
+          </a>
+        </article>
+
       </div>
     </main>
 
     <footer>
-      <span>© 2026 · Даниил · porkaq · Каталог из 3 активных вариантов</span>
+      <span>© 2026 · Даниил · porkaq · Каталог из 7 вариантов (3 base + 4 animated)</span>
       <span><a href="https://t.me/porkaqq">Telegram @porkaqq</a> · <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a> · <a href="https://github.com/porkaq">GitHub</a></span>
     </footer>
   </div>
