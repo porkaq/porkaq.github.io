@@ -1015,10 +1015,17 @@ fast yes, careful yes.
         }
       }
 
-      // ── 2. Fade-up секций + scroll-typing через IntersectionObserver ───────
-      // Очищаем ВСЕ typing-targets (output blocks + команды) перед observer,
-      // чтобы текст не «мигнул»
+      // Резервируем финальную высоту терминалов до очистки typing-targets.
+      // Иначе рамки растут вместе с текстом и создают заметный layout shift.
       const typeTargets = document.querySelectorAll('.type-target, .term-type');
+      const animatedWindows = document.querySelectorAll('.term-window');
+
+      typeTargets.forEach(el => {
+        if (el.dataset.text) el.textContent = el.dataset.text;
+      });
+      animatedWindows.forEach(windowEl => {
+        windowEl.style.minHeight = `${Math.ceil(windowEl.getBoundingClientRect().height)}px`;
+      });
       typeTargets.forEach(el => { el.textContent = ''; });
 
       const fadeEls = document.querySelectorAll('.fade-section');
