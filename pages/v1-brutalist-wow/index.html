@@ -146,6 +146,29 @@
       white-space: nowrap;
     }
 
+    .hero-title-role {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.18em;       /* ~36px на 200px hero — мелкая строка под именем */
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-top: 0.5em;
+      border-top: var(--bw-bold) solid var(--accent);
+      padding-top: 0.4em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title-role { font-size: 0.22em; margin-top: 0.5em; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .hero-title-role { font-size: 0.20em; }
+    }
+
     /* Hero scramble spans — фиксированная ширина каждой ячейки.
        JS при boot order измеряет maxCharWidth (самый широкий символ в scramblePool)
        и ставит эту ширину каждому span'у, чтобы при смене символа
@@ -805,7 +828,7 @@
 <section class="hero" aria-label="Главный экран">
   <div class="hero-grid">
 
-    <h1 class="hero-title" data-scramble-ready="1"><span class="scramble">Д</span><span class="scramble">А</span><span class="scramble">Н</span><span class="scramble">И</span><span class="scramble">И</span><span class="scramble">Л</span></h1>
+    <h1 class="hero-title" data-scramble-ready="1"><span class="scramble">Д</span><span class="scramble">А</span><span class="scramble">Н</span><span class="scramble">И</span><span class="scramble">И</span><span class="scramble">Л</span><span class="hero-title-role">Разработчик</span></h1>
 
     <aside class="hero-manifest" aria-label="Карточка контекста">
       <p class="hero-manifest-row">

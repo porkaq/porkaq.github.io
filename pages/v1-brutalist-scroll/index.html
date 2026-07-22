@@ -137,6 +137,28 @@
       margin: 0;
     }
 
+    .hero-title-role {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.10em;       /* ~20px на 200px hero */
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-top: 0.45em;
+      border-top: var(--bw-bold) solid var(--accent);
+      padding-top: 0.4em;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title-role { font-size: 0.16em; margin-top: 0.5em; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .hero-title-role { font-size: 0.13em; }
+    }
+
     /* Hero manifest (right column) */
     .hero-manifest {
       font-family: var(--font-mono);
@@ -729,7 +751,7 @@
 <section class="hero" aria-label="Главный экран">
   <div class="hero-grid">
 
-    <h1 class="hero-title">ДАНИИЛ</h1>
+    <h1 class="hero-title">ДАНИИЛ<span class="hero-title-role">Разработчик</span></h1>
 
     <aside class="hero-manifest" aria-label="Карточка контекста">
       <p class="hero-manifest-row">
