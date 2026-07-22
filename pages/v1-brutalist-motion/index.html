@@ -302,55 +302,14 @@
     }
 
     /* =====================================================
-       SCROLL-REVEAL · clip-path curtain / sweep / scaleX.
-       Дополнительный слой к [data-reveal] на h2 — даёт тем же
-       JS-хуком возможность раскрывать секции и инлайн-акценты.
-       linear timing only — соответствует брутальной эстетике.
+       NOTE: scroll-reveal motion на h2 реализован через
+       [data-reveal] → JS добавляет .is-revealed → анимирует
+       .section-heading::before (красная черта). См. SCROLL-REVEAL
+       в JS-секции ниже. Этого достаточно; дополнительный слой
+       через clip-path / transform-сlassы (.reveal, .reveal-up,
+       .reveal-x, .reveal-scale) из early-прототипа удалён —
+       не использовался в финале.
        ===================================================== */
-    .reveal {
-      clip-path: inset(0 100% 0 0);
-      transform: translate3d(0, 0, 0);
-      transition:
-        clip-path 600ms linear,
-        transform 600ms linear;
-      will-change: clip-path, transform;
-    }
-    .reveal.is-revealed {
-      clip-path: inset(0 0 0 0);
-    }
-
-    /* Альтернативное имя из той же семьи. */
-    .reveal-up {
-      clip-path: inset(0 100% 0 0);
-      transform: translate3d(0, 0, 0);
-      transition:
-        clip-path 600ms linear,
-        transform 600ms linear;
-      will-change: clip-path, transform;
-    }
-    .reveal-up.is-revealed {
-      clip-path: inset(0 0 0 0);
-    }
-
-    /* Sweep: красная черта въезжает слева (для лейблов / индексов). */
-    .reveal-x {
-      transform: translate3d(-100%, 0, 0);
-      transform-origin: left center;
-      transition: transform 500ms linear;
-    }
-    .reveal-x.is-revealed {
-      transform: translate3d(0, 0, 0);
-    }
-
-    /* scaleX: инлайн-чerta растёт из нуля. */
-    .reveal-scale {
-      transform: scaleX(0);
-      transform-origin: left center;
-      transition: transform 500ms linear;
-    }
-    .reveal-scale.is-revealed {
-      transform: scaleX(1);
-    }
 
     /* =====================================================
        SECTION frame
@@ -870,16 +829,6 @@
       .hero-underline-mark {
         width: calc(100% + 4px) !important;
       }
-      /* scroll-reveal helpers: сразу финальное состояние */
-      .reveal,
-      .reveal-up {
-        clip-path: none !important;
-        transform: none !important;
-      }
-      .reveal-x,
-      .reveal-scale {
-        transform: none !important;
-      }
       .contact-label .char {
         transform: none !important;
       }
@@ -1286,9 +1235,8 @@
 
   /* ---------- 5) Magnetic CTA ---------- */
   // Skip entirely under prefers-reduced-motion: hard accessibility off.
-  if (reduced) {
-    // (no magneticNodes wired; button is static.)
-  } else {
+  // Else wire up the [data-magnetic] buttons.
+  if (!reduced) {
     var magneticNodes = document.querySelectorAll('[data-magnetic]');
   magneticNodes.forEach(function (btn) {
     var rectCache = null;
