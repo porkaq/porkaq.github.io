@@ -140,12 +140,15 @@
       margin: 0;
     }
 
-    /* Hero scramble spans — fixed-width cells, текст без переноса.
-       data-scramble-ready="1" сразу в HTML — буквы видны постоянно;
-       scramble-цикл JS просто меняет textContent быстро, без visibility-флипа. */
+    /* Hero scramble spans — фиксированная ширина каждой ячейки.
+       JS при boot order измеряет maxCharWidth (самый широкий символ в scramblePool)
+       и ставит эту ширину каждому span'у, чтобы при смене символа
+       содержимое соседей не сдвигалось (был «прыжок» каждые 80ms). */
     .scramble {
       display: inline-block;
       vertical-align: top;
+      text-align: center;
+      white-space: pre;
     }
 
     /* Hero manifest (right column) */
@@ -1020,11 +1023,42 @@
   var SCRAMBLE_STAGGER = 100; // ms между стартами букв
   var SCRAMBLE_TICKS = 6;     // сколько случайных символов перед финалом
 
+  // Фиксируем ширину каждой scramble-ячейки равной самому широкому символу,
+  // чтобы при смене символа соседние буквы не сдвигались.
+  function lockScrambleCellWidths() {
+    if (!heroTitle || !scrambleChars.length) return;
+    var measure = document.createElement('span');
+    measure.className = 'scramble';
+    measure.style.visibility = 'hidden';
+    measure.style.position = 'absolute';
+    measure.style.left = '-9999px';
+    // Используем тот же шрифт и размер, что у .hero-title
+    var heroCS = getComputedStyle(heroTitle);
+    measure.style.fontFamily = heroCS.fontFamily;
+    measure.style.fontSize = heroCS.fontSize;
+    measure.style.fontWeight = heroCS.fontWeight;
+    measure.style.letterSpacing = heroCS.letterSpacing;
+    document.body.appendChild(measure);
+    var maxW = 0;
+    for (var i = 0; i < scramblePool.length; i++) {
+      measure.textContent = scramblePool[i];
+      var w = measure.getBoundingClientRect().width;
+      if (w > maxW) maxW = w;
+    }
+    document.body.removeChild(measure);
+    // Применяем фиксированную ширину каждой ячейке + text-align: center
+    // уже в CSS, так что содержимое центрируется внутри.
+    for (var j = 0; j < scrambleChars.length; j++) {
+      scrambleChars[j].style.width = Math.ceil(maxW) + 'px';
+    }
+  }
+
   function runScramble() {
     if (!heroTitle || !scrambleChars.length) return;
     if (reduced) {
       return;
     }
+    lockScrambleCellWidths();
     var finished = 0;
     scrambleChars.forEach(function (node, i) {
       var finalChar = node.textContent;
