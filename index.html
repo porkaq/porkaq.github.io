@@ -3,248 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Даниил — Frontend & Python разработчик</title>
-  <meta name="description" content="Лендинги, вёрстка, парсинг и Telegram-боты. HTML/CSS/JS, PHP, Python.">
-  <link rel="icon" type="image/jpeg" href="assets/avatar.jpg">
+  <title>Даниил — 6 вариантов портфолио</title>
+  <meta name="description" content="Каталог из 6 эстетик одного портфолио Даниила. Brutalist / Editorial / Terminal / Minimalist / Swiss Grid / Playful. Контент одинаковый, тон и анимации — разные.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #000000;
-      --surface: #0a0a0a;
-      --border: #1f1f1f;
-      --border-hover: #2a2a2a;
-      --text: #ededed;
-      --muted: #888888;
-      --dim: #555555;
-      --accent: #ffffff;
+      --bg: #FAFAFA;
+      --ink: #0A0A0A;
+      --muted: #5F625D;
+      --border: #E5E5E2;
+      --accent: #4D6A4D;
+      --accent-soft: #E9EFE8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
     body {
-      font: 15px/1.6 'Geist', system-ui, -apple-system, sans-serif;
+      font: 16px/1.55 'Geist', system-ui, -apple-system, sans-serif;
       background: var(--bg);
-      color: var(--text);
+      color: var(--ink);
       letter-spacing: -0.011em;
     }
-    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-    a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.15s; }
-    a:hover { border-bottom-color: var(--text); }
-    a.bare { border-bottom: none; }
-    a.bare:hover { border-bottom: 1px solid var(--text); }
-    code, .mono { font-family: 'Geist Mono', 'SF Mono', Menlo, monospace; font-size: 13px; }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--accent); }
+    img { display: block; max-width: 100%; height: auto; }
 
-    /* NAV */
-    nav { padding: 20px 0; border-bottom: 1px solid var(--border); }
-    nav .container { display: flex; justify-content: space-between; align-items: center; }
-    nav .logo { font-weight: 600; letter-spacing: -0.02em; }
-    nav .links a { margin-left: 24px; font-size: 14px; color: var(--muted); }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+    @media (max-width: 720px) { .wrap { padding: 0 20px; } }
 
-    /* HERO */
-    .hero { padding: 80px 0 60px; }
-    .hero-inner { display: flex; gap: 40px; align-items: center; }
-    .hero img.avatar {
-      width: 96px !important; height: 96px !important; min-width: 96px; max-width: 96px;
-      min-height: 96px; max-height: 96px;
-      border-radius: 50%; object-fit: cover; object-position: center;
-      flex-shrink: 0; aspect-ratio: 1/1;
-      border: 1px solid var(--border); display: block;
-    }
-    .hero-text .greeting {
-      font-size: 13px; color: var(--muted); margin-bottom: 12px;
-      text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500;
-    }
-    .hero-text h1 {
-      font-size: 42px; font-weight: 600; letter-spacing: -0.03em;
-      line-height: 1.1; margin-bottom: 16px;
-    }
-    .hero-text .tag {
-      color: var(--muted); font-size: 17px; margin-bottom: 24px;
-      max-width: 560px; line-height: 1.5;
-    }
-    .hero-text .contacts { display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px; }
-    .hero-text .contacts a { color: var(--muted); }
-    .hero-text .contacts a:hover { color: var(--text); }
+    /* --- header --- */
+    header { padding: 56px 0 32px; border-bottom: 1px solid var(--border); }
+    header .eyebrow { font: 500 12px/1 'Geist Mono', ui-monospace, monospace; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 16px; }
+    header h1 { font: 500 56px/1.05 'Geist', system-ui; letter-spacing: -0.025em; max-width: 14ch; margin-bottom: 24px; }
+    header .lede { font-size: 17px; line-height: 1.55; color: var(--muted); max-width: 60ch; }
+    @media (max-width: 720px) { header h1 { font-size: 40px; } }
 
-    /* SECTION */
-    section { padding: 64px 0; border-top: 1px solid var(--border); }
-    .section-label {
-      font-size: 12px; color: var(--dim); text-transform: uppercase;
-      letter-spacing: 0.1em; font-weight: 500; margin-bottom: 32px;
-    }
-    h2 { display: none; }
+    /* --- meta bar --- */
+    .meta { display: flex; gap: 32px; flex-wrap: wrap; padding: 24px 0; border-bottom: 1px solid var(--border); font: 500 13px/1.4 'Geist Mono', monospace; color: var(--muted); letter-spacing: 0.02em; text-transform: uppercase; }
+    .meta strong { color: var(--ink); font-weight: 500; }
 
-    /* STACK */
-    .stack { display: flex; flex-wrap: wrap; gap: 8px; }
-    .stack span {
-      background: var(--surface);
+    /* --- catalog grid --- */
+    main { padding: 64px 0 96px; }
+    .catalog { display: grid; grid-template-columns: repeat(2, 1fr); gap: 48px 32px; }
+    @media (max-width: 960px) { .catalog { grid-template-columns: 1fr; } }
+
+    .card { display: flex; flex-direction: column; gap: 16px; }
+    .card .thumb {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: #fff;
       border: 1px solid var(--border);
-      padding: 6px 12px; border-radius: 6px;
-      font-size: 13px; color: var(--text);
-    }
-
-    /* SERVICES */
-    .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .service { background: var(--bg); padding: 24px; }
-    .service h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
-    .service p { color: var(--muted); font-size: 14px; line-height: 1.5; }
-
-    /* PROJECTS */
-    .project {
-      border: 1px solid var(--border);
-      border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 16px;
-      transition: border-color 0.15s;
+      transition: transform 200ms ease-out, border-color 200ms ease-out;
     }
-    .project:hover { border-color: var(--border-hover); }
-    .project img {
-      width: 100%; height: 240px; object-fit: cover; object-position: top;
-      display: block; border-bottom: 1px solid var(--border);
-    }
-    .project-body { padding: 20px 24px; }
-    .project h3 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
-    .project p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
-    .project .links { display: flex; gap: 20px; font-size: 13px; }
-    .project .links a { color: var(--muted); }
+    .card:hover .thumb { transform: translateY(-2px); border-color: var(--ink); }
+    .card .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .card .meta-line { display: flex; align-items: baseline; gap: 12px; }
+    .card .num { font: 500 13px/1 'Geist Mono', monospace; color: var(--muted); letter-spacing: 0.04em; }
+    .card h2 { font: 500 22px/1.15 'Geist'; letter-spacing: -0.015em; }
+    .card .tag { font: 500 11px/1 'Geist Mono', monospace; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 4px; }
+    .card .desc { font-size: 15px; line-height: 1.55; color: var(--muted); }
+    .card .open { font: 500 13px/1 'Geist Mono', monospace; color: var(--ink); margin-top: 4px; letter-spacing: 0.02em; }
+    .card a:hover .open { color: var(--accent); }
 
-    /* FOOTER */
-    footer { padding: 40px 0 60px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; color: var(--dim); }
+    /* --- footer --- */
+    footer { padding: 32px 0 56px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font: 500 12px/1.4 'Geist Mono', monospace; color: var(--muted); letter-spacing: 0.02em; text-transform: uppercase; }
+    footer a { color: var(--ink); }
+    footer a:hover { color: var(--accent); }
 
-    /* MOBILE */
-    @media (max-width: 600px) {
-      .hero { padding: 48px 0 32px; }
-      .hero-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
-      .hero img.avatar { width: 72px !important; height: 72px !important; min-width: 72px; max-width: 72px; min-height: 72px; max-height: 72px; }
-      .hero-text h1 { font-size: 32px; }
-      .hero-text .tag { font-size: 15px; }
-      section { padding: 40px 0; }
-      .project img { height: 180px; }
-      nav .links a { margin-left: 16px; }
-      footer { flex-direction: column; gap: 8px; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .card .thumb { transition: none; }
     }
   </style>
 </head>
 <body>
-  <nav>
-    <div class="container">
-      <a href="#" class="logo bare">daniil.dev</a>
-      <div class="links">
-        <a href="#work" class="bare">Работы</a>
-        <a href="#services" class="bare">Услуги</a>
-        <a href="https://t.me/porkaqq" class="bare">Telegram</a>
-      </div>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">CATALOG · 22 JULY 2026 · 6 VARIANTS</div>
+      <h1>Один Даниил — шесть эстетик.</h1>
+      <p class="lede">Шесть standalone-страниц одного портфолио. Контент, контакты и проекты одинаковые. Тон, типографика, цвет и анимации — разные. Это каталог для выбора финального варианта, не финальный сайт.</p>
+    </header>
+
+    <div class="meta">
+      <span><strong>Имя</strong> · Даниил</span>
+      <span><strong>Роль</strong> · делаю сайты и ботов</span>
+      <span><strong>Стек</strong> · PHP · 1С-Битрикс · HTML/CSS/JS · Python · Telegram</span>
+      <span><strong>Опыт</strong> · 4 года на проде ИРНИТУ</span>
+      <span><strong>Локация</strong> · Иркутск, удалёнка</span>
+      <span><strong>Свободен</strong> · с 27 июля, 30+ ч/нед</span>
     </div>
-  </nav>
 
-  <header class="hero">
-    <div class="container hero-inner">
-      <img src="assets/avatar_round.png" alt="Даниил" class="avatar">
-      <div class="hero-text">
-        <div class="greeting">Привет</div>
-        <h1>Я делаю сайты, лендинги и ботов</h1>
-        <p class="tag">Frontend-разработчик и Python-автоматизатор. HTML/CSS/JS, PHP, парсинг, Telegram-боты. Быстро, по фикс-цене, на совесть.</p>
-        <div class="contacts">
-          <a href="https://t.me/porkaqq">Telegram</a>
-          <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a>
-          <a href="https://github.com/porkaq">GitHub</a>
-        </div>
+    <main>
+      <div class="catalog">
+
+        <article class="card">
+          <a href="pages/v1-brutalist/index.html">
+            <div class="thumb"><img src="assets/previews/v1-brutalist-hero.jpg" alt="V1 Brutalist hero preview" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V1</span>
+              <span class="tag">Brutalist</span>
+            </div>
+            <h2>Бетон и манифест</h2>
+            <p class="desc">Чёрный фон, белая типографика, красный акцент. «ДАНИИЛ» 200px, рубленый тон, без анимаций. Эстетика Bloomberg Businessweek и брутализма 2010-х.</p>
+            <span class="open">→ Открыть v1-brutalist</span>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="pages/v2-editorial/index.html">
+            <div class="thumb"><img src="assets/previews/v2-editorial-hero.jpg" alt="V2 Editorial hero preview" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V2</span>
+              <span class="tag">Editorial</span>
+            </div>
+            <h2>Журнал «Ъ», long-read</h2>
+            <p class="desc">Кремовый фон, тёмно-зелёный текст, mustard marker-pen. Drop-cap 96px, vintage flat-lay фото, fade-up через IntersectionObserver. Тон — длинный, развёрнутый, как в The New Yorker.</p>
+            <span class="open">→ Открыть v2-editorial</span>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="pages/v3-terminal/index.html">
+            <div class="thumb"><img src="assets/previews/v3-terminal-hero.jpg" alt="V3 Terminal hero preview" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V3</span>
+              <span class="tag">Terminal</span>
+            </div>
+            <h2>Чёрный экран и зелёный текст</h2>
+            <p class="desc">JetBrains Mono ВЕЗДЕ, prompt `$ daniil@irkutsk:~$`, вывод реальных команд (whoami, ls, cat, tree). Typing через rAF, cursor blink, fade-up через IO. Не Matrix rain — серьёзный dev-tool.</p>
+            <span class="open">→ Открыть v3-terminal</span>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="pages/v4-minimalist/index.html">
+            <div class="thumb"><img src="assets/previews/v4-minimalist-hero.jpg" alt="V4 Minimalist hero preview" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V4</span>
+              <span class="tag">Minimalist</span>
+            </div>
+            <h2>Apple product page, Linear.app</h2>
+            <p class="desc">Офф-вайт фон, чёрный текст, moss accent. Geist Sans, split 50/50, минимум воздуха и слов. Subtle fade-up через IO, hover-lift translateY. Фактология, без эмоций.</p>
+            <span class="open">→ Открыть v4-minimalist</span>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="pages/v5-swiss/index.html">
+            <div class="thumb"><img src="assets/previews/v5-swiss-hero.jpg" alt="V5 Swiss Grid hero preview" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V5</span>
+              <span class="tag">Swiss Grid</span>
+            </div>
+            <h2>Müller-Brockmann, постер</h2>
+            <p class="desc">12-колонная сетка, Inter caps для всего, графит + кремовый + терракотовый. Единственная проверенная цифра — «04» (4 года). Формальный third-person тон, как в каталоге.</p>
+            <span class="open">→ Открыть v5-swiss</span>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="pages/v6-playful/index.html">
+            <div class="thumb"><img src="assets/previews/v6-playful-hero.jpg" alt="V6 Playful hero preview" loading="lazy"></div>
+            <div class="meta-line">
+              <span class="num">V6</span>
+              <span class="tag">Playful</span>
+            </div>
+            <h2>Personal zine, иллюстрированное</h2>
+            <p class="desc">Тёплая палитра, Caveat/Kalam handwritten имя «Даня», flat-lay иллюстрация рабочего стола. Marquee для стека, hover-tilt rotateY через rAF, fade-up через IO. Личный zine, не крикливый childish.</p>
+            <span class="open">→ Открыть v6-playful</span>
+          </a>
+        </article>
+
       </div>
-    </div>
-  </header>
+    </main>
 
-  <section id="work">
-    <div class="container">
-      <div class="section-label">Проекты</div>
-
-      <div class="project">
-        <img src="assets/projects/elovpark.jpg" alt="Еловый парк">
-        <div class="project-body">
-          <h3>Еловый парк — интернет-магазин</h3>
-          <p>Вёрстка и JS-интерактив для интернет-магазина: каталог, карточки товаров, галерея, модалки, плавный скролл, форма заказа. Адаптив, тёмная тема.</p>
-          <div class="links">
-            <a href="https://elovpark.ru/" target="_blank" rel="noopener">elovpark.ru →</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="project">
-        <img src="assets/projects/sibstalker.jpg" alt="Сибсталкер">
-        <div class="project-body">
-          <h3>Сибсталкер — магазин вездеходов</h3>
-          <p>Дизайн, вёрстка и фронтенд для магазина вездеходной техники: каталог моделей с фильтрами, карточки товаров, фотогалерея, форма обратной связи.</p>
-          <div class="links">
-            <a href="https://sibstalker.ru/" target="_blank" rel="noopener">sibstalker.ru →</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="project">
-        <img src="assets/projects/istu.jpg" alt="ИРНИТУ">
-        <div class="project-body">
-          <h3>ИРНИТУ — промо-страница к 95-летию</h3>
-          <p>Работа в команде над промо-страницей университета к юбилею: вёрстка, интерактив, адаптив.</p>
-          <div class="links">
-            <a href="https://www.istu.edu/promo/95/" target="_blank" rel="noopener">istu.edu/promo/95 →</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="services">
-    <div class="container">
-      <div class="section-label">Услуги</div>
-      <div class="services">
-        <div class="service">
-          <h3>Лендинги под ключ</h3>
-          <p>Одностраничник на HTML+CSS+JS с адаптивом, формой и анимацией. 2–3 дня.</p>
-        </div>
-        <div class="service">
-          <h3>Вёрстка по макету</h3>
-          <p>Figma / Photoshop → чистый семантический HTML+CSS, mobile-first.</p>
-        </div>
-        <div class="service">
-          <h3>Парсинг данных</h3>
-          <p>Соберу данные с любого сайта в Excel / CSV / Google Sheets.</p>
-        </div>
-        <div class="service">
-          <h3>Telegram-боты</h3>
-          <p>Бот на Python (aiogram) — от эхо-бота до интеграции с CRM и API.</p>
-        </div>
-        <div class="service">
-          <h3>Правки PHP-сайтов</h3>
-          <p>Доработка и баг-фикс на Битриксе, Laravel, самописных CMS. Почасовая ставка.</p>
-        </div>
-        <div class="service">
-          <h3>Автоматизация</h3>
-          <p>Скрипты, которые экономят время: рассылки, интеграции, обработка Excel.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="stack">
-    <div class="container">
-      <div class="section-label">Стек</div>
-      <div class="stack">
-        <span>HTML5 / CSS3</span>
-        <span>JavaScript (ES6+)</span>
-        <span>PHP</span>
-        <span>Python</span>
-        <span>MySQL / SQL</span>
-        <span>Git / GitHub</span>
-        <span>Figma → вёрстка</span>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <div class="container" style="display: flex; justify-content: space-between; width: 100%;">
-      <span>© 2026 Даниил</span>
-      <span>Связь — <a href="https://t.me/porkaqq">Telegram</a></span>
-    </div>
-  </footer>
+    <footer>
+      <span>© 2026 · Даниил · porkaq · Каталог из 6 вариантов</span>
+      <span><a href="https://t.me/porkaqq">Telegram @porkaqq</a> · <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a> · <a href="https://github.com/porkaq">GitHub</a></span>
+    </footer>
+  </div>
 </body>
 </html>

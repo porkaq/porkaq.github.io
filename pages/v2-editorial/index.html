@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Портфолио Даниила Варламова — разработчика из Иркутска. Editorial version V2.">
+  <title>V2 · Editorial — Даниил Варламов</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F5F0E8;
+      --paper-2: #EDE5D6;
+      --ink: #1A2E1F;
+      --ink-muted: #5C6E5F;
+      --mustard: #C7A865;
+      --rule: rgba(26, 46, 31, .08);
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+      --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+      --dur-base: 320ms;
+      --dur-slow: 600ms;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.65;
+      text-align: left;
+    }
+    a { color: inherit; }
+    .container { width: min(100%, 1280px); margin: 0 auto; padding: 0 64px; }
+    .masthead {
+      position: sticky; top: 0; z-index: 10; min-height: 64px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      border-bottom: 1px solid var(--rule); background: var(--paper);
+      font: 500 13px/1.4 'Inter', sans-serif; letter-spacing: .16em; text-transform: uppercase;
+    }
+    .masthead__stamp, .masthead__place { color: var(--ink-muted); white-space: nowrap; }
+    .masthead__nav { display: flex; align-items: center; gap: 28px; }
+    .masthead__nav a { position: relative; padding-bottom: 4px; text-decoration: none; letter-spacing: .04em; }
+    .masthead__nav a::after { content: ''; position: absolute; left: 0; right: 100%; bottom: 0; height: 2px; background: var(--mustard); transition: right 200ms var(--ease-out); }
+    .masthead__nav a:hover::after, .masthead__nav a[aria-current="page"]::after { right: 0; }
+    .masthead__nav a[aria-current="page"] { color: var(--mustard); }
+    .masthead__menu-button { display: none; border: 0; padding: 10px 0; color: var(--ink); background: transparent; font: 500 14px 'Inter', sans-serif; text-transform: uppercase; cursor: pointer; }
+    .masthead__overlay { display: none; }
+    .hero { display: grid; grid-template-columns: 38% 62%; gap: 64px; padding-top: 64px; padding-bottom: 88px; }
+    .hero__photo-wrap { min-width: 0; }
+    .hero__photo { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--paper-2); opacity: 0; animation: hero-photo-in 800ms 200ms var(--ease-out) forwards; }
+    .hero__caption { margin: 12px 0 0; color: var(--ink-muted); font: italic 400 13px/1.45 'Inter', sans-serif; }
+    .hero__text { min-width: 0; padding-top: 8px; opacity: 0; transform: translateY(8px); animation: hero-text-in 800ms var(--ease-out) forwards; }
+    .byline { margin: 0 0 28px; color: var(--ink-muted); font: 500 13px/1.45 'Inter', sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 500; }
+    h1 { max-width: 760px; margin: 0; font-size: clamp(52px, 6.9vw, 88px); line-height: .96; letter-spacing: -.025em; }
+    .marker { background: linear-gradient(transparent 60%, var(--mustard) 60% 92%, transparent 92%); }
+    .ornament { width: 64px; height: 3px; margin: 38px 0 28px; background: var(--mustard); }
+    .hero__lede { max-width: 680px; margin: 0; font-size: 24px; font-style: italic; line-height: 1.45; letter-spacing: -.005em; }
+    .dropcap::first-letter { font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: 96px; line-height: .86; float: left; margin: 6px 12px 0 0; color: var(--mustard); font-feature-settings: "ss01" 1; opacity: 0; transform: scale(.85) translateY(4px); transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out); }
+    .hero__lede[data-revealed="true"] .dropcap::first-letter { opacity: 1; transform: scale(1) translateY(0); transition-delay: 600ms; }
+    .section-rule { width: 64px; margin: 96px auto; border: 0; border-top: 1px solid var(--rule); }
+    .section-block { max-width: 680px; margin: 0 auto; }
+    .section-block h2 { margin: 0 0 30px; font-size: 40px; line-height: 1.1; letter-spacing: -.018em; }
+    .section-block p { margin: 0 0 26px; }
+    .section-block p:last-child { margin-bottom: 0; }
+    .index-line { display: flex; align-items: baseline; gap: 16px; margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--ink-muted); font: 400 13px/1.45 'Inter', sans-serif; }
+    .index-line::before { content: '───'; color: var(--ink-muted); letter-spacing: -.08em; }
+    .pull-quote { max-width: 920px; margin: 56px -120px; padding: 6px 36px; border-left: 4px solid var(--mustard); text-align: center; font-size: 32px; font-style: italic; line-height: 1.3; letter-spacing: -.015em; }
+    .pull-quote cite { display: block; margin-top: 20px; color: var(--ink-muted); font: italic 400 13px/1.45 'Inter', sans-serif; letter-spacing: .02em; }
+    .availability-note { margin-top: 42px; padding-top: 18px; border-top: 1px solid var(--rule); }
+    .project-entry { margin-top: 64px; padding-top: 64px; border-top: 1px solid var(--rule); }
+    .project-entry:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+    .project-entry__index { margin-bottom: 14px; color: var(--mustard); font: 500 13px/1.4 'Inter', sans-serif; font-variant-numeric: tabular-nums; }
+    .project-entry__title { margin: 0 0 16px; font-size: 24px; line-height: 1.25; }
+    .project-entry__body { margin-bottom: 18px; }
+    .project-entry__link { display: inline-block; padding-bottom: 2px; color: var(--ink); font: 500 15px/1.4 'Inter', sans-serif; text-decoration: none; border-bottom: 1px solid var(--mustard); }
+    .contact-list { display: grid; grid-template-columns: 1fr 2fr; gap: 8px 24px; margin: 38px 0 34px; font: 500 14px/1.5 'Inter', sans-serif; }
+    .contact-list span:nth-child(odd) { color: var(--ink-muted); }
+    .contact-list a { text-decoration: underline; text-decoration-color: var(--mustard); text-underline-offset: 4px; }
+    .colophon { margin-top: 96px; padding: 24px 0 52px; border-top: 1px solid var(--rule); }
+    .colophon__line { display: flex; align-items: center; gap: 14px; color: var(--ink-muted); font: 500 13px/1.45 'Inter', sans-serif; letter-spacing: .04em; }
+    .colophon__line::before { content: '───'; }
+    .colophon p { max-width: 680px; margin: 28px auto 0; color: var(--ink); font-size: 16px; line-height: 1.55; }
+    .colophon__last { color: var(--ink-muted) !important; font: 400 13px/1.55 'Inter', sans-serif; }
+    [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); will-change: opacity, transform; }
+    [data-reveal][data-revealed="true"] { opacity: 1; transform: translateY(0); }
+    [data-reveal-delay="1"][data-revealed="true"] { transition-delay: 80ms; }
+    [data-reveal-delay="2"][data-revealed="true"] { transition-delay: 160ms; }
+    @keyframes hero-text-in { to { opacity: 1; transform: translateY(0); } }
+    @keyframes hero-photo-in { to { opacity: 1; } }
+    @media (max-width: 1023px) {
+      .hero { grid-template-columns: 1fr; gap: 40px; }
+      .hero__photo { max-width: 500px; }
+      .hero__text { padding-top: 0; }
+      .pull-quote { margin-right: -80px; margin-left: -80px; }
+    }
+    @media (max-width: 767px) {
+      .container { padding-right: 24px; padding-left: 24px; }
+      .masthead { min-height: 58px; }
+      .masthead__nav, .masthead__place { display: none; }
+      .masthead__menu-button { display: block; }
+      .masthead__overlay { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; background: var(--paper); transition: opacity 320ms var(--ease-out), visibility 320ms; }
+      .masthead__overlay[data-open="true"] { visibility: visible; opacity: 1; }
+      .masthead__overlay nav { display: grid; gap: 24px; text-align: center; font: 500 20px/1.4 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+      .masthead__overlay a { text-decoration: none; }
+      .masthead__close { position: absolute; top: 20px; right: 24px; border: 0; background: transparent; color: var(--ink); font: 500 14px 'Inter', sans-serif; cursor: pointer; }
+      .hero { padding-top: 32px; padding-bottom: 56px; }
+      h1 { font-size: 52px; }
+      .hero__lede { font-size: 20px; }
+      .dropcap::first-letter { font-size: 72px; }
+      .section-rule { margin: 64px auto; }
+      .section-block h2 { margin-bottom: 22px; font-size: 28px; }
+      .pull-quote { margin: 42px 0; padding: 4px 20px; text-align: left; font-size: 24px; }
+      .contact-list { grid-template-columns: 1fr; gap: 2px; }
+      .contact-list span:nth-child(even) { margin-bottom: 10px; }
+      .colophon { margin-top: 64px; padding-bottom: 32px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      [data-reveal], .hero__text, .hero__photo { opacity: 1; transform: none; }
+      .dropcap::first-letter, .hero__lede[data-revealed="true"] .dropcap::first-letter { opacity: 1; transform: none; transition-delay: 0ms; }
+    }
+  </style>
+</head>
+<body>
+  <header id="masthead" class="masthead container" aria-label="Основная навигация">
+    <div class="masthead__stamp">V2 · Editorial</div>
+    <nav class="masthead__nav" aria-label="Разделы портфолио">
+      <a href="#experience">Опыт</a><a href="#stack">Стек</a><a href="#projects">Проекты</a><a href="#contact">Контакты</a>
+    </nav>
+    <div class="masthead__place">Иркутск · 2026</div>
+    <button class="masthead__menu-button" type="button" aria-expanded="false" aria-controls="mobile-menu">Меню</button>
+    <div id="mobile-menu" class="masthead__overlay" data-open="false" aria-label="Мобильная навигация">
+      <button class="masthead__close" type="button">Закрыть</button>
+      <nav aria-label="Мобильные разделы"><a href="#experience">Опыт</a><a href="#stack">Стек</a><a href="#projects">Проекты</a><a href="#contact">Контакты</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="hero" class="hero container" aria-labelledby="hero-title">
+      <figure class="hero__photo-wrap">
+        <img class="hero__photo" src="/assets/hero/v2-editorial-hero.jpg" alt="Рабочий стол разработчика у окна в Иркутске" onerror="this.style.display='none'">
+        <figcaption class="hero__caption">«Рабочий стол №2, Иркутск, 2026»</figcaption>
+      </figure>
+      <div class="hero__text">
+        <p class="byline">Даниил · разработчик · Иркутск</p>
+        <h1 id="hero-title">Я <span class="marker">делаю интерфейсы</span>, которые не ломаются на следующее утро.</h1>
+        <div class="ornament" aria-hidden="true"></div>
+        <p class="hero__lede dropcap" data-reveal>Этот текст — мой первый абзац в журнале, который я сверстал сам. Я пишу его так, как редактор пишет лид: спокойно, с одним трюком в первом предложении, без восклицательных знаков и без обещаний, которые нельзя выполнить к пятнице. С 2022 года я работаю на проде ИРНИТУ — это значит, что мои правки видят тысячи студентов каждое утро, и если что-то ломается в семь утра, я уже знаю об этом в семь ноль-пять. Это не самая высокооплачиваемая работа в моей жизни, но она, пожалуй, самая честная: если интерфейс плохой — об этом пишут в личку, а не в отчёте о баге.</p>
+      </div>
+    </section>
+
+    <hr class="section-rule" aria-hidden="true">
+    <section id="about" class="section-block" data-reveal aria-labelledby="about-title">
+      <h2 id="about-title">Коротко о том, кто я</h2>
+      <p>Я Даниил. Мне двадцать два, я из Иркутска, и я делаю сайты и ботов с тех пор, как мне исполнилось восемнадцать. Начинал с правок в шаблонах 1С-Битрикса, потому что так получилось — в Иркутске это всё ещё рабочая лошадка для большинства компаний, и кто-то должен это поддерживать. Через год стал делать интерфейсы целиком, ещё через год — Telegram-ботов и автоматизацию на Python, ещё через год — кастомные компоненты для Битрикса, которые теперь переиспользуются на других проектах.</p>
+      <p>Сейчас у меня четыре года коммерческого опыта, всё на одном месте, всё на проде университета. Это редкая история — обычно к этому возрасту успевают сменить три студии и один фриланс, но я остался, потому что задачи были разные, а люди — адекватные. Если вы из Иркутска и вам нужен кто-то, кто починит сайт, который «сломался вчера» — скорее всего, мы уже встречались в чате поддержки.</p>
+    </section>
+
+    <hr class="section-rule" aria-hidden="true">
+    <section id="stack" class="section-block" data-reveal aria-labelledby="stack-title">
+      <h2 id="stack-title">Инструменты</h2>
+      <p>Стек, с которым я работаю каждый день, выглядит так: PHP, 1С-Битрикс, HTML, CSS и JavaScript — для всего, что связано с веб-интерфейсом; Python — для всего, что связано с автоматизацией и ботами; Telegram Bot API — потому что половина задач в регионе приходит именно из мессенджеров. Понимаю SQL, Git, основы Docker, немного Node.js. Любимое — это когда бэкенд и фронтенд сходятся в одной точке, и эта точка — ваш прод, и я вижу, что моя правка работает.</p>
+      <div class="index-line">Инструменты — PHP · Битрикс · HTML · CSS · JS · Python · Telegram · SQL · Git · Docker · Node.js</div>
+    </section>
+
+    <hr class="section-rule" aria-hidden="true">
+    <section id="experience" class="section-block" data-reveal aria-labelledby="experience-title">
+      <h2 id="experience-title">Четыре года на проде</h2>
+      <p>Четыре года на проде — это звучит коротко, пока не начнёшь перечислять. За это время я сделал сайты для туристического кластера и портал для сообщества, написал три Telegram-бота для внутренних процессов, пережил два больших миграции серверов и один инцидент, когда я в три часа ночи откатывал деплой прямо из телефона в аэропорту. Это не подвиги — это обычная работа, но в журнале «обычная работа» тоже заслуживает внимания, потому что именно из неё складывается всё остальное.</p>
+      <blockquote class="pull-quote">«Главный навык разработчика на проде — это не скорость правок, а умение откатить их до того, как проблему заметит кто-то кроме тебя.»<cite>Из внутренней вики команды</cite></blockquote>
+      <p>Это цитата не из учебника, а из внутренней вики команды. Я не помню, кто её написал, но помню, что каждый раз, когда я её перечитываю, она звучит точнее.</p>
+    </section>
+
+    <hr class="section-rule" aria-hidden="true">
+    <section id="availability" class="section-block" data-reveal aria-labelledby="availability-title">
+      <h2 id="availability-title">Доступность и условия</h2>
+      <p>С 27 июля я открыт к проектам — это значит, что основная работа в университете заканчивается и у меня появляется тридцать с лишним часов в неделю, которые можно отдать вашему сайту, боту или автоматизации. Ставка — от восьмисот рублей в час, либо фикс за задачу, если задача понятная и с дедлайном. Работаю в Иркутске по UTC+8, но к удалёнке привык — половина созвонов за последний год проходила с людьми из Москвы и Новосибирска.</p>
+      <p class="availability-note">Не беру: проекты с оплатой «долей в будущем», задачи без технического задания («просто сделай красиво»), сайты, которые надо «поднять за выходные». Беру: интерфейсы, которые надо довести до ума; ботов, которые надо оживить; бэкенд, который надо привести в порядок после чужого разработчика.</p>
+    </section>
+
+    <hr class="section-rule" aria-hidden="true">
+    <section id="projects" class="section-block" aria-labelledby="projects-title">
+      <div data-reveal><h2 id="projects-title">Три проекта</h2></div>
+      <article class="project-entry" data-reveal data-reveal-delay="0">
+        <div class="project-entry__index">01</div><h3 class="project-entry__title">«Ёловый парк» в Иркутске</h3>
+        <p class="project-entry__body">Сайт туристического кластера: витрина, бронирование, события, карта, мультиязычность. Делал интеграцию с внешней CRM, чинил производительность после роста трафика в сезон. Написал три кастомных компонента для Битрикса, которые теперь используются на других проектах студии.</p>
+        <a class="project-entry__link" href="https://elovpark.ru">→ elovpark.ru</a>
+      </article>
+      <article class="project-entry" data-reveal data-reveal-delay="1">
+        <div class="project-entry__index">02</div><h3 class="project-entry__title">«Сибсталкер» — портал сообщества</h3>
+        <p class="project-entry__body">Контент-портал с форумом и лентой событий. Долгое время работал как единственный разработчик: добавлял фичи, тушил баги, переносил на новый хостинг. Запомнилось, как однажды правка в шаблоне header'a сломала авторизацию на полчаса — это был урок про кэш и порядок применения патчей.</p>
+        <a class="project-entry__link" href="https://sibstalker.ru">→ sibstalker.ru</a>
+      </article>
+      <article class="project-entry" data-reveal data-reveal-delay="2">
+        <div class="project-entry__index">03</div><h3 class="project-entry__title">Сайт приёмной комиссии ИРНИТУ</h3>
+        <p class="project-entry__body">Сделал промо-страницу для абитуриентов: адаптивно, на Битриксе, с интеграцией в общий сайт вуза. Это было в первый месяц работы — многому научился, в первую очередь — не бояться деплоя.</p>
+        <a class="project-entry__link" href="https://istu.edu/promo/95">→ istu.edu/promo/95</a>
+      </article>
+    </section>
+
+    <hr class="section-rule" aria-hidden="true">
+    <section id="contact" class="section-block" data-reveal aria-labelledby="contact-title">
+      <h2 id="contact-title">Контакты</h2>
+      <p>Если есть задача — напишите. Сначала в Telegram, потому что я там отвечаю быстрее, чем в почте. Если задача срочная или большая — лучше сразу email с описанием, сроками и, если есть, бюджетом. GitHub — для вопросов про код, я смотрю issues раз в неделю, но пулреквесты принимаю, если они не «заменил jQuery на React» и не «добавил console.log».</p>
+      <div class="contact-list" aria-label="Контактные данные"><span>Telegram</span><a href="https://t.me/porkaqq">@porkaqq</a><span>Email</span><a href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a><span>GitHub</span><a href="https://github.com/porkaq">github.com/porkaq</a></div>
+      <p>Открыт к проектам с 27 июля, 30+ часов в неделю, ставка от 800 ₽/ч или фикс за задачу. Работаю в Иркутске, готов к удалёнке.</p>
+    </section>
+  </main>
+
+  <footer id="colophon" class="colophon container" data-reveal aria-label="Колофон">
+    <div class="colophon__line">2026</div>
+    <p>Этот сайт — вариант V2 из каталога шести эстетик. Шрифт — Newsreader для прозы, Inter для интерфейса. Hero-фотография сгенерирована для репортажа, не снята на камеру. Набран вручную в HTML и CSS, без шаблонов и без сборщика. Из шести вариантов этот — самый длинный, потому что в журнале «интерфейс» читают так же внимательно, как статью.</p>
+    <p class="colophon__last">Last edited 22 July 2026. © Daniil Varlamov.</p>
+  </footer>
+
+  <script>
+    (() => {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const revealAll = () => document.querySelectorAll('[data-reveal]').forEach(el => el.dataset.revealed = 'true');
+      if (reduced || !('IntersectionObserver' in window)) {
+        revealAll();
+      } else {
+        const io = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => { if (entry.isIntersecting) { entry.target.dataset.revealed = 'true'; observer.unobserve(entry.target); } });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: .15 });
+        document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+      }
+      const menu = document.querySelector('.masthead__overlay');
+      const menuButton = document.querySelector('.masthead__menu-button');
+      const closeButton = document.querySelector('.masthead__close');
+      const setMenu = open => { menu.dataset.open = String(open); menuButton.setAttribute('aria-expanded', String(open)); document.body.style.overflow = open ? 'hidden' : ''; };
+      menuButton.addEventListener('click', () => setMenu(true));
+      closeButton.addEventListener('click', () => setMenu(false));
+      menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+    })();
+  </script>
+</body>
+</html>

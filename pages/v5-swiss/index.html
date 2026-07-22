@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ДАНИИЛ — РАЗРАБОТЧИК · ИРКУТСК · V5 / SWISS GRID</title>
+<meta name="description" content="ДАНИИЛ · ВЕБ-РАЗРАБОТКА · АВТОМАТИЗАЦИЯ · ПОДДЕРЖКА ПРОДУКТИВНЫХ СИСТЕМ. Каталожное портфолио: ИРНИТУ, Иркутск, 4 года на проде.">
+<meta name="theme-color" content="#F5F0E8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     V5 SWISS / GRID — TOKENS
+     Палитра: graphite / paper / terracotta. Без растровых переходов. */
+     ========================================================= */
+  :root {
+    --ink:           #1A1A1A;
+    --paper:         #F5F0E8;
+    --paper-hover:   #EAE3D8;
+    --ink-muted:     #4A4743;
+    --ink-soft:      #77716B;
+    --terracotta:    #D97757;
+    --terracotta-dk: #A94F39;
+    --rule:          #1A1A1A;
+    --rule-soft:     rgba(26, 26, 26, 0.18);
+    --rule-faint:    rgba(26, 26, 26, 0.10);
+
+    /* 12-col grid math (desktop) */
+    --container: 1200px;
+    --gutter-d:  32px;
+    --cols:      12;
+    --gap-d:     16px;
+    --gap-t:     16px;
+    --gap-m:     12px;
+  }
+
+  /* =========================================================
+     RESET / BASE
+     ========================================================= */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: transparent; border: 0; padding: 0; cursor: pointer; }
+  img, svg { display: block; max-width: 100%; }
+  ::selection { background: var(--ink); color: var(--paper); }
+
+  /* Утилитарные токены текста */
+  .uc      { text-transform: uppercase; }
+  .num     { font-variant-numeric: tabular-nums lining-nums; }
+  .label   { font-size: 12px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; line-height: 1.3; }
+  .label-sm{ font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.35; }
+  .note    { font-size: 11px; font-weight: 400; letter-spacing: 0; line-height: 1.5; color: var(--ink-muted); }
+
+  /* Видимый focus — только через :focus-visible */
+  a:focus-visible, button:focus-visible, .cell:focus-visible {
+    outline: 2px solid var(--terracotta-dk);
+    outline-offset: 3px;
+  }
+
+  /* =========================================================
+     GRID FRAME — 12 columns desktop, 8 tablet, 4 mobile
+     ========================================================= */
+  .frame {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding-left: var(--gutter-d);
+    padding-right: var(--gutter-d);
+    position: relative;
+  }
+
+  /* Вертикальные направляющие — узкая колонка графита, не декоративная заливка */
+  .guides {
+    position: relative;
+  }
+  .guides::before,
+  .guides::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--rule-faint);
+    pointer-events: none;
+  }
+  .guides::before { left: 0; }
+  .guides::after  { right: 0; }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    column-gap: var(--gap-d);
+    row-gap: 0;
+    position: relative;
+  }
+
+  /* Внутренние направляющие — только между колонками внутри секции */
+  /* Внутренние направляющие колонок убраны намеренно:
+     "guides подчинены композиции, не создают паттерн ради паттерна" (спека §4.2).
+     Каркас обеспечивают: внешние .guides::before/::after, grid-gap как ритм,
+     и border-bottom на структурных элементах (section / row). */
+
+  /* Span helpers — desktop */
+  .c-1  { grid-column: 1 / span 1; }
+  .c-2  { grid-column: 1 / span 2; }
+  .c-3  { grid-column: 1 / span 3; }
+  .c-4  { grid-column: 1 / span 4; }
+  .c-5  { grid-column: 1 / span 5; }
+  .c-6  { grid-column: 1 / span 6; }
+  .c-7  { grid-column: 1 / span 7; }
+  .c-8  { grid-column: 1 / span 8; }
+  .c-9  { grid-column: 1 / span 9; }
+  .c-10 { grid-column: 1 / span 10; }
+  .c-11 { grid-column: 1 / span 11; }
+  .c-12 { grid-column: 1 / span 12; }
+
+  .s4-7  { grid-column: 4 / span 7; }
+  .s4-9  { grid-column: 4 / span 9; }
+  .s4-12 { grid-column: 4 / span 12; }
+  .s5-8  { grid-column: 5 / span 8; }
+  .s8-12 { grid-column: 8 / span 5; }
+  .s9-12 { grid-column: 9 / span 4; }
+  .s7-12 { grid-column: 7 / span 6; }
+  .s6-12 { grid-column: 6 / span 7; }
+
+  /* =========================================================
+     NAV / INDEX
+     ========================================================= */
+  .nav {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .nav .row { align-items: baseline; }
+  .nav .brand {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; line-height: 1.3;
+  }
+  .nav .brand .dot {
+    display: inline-block; width: 8px; height: 8px;
+    background-color: var(--terracotta); margin-right: 8px;
+    transform: translateY(-1px);
+  }
+  .nav ol {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .nav ol a {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; line-height: 1.3;
+    display: inline-block; padding: 4px 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .nav ol a:hover { border-bottom-color: var(--ink); }
+  .nav ol a[aria-current="page"] {
+    border-bottom-color: var(--terracotta);
+  }
+  .nav .variant {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; line-height: 1.3;
+    text-align: right;
+  }
+
+  /* =========================================================
+     HERO
+     ========================================================= */
+  .hero {
+    padding-top: 40px;
+    padding-bottom: 96px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero .meta-row {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; line-height: 1.35;
+    color: var(--ink-muted);
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 48px;
+  }
+  .hero .meta-row .left { display: inline-block; }
+  .hero .meta-row .right { float: right; }
+
+  .hero .name {
+    font-size: 64px; font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .hero .role {
+    margin-top: 16px;
+    font-size: 18px; font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .hero .where {
+    margin-top: 24px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.3;
+  }
+  .hero .period {
+    margin-top: 4px;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    line-height: 1.3;
+  }
+  .hero .stack-line {
+    margin-top: 32px;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .hero .stack-line .pipe { color: var(--rule-faint); padding: 0 6px; }
+
+  /* CTA внутри hero */
+  .hero .cta {
+    margin-top: 40px;
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border: 1px solid var(--ink);
+    background-color: var(--paper);
+    color: var(--ink);
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    transition: background-color 180ms cubic-bezier(.25,.46,.45,.94),
+                color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .hero .cta .arrow {
+    display: inline-block;
+    width: 20px; height: 10px;
+    position: relative;
+  }
+  .hero .cta .arrow::before,
+  .hero .cta .arrow::after {
+    content: "";
+    position: absolute;
+    background-color: var(--ink);
+  }
+  .hero .cta .arrow::before {
+    /* horizontal stem */
+    left: 0; right: 4px; top: 50%;
+    height: 1px;
+  }
+  .hero .cta .arrow::after {
+    /* vertical head bar (straight line, no rotation) */
+    right: 0; top: 0; bottom: 0;
+    width: 1px;
+  }
+  .hero .cta:hover .arrow::before,
+  .hero .cta:hover .arrow::after { background-color: var(--paper); }
+  .hero .cta:hover { background-color: var(--ink); color: var(--paper); }
+  .hero .cta-secondary {
+    margin-left: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--ink);
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    transition: color 180ms cubic-bezier(.25,.46,.45,.94),
+                border-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .hero .cta-secondary:hover { color: var(--terracotta-dk); border-bottom-color: var(--terracotta-dk); }
+
+  /* Stat block (right column) */
+  .hero .stat {
+    text-align: right;
+    border-left: 1px solid var(--rule);
+    padding-left: 24px;
+  }
+  .hero .stat-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.35;
+  }
+  .hero .stat-value {
+    margin-top: 14px;
+    font-size: 56px; font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .hero .stat-caption {
+    margin-top: 10px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .hero .stat-source {
+    margin-top: 8px;
+    font-size: 11px; font-weight: 400;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  /* Терракотовый маркер (точка) на hero — ≤10% budget */
+  .hero .marker {
+    display: inline-block; width: 6px; height: 6px;
+    background-color: var(--terracotta);
+    margin-right: 8px;
+    transform: translateY(-1px);
+  }
+
+  /* Fade-up — только stat-value, observer reveals */
+  .reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 480ms cubic-bezier(.215,.61,.355,1),
+                transform 480ms cubic-bezier(.215,.61,.355,1);
+    transition-delay: 60ms;
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* =========================================================
+     SECTION SHELL
+     ========================================================= */
+  .section {
+    padding-top: 80px;
+    padding-bottom: 80px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section:last-of-type { border-bottom: 0; }
+
+  .section-head {
+    margin-bottom: 40px;
+  }
+  .section-head .label { color: var(--ink-muted); }
+  .section-head .heading {
+    margin: 8px 0 0;
+    font-size: 32px; font-weight: 700;
+    line-height: 1.10;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+  .section-head .body {
+    margin: 16px 0 0;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-muted);
+    max-width: 56ch;
+  }
+
+  /* =========================================================
+     01 / STACK
+     ========================================================= */
+  .stack-row {
+    font-size: 22px; font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0;
+    row-gap: 0;
+  }
+  .stack-row .tech {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    transition: background-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .stack-row .tech.is-left { padding-right: 24px; }
+  .stack-row .tech.is-right { padding-left: 24px; border-left: 1px solid var(--rule); }
+  .stack-row .tech:hover { background-color: var(--paper-hover); }
+  .stack-row .tech .dot {
+    display: inline-block; width: 4px; height: 4px;
+    background-color: var(--ink); border-radius: 0;
+    transform: translateY(-4px); margin: 0 10px;
+  }
+
+  .tasks {
+    margin-top: 32px;
+    border-top: 1px solid var(--rule);
+  }
+  .tasks .task {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule-faint);
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    column-gap: 24px;
+    align-items: baseline;
+  }
+  .tasks .task .idx {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.10em;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .tasks .task .text {
+    font-size: 18px; font-weight: 500;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+    line-height: 1.25;
+  }
+  .tasks .task:hover { background-color: var(--paper-hover); }
+
+  /* =========================================================
+     02 / SELECTED WORK
+     ========================================================= */
+  .projects .project {
+    padding: 28px 24px;
+    border: 1px solid var(--rule);
+    background-color: var(--paper);
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    row-gap: 12px;
+    transition: background-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .projects .project:hover { background-color: var(--paper-hover); }
+  .projects .project .meta {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid var(--rule-faint);
+    padding-bottom: 12px;
+  }
+  .projects .project .num {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .projects .project .year {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .projects .project .title {
+    margin: 0;
+    font-size: 22px; font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+  .projects .project .domain {
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-muted);
+    word-break: break-word;
+  }
+  .projects .project .role {
+    font-size: 13px; font-weight: 400;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .projects .project .ext {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding-top: 4px;
+    border-bottom: 1px solid var(--ink);
+    align-self: start;
+    justify-self: start;
+    transition: color 180ms cubic-bezier(.25,.46,.45,.94),
+                border-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .projects .project .ext:hover {
+    color: var(--terracotta-dk);
+    border-bottom-color: var(--terracotta-dk);
+  }
+
+  /* =========================================================
+     03 / AVAILABILITY
+     ========================================================= */
+  .avail-headline {
+    font-size: 32px; font-weight: 700;
+    line-height: 1.10;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+  .avail-headline .count {
+    display: inline-block;
+    color: var(--ink);
+    padding: 0 6px;
+    border-bottom: 2px solid var(--terracotta);
+    line-height: 0.95;
+  }
+  .avail-sub {
+    margin-top: 16px;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-muted);
+    max-width: 48ch;
+  }
+
+  .avail-block {
+    border: 1px solid var(--rule);
+    background-color: var(--paper);
+  }
+  .avail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--rule-faint);
+  }
+  .avail-row:last-child { border-bottom: 0; }
+  .avail-row .cell {
+    padding: 22px 20px;
+    border-right: 1px solid var(--rule-faint);
+  }
+  .avail-row .cell:last-child { border-right: 0; }
+  .avail-row .cell:hover { background-color: var(--paper-hover); }
+  .avail-row .k {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .avail-row .v {
+    margin-top: 10px;
+    font-size: 20px; font-weight: 700;
+    line-height: 1.20;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .avail-row .v .small {
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  .avail-foot {
+    margin-top: 16px;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* =========================================================
+     04 / CONTACT
+     ========================================================= */
+  .contact .primary {
+    padding: 32px 28px;
+    border: 1px solid var(--ink);
+    background-color: var(--ink);
+    color: var(--paper);
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    row-gap: 12px;
+    transition: background-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .contact .primary:hover { background-color: var(--terracotta-dk); border-color: var(--terracotta-dk); }
+  .contact .primary .k {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--paper);
+    opacity: 0.7;
+  }
+  .contact .primary .handle {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.10;
+  }
+  .contact .primary .hint {
+    font-size: 13px; font-weight: 500;
+    line-height: 1.55;
+    color: var(--paper);
+    opacity: 0.85;
+  }
+  .contact .primary .ext {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--paper);
+    align-self: start; justify-self: start;
+  }
+
+  .contact .secondary {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    row-gap: 16px;
+  }
+  .contact .secondary .route {
+    padding: 22px 24px;
+    border: 1px solid var(--rule);
+    background-color: var(--paper);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    row-gap: 8px;
+    transition: background-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .contact .secondary .route:hover { background-color: var(--paper-hover); }
+  .contact .secondary .route .k {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .contact .secondary .route .v {
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+  .contact .secondary .route .ext {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--ink);
+    align-self: end; justify-self: start;
+    transition: color 180ms cubic-bezier(.25,.46,.45,.94),
+                border-color 180ms cubic-bezier(.25,.46,.45,.94);
+  }
+  .contact .secondary .route:hover .ext {
+    color: var(--terracotta-dk);
+    border-bottom-color: var(--terracotta-dk);
+  }
+
+  /* =========================================================
+     FOOTER
+     ========================================================= */
+  .footer {
+    padding-top: 56px;
+    padding-bottom: 56px;
+    border-top: 1px solid var(--rule);
+  }
+  .footer .row { align-items: baseline; row-gap: 16px; }
+  .footer .tag {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.3;
+  }
+  .footer .copy {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .footer .stamp {
+    text-align: right;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* =========================================================
+     RESPONSIVE — TABLET 768-1023
+     ========================================================= */
+  @media (max-width: 1023px) {
+    :root {
+      --cols: 8;
+      --gap-d: var(--gap-t);
+    }
+    .frame { padding-left: 24px; padding-right: 24px; }
+    .guides-row::before {
+      background-size: calc((100% - 7 * var(--gap-d)) / 8 + var(--gap-d)) 100%;
+    }
+
+    /* Re-span hero */
+    .hero .name { font-size: 56px; }
+    .hero .stat-value { font-size: 52px; }
+
+    .stack-row { font-size: 20px; }
+
+    .projects .project .title { font-size: 20px; }
+
+    .avail-headline { font-size: 28px; }
+  }
+
+  /* =========================================================
+     RESPONSIVE — MOBILE <768
+     ========================================================= */
+  @media (max-width: 767px) {
+    :root {
+      --cols: 4;
+      --gap-d: var(--gap-m);
+    }
+    .frame { padding-left: 20px; padding-right: 20px; }
+    .guides-row::before {
+      background-size: calc((100% - 3 * var(--gap-d)) / 4 + var(--gap-d)) 100%;
+    }
+
+    /* Nav */
+    .nav .row { row-gap: 12px; }
+    .nav ol { grid-auto-flow: row; grid-auto-columns: auto; gap: 8px 24px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .nav .variant { text-align: left; }
+
+    /* Hero */
+    .hero { padding-top: 28px; padding-bottom: 64px; }
+    .hero .meta-row { margin-bottom: 32px; padding-bottom: 16px; }
+    .hero .meta-row .right { float: none; display: block; margin-top: 4px; }
+    .hero .name { font-size: 40px; line-height: 0.95; }
+    .hero .role { font-size: 15px; margin-top: 12px; }
+    .hero .where { font-size: 11px; margin-top: 20px; }
+    .hero .period { font-size: 11px; }
+    .hero .stack-line { font-size: 11px; margin-top: 24px; }
+    .hero .cta { margin-top: 32px; padding: 12px 14px; }
+    .hero .cta-secondary { margin-left: 0; margin-top: 16px; display: inline-block; }
+
+    .hero .stat {
+      margin-top: 32px;
+      text-align: left;
+      border-left: 1px solid var(--rule);
+      padding-left: 16px;
+    }
+    .hero .stat-value { font-size: 40px; }
+
+    /* Sections */
+    .section { padding-top: 56px; padding-bottom: 56px; }
+    .section-head { margin-bottom: 28px; }
+    .section-head .heading { font-size: 25px; }
+    .section-head .body { font-size: 15px; }
+
+    /* Stack */
+    .stack-row { font-size: 18px; }
+    .stack-row .tech.is-right { border-left: 1px solid var(--rule); }
+
+    /* Projects */
+    .projects .row { row-gap: 16px; }
+    .projects .project { padding: 22px 20px; }
+    .projects .project .title { font-size: 18px; }
+
+    /* Availability */
+    .avail-headline { font-size: 25px; }
+    .avail-row { grid-template-columns: 1fr; }
+    .avail-row .cell { border-right: 0; border-bottom: 1px solid var(--rule-faint); }
+    .avail-row .cell:last-child { border-bottom: 0; }
+    .avail-row .v { font-size: 18px; }
+
+    /* Contact */
+    .contact .primary { padding: 26px 22px; }
+    .contact .primary .handle { font-size: 24px; }
+    .contact .secondary { row-gap: 12px; }
+    .contact .secondary .route { padding: 18px 20px; }
+    .contact .secondary .route .v { font-size: 16px; }
+
+    /* Footer */
+    .footer { padding-top: 40px; padding-bottom: 40px; }
+    .footer .stamp { text-align: left; }
+  }
+
+  /* =========================================================
+     REDUCED MOTION — обязательное требование спеки §5.6
+     ========================================================= */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+    .reveal {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    /* Hover оставляем мгновенным: background-color меняется без transition.
+       На mobile :hover не срабатывает, состояние доступно через :focus-visible. */
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">К СОДЕРЖАНИЮ</a>
+
+<!-- ============================================================
+     NAV / INDEX
+     ============================================================ -->
+<header class="nav frame" role="banner">
+  <div class="row">
+    <div class="c-3">
+      <a class="brand" href="#main" aria-label="ДАНИИЛ — НА ГЛАВНУЮ">
+        <span class="dot" aria-hidden="true"></span>ДАНИИЛ
+      </a>
+    </div>
+    <nav class="c-6" aria-label="ОСНОВНАЯ НАВИГАЦИЯ">
+      <ol>
+        <li><a href="#main" aria-current="page">HOME</a></li>
+        <li><a href="#work">WORK</a></li>
+        <li><a href="#availability">ABOUT</a></li>
+        <li><a href="#contact">CONTACT</a></li>
+      </ol>
+    </nav>
+    <div class="c-3">
+      <div class="variant">V5 / SWISS GRID</div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================================================
+     HERO / IDENTIFICATION
+     cols: name 1-7, stat 9-12, breathing column 8
+     ============================================================ -->
+<section class="hero frame guides guides-row" aria-labelledby="hero-name">
+
+  <!-- Meta-row: cols 1-12 -->
+  <div class="row meta-row" role="doc-subtitle">
+    <div class="c-12">
+      <span class="left">V5 / SWISS GRID · CATALOG SHEET</span>
+      <span class="right">INDEX · ДАНИИЛ · ИРКУТСК · УДАЛЁНКА</span>
+    </div>
+  </div>
+
+  <!-- Name block: cols 1-7 -->
+  <div class="row" style="row-gap: 0;">
+    <div class="c-7">
+      <h1 id="hero-name" class="name">ДАНИИЛ</h1>
+      <div class="role">ДЕЛАЮ САЙТЫ И БОТОВ</div>
+      <div class="where">ИРКУТСК · УДАЛЁНКА</div>
+      <div class="period">ОПЫТ НА ПРОДЕ · 2022 — НАСТОЯЩЕЕ ВРЕМЯ</div>
+
+      <div class="stack-line">
+        ВЕБ-РАЗРАБОТКА<span class="pipe">·</span>АВТОМАТИЗАЦИЯ<span class="pipe">·</span>ПОДДЕРЖКА ПРОДУКТИВНЫХ СИСТЕМ
+      </div>
+
+      <div>
+        <a class="cta" href="#work" aria-label="СМОТРЕТЬ ПРОЕКТЫ — ВЫБРАННЫЕ РАБОТЫ">
+          <span>СМОТРЕТЬ ПРОЕКТЫ</span>
+          <span class="arrow" aria-hidden="true"></span>
+        </a>
+        <a class="cta-secondary" href="#contact">НАПИСАТЬ В TELEGRAM</a>
+      </div>
+    </div>
+
+    <!-- Stat block: cols 9-12 -->
+    <aside class="c-7 s9-12" aria-label="ПОДТВЕРЖДЁННОЕ ДОКАЗАТЕЛЬСТВО ОПЫТА">
+      <div class="stat">
+        <div class="stat-label"><span class="marker" aria-hidden="true"></span>ОПЫТ НА ПРОДЕ</div>
+        <div class="stat-value num reveal" data-reveal="stat">04</div>
+        <div class="stat-caption">ГОДА НА ПРОДЕ ИРНИТУ</div>
+        <div class="stat-source">
+          Источник: handover и контент-каркас проекта; поддержка продуктивных систем ИРНИТУ с 2022&nbsp;года.
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================================================
+     01 / STACK & CAPABILITIES
+     ============================================================ -->
+<section id="stack" class="section frame guides guides-row" aria-labelledby="stack-h">
+  <div class="row">
+    <div class="c-3">
+      <div class="section-head">
+        <div class="label">01 / STACK</div>
+      </div>
+    </div>
+    <div class="s4-12">
+      <h2 id="stack-h" class="heading" style="margin:0;font-size:32px;font-weight:700;line-height:1.10;letter-spacing:-0.02em;text-transform:uppercase;">
+        Стек и задачи
+      </h2>
+      <p class="body" style="margin:16px 0 0;font-size:16px;line-height:1.65;color:var(--ink-muted);max-width:60ch;">
+        Каждая позиция стека подтверждена реальной работой на проде. Навыки вне этого списка в V5 не заявляются.
+      </p>
+
+      <!-- Horizontal/lomannaya стека -->
+      <div class="stack-row" style="margin-top:40px;">
+        <span class="tech is-left">PHP</span>
+        <span class="tech is-right">1С-БИТРИКС</span>
+        <span class="tech is-left">HTML / CSS / JS</span>
+        <span class="tech is-right">PYTHON</span>
+        <span class="tech is-left">TELEGRAM · БОТЫ</span>
+      </div>
+
+      <!-- Задачи -->
+      <ol class="tasks" aria-label="ТИПЫ ЗАДАЧ">
+        <li class="task">
+          <span class="idx">01</span>
+          <span class="text">САЙТЫ И ЛЕНДИНГИ НА 1С-БИТРИКС И PHP</span>
+        </li>
+        <li class="task">
+          <span class="idx">02</span>
+          <span class="text">TELEGRAM-БОТЫ И АВТОМАТИЗАЦИЯ НА PYTHON</span>
+        </li>
+        <li class="task">
+          <span class="idx">03</span>
+          <span class="text">ПОДДЕРЖКА И ДОРАБОТКА ПРОДУКТИВНЫХ СИСТЕМ ИРНИТУ</span>
+        </li>
+        <li class="task">
+          <span class="idx">04</span>
+          <span class="text">ИНТЕГРАЦИИ: CRM, ВНУТРЕННИЕ СЕРВИСЫ, ОБМЕН ДАННЫМИ</span>
+        </li>
+        <li class="task">
+          <span class="idx">05</span>
+          <span class="text">HTML-ВЁРСТКА ПО ДИЗАЙНУ И АДАПТИВ ДЛЯ ПРОДАКШЕНА</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     02 / SELECTED WORK
+     Асимметричные spans: P1 1-7, P2 8-12, P3 full row
+     ============================================================ -->
+<section id="work" class="section projects frame guides guides-row" aria-labelledby="work-h">
+  <div class="row" style="margin-bottom: 40px;">
+    <div class="c-3">
+      <div class="label">02 / SELECTED WORK</div>
+    </div>
+    <div class="s4-12">
+      <h2 id="work-h" class="heading" style="margin:0;font-size:32px;font-weight:700;line-height:1.10;letter-spacing:-0.02em;text-transform:uppercase;">
+        Три выбранные работы
+      </h2>
+      <p class="body" style="margin:16px 0 0;font-size:16px;line-height:1.65;color:var(--ink-muted);max-width:60ch;">
+        Реальные домены, реальные роли. Скриншоты и метрики добавляются отдельно, по запросу.
+      </p>
+    </div>
+  </div>
+
+  <div class="row" style="row-gap: 24px;">
+    <!-- P1: span 1-7 -->
+    <article class="c-7">
+      <a class="project" href="https://elovpark.ru" rel="noopener noreferrer" target="_blank" aria-label="ОТКРЫТЬ ELOVPARK.RU">
+        <div class="meta">
+          <span class="num">P / 01</span>
+          <span class="year">PHP · 1С-БИТРИКС</span>
+        </div>
+        <h3 class="title">ELOVPARK.RU</h3>
+        <div class="domain">elovpark.ru</div>
+        <p class="role">Сайт проекта «Ёлки-парк»: информационная структура, шаблоны, доработка каталога и интеграций на 1С-Битрикс.</p>
+        <span class="ext">ОТКРЫТЬ САЙТ <span aria-hidden="true">→</span></span>
+      </a>
+    </article>
+
+    <!-- P2: span 8-12 -->
+    <article class="c-12 s8-12">
+      <a class="project" href="https://sibstalker.ru" rel="noopener noreferrer" target="_blank" aria-label="ОТКРЫТЬ SIBSTALKER.RU">
+        <div class="meta">
+          <span class="num">P / 02</span>
+          <span class="year">PHP · ВЁРСТКА</span>
+        </div>
+        <h3 class="title">SIBSTALKER.RU</h3>
+        <div class="domain">sibstalker.ru</div>
+        <p class="role">Поддержка и развитие тематического сайта: доработка разделов, вёрстка, техническая поддержка на проде.</p>
+        <span class="ext">ОТКРЫТЬ САЙТ <span aria-hidden="true">→</span></span>
+      </a>
+    </article>
+
+    <!-- P3: span 1-12 (full row) -->
+    <article class="c-12">
+      <a class="project" href="https://istu.edu/promo/95" rel="noopener noreferrer" target="_blank" aria-label="ОТКРЫТЬ ISTU.EDU/PROMO/95">
+        <div class="meta">
+          <span class="num">P / 03</span>
+          <span class="year">1С-БИТРИКС · ПРОД ИРНИТУ</span>
+        </div>
+        <h3 class="title">ISTU.EDU / PROMO / 95</h3>
+        <div class="domain">istu.edu/promo/95</div>
+        <p class="role">Промо-страница к юбилею ИРНИТУ на продуктивной системе университета: интеграция в существующую структуру сайта и оформление по бренд-гайду вуза.</p>
+        <span class="ext">ОТКРЫТЬ СТРАНИЦУ <span aria-hidden="true">→</span></span>
+      </a>
+    </article>
+  </div>
+</section>
+
+<!-- ============================================================
+     03 / AVAILABILITY
+     ============================================================ -->
+<section id="availability" class="section frame guides guides-row" aria-labelledby="avail-h">
+  <div class="row" style="row-gap: 40px;">
+    <!-- Left: experience statement -->
+    <div class="c-5">
+      <div class="label">03 / AVAILABILITY</div>
+      <h2 id="avail-h" class="avail-headline" style="margin-top:16px;">
+        <span class="count">4 ГОДА</span><br>НА ПРОДЕ ИРНИТУ
+      </h2>
+      <p class="avail-sub">
+        Опыт подтверждён четырьмя годами поддержки продуктивных систем университета: 1С-Битрикс, внутренние сервисы, доработки по заявкам подразделений.
+      </p>
+    </div>
+
+    <!-- Right: availability block -->
+    <div class="c-12 s6-12">
+      <div class="avail-block" role="group" aria-label="УСЛОВИЯ ДОСТУПНОСТИ И СТАВКА">
+        <div class="avail-row">
+          <div class="cell">
+            <div class="k">ДОСТУПЕН С</div>
+            <div class="v">27 ИЮЛЯ<span class="small"> &nbsp;2026&nbsp;Г.</span></div>
+          </div>
+          <div class="cell">
+            <div class="k">ОБЪЁМ</div>
+            <div class="v">30+ <span class="small">ЧАСОВ В НЕДЕЛЮ</span></div>
+          </div>
+        </div>
+        <div class="avail-row">
+          <div class="cell">
+            <div class="k">СТАВКА</div>
+            <div class="v">ОТ 800 <span class="small">₽ / ЧАС</span></div>
+          </div>
+          <div class="cell">
+            <div class="k">ФОРМАТ</div>
+            <div class="v">ФИКС <span class="small">ЗА ЗАДАЧУ</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="avail-foot">
+        Формат и объём фиксируются до начала работы. Удалёнка по РФ, Иркутск (GMT+8).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     04 / CONTACT
+     ============================================================ -->
+<section id="contact" class="section contact frame guides guides-row" aria-labelledby="contact-h">
+  <div class="row" style="margin-bottom: 40px;">
+    <div class="c-3">
+      <div class="label">04 / CONTACT</div>
+    </div>
+    <div class="s4-12">
+      <h2 id="contact-h" class="heading" style="margin:0;font-size:32px;font-weight:700;line-height:1.10;letter-spacing:-0.02em;text-transform:uppercase;">
+        Маршруты связи
+      </h2>
+      <p class="body" style="margin:16px 0 0;font-size:16px;line-height:1.65;color:var(--ink-muted);max-width:60ch;">
+        Telegram — основной канал. Email и GitHub — для случаев, когда текст длиннее одного сообщения.
+      </p>
+    </div>
+  </div>
+
+  <div class="row" style="row-gap: 24px;">
+    <!-- Primary: cols 1-7 -->
+    <div class="c-7">
+      <a class="primary" href="https://t.me/porkaqq" rel="noopener noreferrer" target="_blank" aria-label="ОТКРЫТЬ TELEGRAM: @PORKAQQ">
+        <div class="k">TELEGRAM · ОСНОВНОЙ МАРШРУТ</div>
+        <div class="handle">@PORKAQQ</div>
+        <div class="hint">
+          Отвечаю в рабочие часы Иркутска (GMT+8). Для проекта удобно прислать ссылку, сроки и желаемый формат сотрудничества одним сообщением.
+        </div>
+        <span class="ext">НАПИСАТЬ В TELEGRAM <span aria-hidden="true">→</span></span>
+      </a>
+    </div>
+
+    <!-- Secondary: cols 9-12 -->
+    <div class="c-12 s9-12">
+      <div class="secondary">
+        <a class="route" href="mailto:varlamovdaniil-2004@mail.ru" aria-label="ОТПРАВИТЬ EMAIL">
+          <div class="k">EMAIL · ДЛЯ ДОКУМЕНТОВ</div>
+          <div class="v">varlamovdaniil-2004@mail.ru</div>
+          <span class="ext">ОТПРАВИТЬ EMAIL <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="route" href="https://github.com/porkaq" rel="noopener noreferrer" target="_blank" aria-label="ОТКРЫТЬ GITHUB">
+          <div class="k">GITHUB · КОД И ПРИМЕРЫ</div>
+          <div class="v">github.com/porkaq</div>
+          <span class="ext">ОТКРЫТЬ GITHUB <span aria-hidden="true">→</span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="footer frame" role="contentinfo">
+  <div class="row">
+    <div class="c-4">
+      <div class="tag">V5 / ДАНИИЛ / ИРКУТСК</div>
+    </div>
+    <div class="c-4">
+      <div class="copy">© 2026 · ЛИЧНОЕ ПОРТФОЛИО · ВСЕ ССЫЛКИ ВЕДУТ НА РЕАЛЬНЫЕ ДОМЕНЫ</div>
+    </div>
+    <div class="c-4">
+      <div class="stamp">ИДЕНТИФИКАЦИЯ ВАРИАНТА · V5 / SWISS GRID</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ============================================================
+  // Motion: fade-up для подтверждённых числовых блоков
+  // - Триггер: IntersectionObserver
+  // - Fallback: при отсутствии IO цифра видна сразу
+  // - При prefers-reduced-motion цифра видна сразу (через CSS)
+  // ============================================================
+  (function () {
+    var supportsIO = 'IntersectionObserver' in window;
+    var targets = document.querySelectorAll('[data-reveal]');
+    if (!targets.length) return;
+
+    // Снимаем initial-скрытие, если observer недоступен — показываем сразу
+    if (!supportsIO) {
+      targets.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.4,
+      rootMargin: '0px 0px -10% 0px'
+    });
+
+    targets.forEach(function (el) { io.observe(el); });
+  })();
+
+  // Помечаем текущий год для accessibility/мониторинга без ложных метрик
+  document.documentElement.setAttribute('data-render', 'v5-swiss');
+</script>
+
+</body>
+</html>
