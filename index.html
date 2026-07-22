@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Даниил — 6 вариантов портфолио</title>
-  <meta name="description" content="Каталог из 6 эстетик одного портфолио Даниила. Brutalist / Editorial / Terminal / Minimalist / Swiss Grid / Playful. Контент одинаковый, тон и анимации — разные.">
+  <title>Даниил — каталог портфолио</title>
+  <meta name="description" content="Каталог активных вариантов портфолио Даниила (V1 Brutalist / V3 Terminal / V4 Minimalist). V2 Editorial, V5 Swiss и V6 Playful выведены в inactive.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -37,6 +37,18 @@
     header .eyebrow { font: 500 12px/1 'Geist Mono', ui-monospace, monospace; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 16px; }
     header h1 { font: 500 56px/1.05 'Geist', system-ui; letter-spacing: -0.025em; max-width: 14ch; margin-bottom: 24px; }
     header .lede { font-size: 17px; line-height: 1.55; color: var(--muted); max-width: 60ch; }
+    header .note {
+      margin-top: 20px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      background: var(--accent-soft);
+      font: 500 13px/1.5 'Geist Mono', monospace;
+      color: var(--ink);
+      letter-spacing: 0.01em;
+      max-width: 60ch;
+    }
+    header .note strong { color: var(--accent); }
     @media (max-width: 720px) { header h1 { font-size: 40px; } }
 
     /* --- meta bar --- */
@@ -45,7 +57,7 @@
 
     /* --- catalog grid --- */
     main { padding: 64px 0 96px; }
-    .catalog { display: grid; grid-template-columns: repeat(2, 1fr); gap: 48px 32px; }
+    .catalog { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 32px; }
     @media (max-width: 960px) { .catalog { grid-template-columns: 1fr; } }
 
     .card { display: flex; flex-direction: column; gap: 16px; }
@@ -81,9 +93,12 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="eyebrow">CATALOG · 22 JULY 2026 · 6 VARIANTS</div>
-      <h1>Один Даниил — шесть эстетик.</h1>
-      <p class="lede">Шесть standalone-страниц одного портфолио. Контент, контакты и проекты одинаковые. Тон, типографика, цвет и анимации — разные. Это каталог для выбора финального варианта, не финальный сайт.</p>
+      <div class="eyebrow">CATALOG · 22 JULY 2026 · 3 ACTIVE VARIANTS</div>
+      <h1>Один Даниил — три активных эстетики.</h1>
+      <p class="lede">Три standalone-страницы одного портфолио. Контент, контакты и проекты одинаковые. Тон, типографика, цвет и анимации — разные. Это каталог для выбора финального варианта, не финальный сайт.</p>
+      <div class="note">
+        V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive 22 июля 2026 — «не попадание по настроению полное». Файлы страниц и спеки <strong>сохранены</strong> в репо как negative references.
+      </div>
     </header>
 
     <div class="meta">
@@ -108,19 +123,6 @@
             <h2>Бетон и манифест</h2>
             <p class="desc">Чёрный фон, белая типографика, красный акцент. «ДАНИИЛ» 200px, рубленый тон, без анимаций. Эстетика Bloomberg Businessweek и брутализма 2010-х.</p>
             <span class="open">→ Открыть v1-brutalist</span>
-          </a>
-        </article>
-
-        <article class="card">
-          <a href="pages/v2-editorial/index.html">
-            <div class="thumb"><img src="assets/previews/v2-editorial-hero.jpg" alt="V2 Editorial hero preview" loading="lazy"></div>
-            <div class="meta-line">
-              <span class="num">V2</span>
-              <span class="tag">Editorial</span>
-            </div>
-            <h2>Журнал «Ъ», long-read</h2>
-            <p class="desc">Кремовый фон, тёмно-зелёный текст, mustard marker-pen. Drop-cap 96px, vintage flat-lay фото, fade-up через IntersectionObserver. Тон — длинный, развёрнутый, как в The New Yorker.</p>
-            <span class="open">→ Открыть v2-editorial</span>
           </a>
         </article>
 
@@ -150,37 +152,11 @@
           </a>
         </article>
 
-        <article class="card">
-          <a href="pages/v5-swiss/index.html">
-            <div class="thumb"><img src="assets/previews/v5-swiss-hero.jpg" alt="V5 Swiss Grid hero preview" loading="lazy"></div>
-            <div class="meta-line">
-              <span class="num">V5</span>
-              <span class="tag">Swiss Grid</span>
-            </div>
-            <h2>Müller-Brockmann, постер</h2>
-            <p class="desc">12-колонная сетка, Inter caps для всего, графит + кремовый + терракотовый. Единственная проверенная цифра — «04» (4 года). Формальный third-person тон, как в каталоге.</p>
-            <span class="open">→ Открыть v5-swiss</span>
-          </a>
-        </article>
-
-        <article class="card">
-          <a href="pages/v6-playful/index.html">
-            <div class="thumb"><img src="assets/previews/v6-playful-hero.jpg" alt="V6 Playful hero preview" loading="lazy"></div>
-            <div class="meta-line">
-              <span class="num">V6</span>
-              <span class="tag">Playful</span>
-            </div>
-            <h2>Personal zine, иллюстрированное</h2>
-            <p class="desc">Тёплая палитра, Caveat/Kalam handwritten имя «Даня», flat-lay иллюстрация рабочего стола. Marquee для стека, hover-tilt rotateY через rAF, fade-up через IO. Личный zine, не крикливый childish.</p>
-            <span class="open">→ Открыть v6-playful</span>
-          </a>
-        </article>
-
       </div>
     </main>
 
     <footer>
-      <span>© 2026 · Даниил · porkaq · Каталог из 6 вариантов</span>
+      <span>© 2026 · Даниил · porkaq · Каталог из 3 активных вариантов</span>
       <span><a href="https://t.me/porkaqq">Telegram @porkaqq</a> · <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a> · <a href="https://github.com/porkaq">GitHub</a></span>
     </footer>
   </div>
