@@ -131,13 +131,19 @@
 
     .hero-title {
       font-family: var(--font-display);
-      font-size: var(--t-hero);
+      /* Динамический размер через clamp, чтобы 6 scramble-ячеек помещались
+         в 8fr колонку hero-grid. Учитываем Math.ceil в lockScrambleCellWidths:
+         эффективная ширина h1 ≈ 6.1 × font-size (а не 5.76).
+         Column = (vw - 48*2 - 48 gap) × 8/12 ≈ (vw - 144) × 0.667.
+         Требуется font ≤ column / 6.1 ≈ (vw - 144) × 0.109. */
+      font-size: clamp(60px, min(11vw, min(13vh, 130px), calc((100vw - 144px) * 0.109)), 200px);
       font-weight: 900;
       line-height: 0.85;
       letter-spacing: -0.04em;
       text-transform: uppercase;
       color: var(--paper);
       margin: 0;
+      white-space: nowrap;
     }
 
     /* Hero scramble spans — фиксированная ширина каждой ячейки.
@@ -255,15 +261,19 @@
         min-height: 0;
         padding: 32px 0;
       }
-      .hero-title { font-size: clamp(80px, 18vw, 200px); }
+      .hero-title { /* базовый clamp в .hero-title уже покрывает mobile */ }
       .hero-manifest { border-left: 0; padding-left: 0; border-top: var(--bw-bold) solid var(--paper); padding-top: 24px; }
       .hero-nav { margin-top: 24px; gap: 16px; flex-direction: column; }
     }
 
-    /* Tablet hero — split 6/6 */
+    /* Tablet hero — split 6/6. font-size: clamp внутри базового .hero-title
+       учитывает ширину колонки (6fr при grid 6/6 ≈ 50% viewport минус gap).
+       Column = (vw - 48*2 - 32 gap) / 2 ≈ (vw - 128) / 2.
+       Эффективная h1 ширина ≈ 6.1 × font-size. Требуется font ≤ (vw - 128) / 12.2
+       ≈ 8vw. Берём 6.5vw для запаса. */
     @media (min-width: 769px) and (max-width: 1024px) {
       .hero-grid { grid-template-columns: 6fr 6fr; gap: 32px; }
-      .hero-title { font-size: 140px; }
+      .hero-title { font-size: clamp(52px, min(6.5vw, 11vh, calc((100vw - 128px) / 12.2)), 100px); }
     }
 
     /* =====================================================
@@ -1050,6 +1060,16 @@
       return;
     }
     lockScrambleCellWidths();
+
+    // При resize/rotation браузера font-size (через clamp) может измениться —
+    // пересчитываем ширину scramble-ячеек, чтобы h1 не вылезал за колонку.
+    var resizeTimer = null;
+    function onResize() {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(lockScrambleCellWidths, 150);
+    }
+    window.addEventListener('resize', onResize);
+
     var finished = 0;
     scrambleChars.forEach(function (node, i) {
       var finalChar = node.textContent;
