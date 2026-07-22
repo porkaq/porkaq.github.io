@@ -227,6 +227,7 @@
     .term-prompt .term-dollar { color: var(--text); }
 
     .term-cmd  { font-weight: 700; color: var(--syn-cmd); }
+    .term-line > .term-cmd + .term-arg { margin-left: 0.55em; }
     .term-type { font-weight: 700; color: var(--text); }
     .term-type::after { content: ''; } /* typing cursor handled by JS */
     .term-flag { color: var(--syn-flag); }
@@ -246,13 +247,17 @@
     .term-typing { color: var(--text); }
 
     .shell-output {
-      min-height: 110px;
-      max-height: 190px;
+      height: 44px;
       overflow-y: auto;
       margin-top: 8px;
       color: var(--text);
       white-space: pre-wrap;
       scrollbar-color: var(--border-strong) transparent;
+      overflow-anchor: none;
+    }
+    .shell-output:empty::before {
+      content: 'Введите help и нажмите Enter';
+      color: var(--dim);
     }
     .shell-entry { margin: 0 0 7px; }
     .shell-entry-command { color: var(--muted); }
@@ -696,12 +701,12 @@ drwxr-xr-x  porkaq.github.io</pre>
 Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
             </div>
 
+            <div class="shell-output" id="shellOutput" role="log" aria-live="polite" aria-relevant="additions"></div>
             <!-- ACTIVE: interactive browser shell -->
             <div class="term-line term-active">
               <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
               <input class="shell-input" id="shellInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Команда терминала" placeholder="help" data-text="cat about.txt">
             </div>
-            <div class="shell-output" id="shellOutput" role="log" aria-live="polite" aria-relevant="additions"></div>
 
           </div>
         </div>
@@ -1058,10 +1063,7 @@ fast yes, careful yes.
           'contact.txt': fileText('#contact .type-target[data-text]'),
           'projects.txt': fileText('#projects .type-target[data-text]')
         };
-        const fileSections = {
-          'about.txt': 'about', 'skills.txt': 'skills',
-          'projects.txt': 'projects', 'contact.txt': 'contact'
-        };
+
         const history = [];
         let historyIndex = 0;
 
@@ -1080,10 +1082,7 @@ fast yes, careful yes.
           shellOutput.appendChild(entry);
           shellOutput.scrollTop = shellOutput.scrollHeight;
         };
-        const visit = file => {
-          const id = fileSections[file];
-          if (id) document.getElementById(id)?.scrollIntoView({ behavior: REDUCE_MOTION ? 'auto' : 'smooth' });
-        };
+
         const run = raw => {
           const command = raw.trim();
           if (!command) return;
@@ -1101,15 +1100,13 @@ fast yes, careful yes.
           else if (name === 'clear') { shellOutput.replaceChildren(); return; }
           else if (name === 'cat') {
             result = parts.length === 1 && Object.hasOwn(files, arg) ? files[arg] : `cat: ${arg || 'missing operand'}: ${parts.length > 1 ? 'too many arguments' : 'No such file'}`;
-            if (parts.length === 1 && Object.hasOwn(files, arg)) visit(arg);
           } else if (name === 'head') {
             result = parts.length === 1 && Object.hasOwn(files, arg) ? files[arg].split('\n').slice(0, 5).join('\n') : `head: ${arg || 'missing operand'}: ${parts.length > 1 ? 'too many arguments' : 'No such file'}`;
-            if (parts.length === 1 && Object.hasOwn(files, arg)) visit(arg);
           } else if (name === 'wc') {
             const file = parts[1] || '';
             if (parts.length !== 2 || parts[0] !== '-l') result = 'usage: wc -l FILE';
             else if (!Object.hasOwn(files, file)) result = `wc: ${file}: No such file`;
-            else { result = `${files[file].split('\n').length} ${file}`; visit(file); }
+            else result = `${files[file].split('\n').length} ${file}`;
           } else result = `${name}: command not found`;
           appendEntry(command, result);
         };
@@ -1117,6 +1114,7 @@ fast yes, careful yes.
         shellInput.addEventListener('keydown', event => {
           if (event.isComposing) return;
           if (event.key === 'Enter') {
+            event.preventDefault();
             const command = shellInput.value;
             if (command.trim()) { history.push(command); historyIndex = history.length; }
             run(command);
