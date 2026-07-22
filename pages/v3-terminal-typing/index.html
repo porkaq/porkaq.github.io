@@ -227,6 +227,8 @@
     .term-prompt .term-dollar { color: var(--text); }
 
     .term-cmd  { font-weight: 700; color: var(--syn-cmd); }
+    .term-type { font-weight: 700; color: var(--text); }
+    .term-type::after { content: ''; } /* typing cursor handled by JS */
     .term-flag { color: var(--syn-flag); }
     .term-arg  { color: var(--syn-str); }
     .term-com  { color: var(--dim); font-style: italic; opacity: 0.85; }
@@ -714,13 +716,13 @@ Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
       <div class="term-window">
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-          <span class="term-cmd">ls</span><span class="term-flag"> -la</span><span class="term-arg"> about.txt</span>
+          <span class="term-type" data-text="ls -la about.txt"></span>
         </div>
         <pre class="term-output"><span class="term-result"><span class="type-target" data-text="-rw-r--r--  1 daniil daniil  1.2K  Jul 22 10:16  ./about.txt"></span></span></pre>
 
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-          <span class="term-cmd">cat</span><span class="term-arg"> about.txt</span>
+          <span class="term-type" data-text="cat about.txt"></span>
         </div>
         <pre class="term-output"><span class="term-result"><span class="type-target" data-text="# Daniil Varlamov
 # Иркутск → remote
@@ -751,13 +753,13 @@ languages   : русский (native), english (read/write)"></span></span></pre
       <div class="term-window">
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-          <span class="term-cmd">cat</span><span class="term-arg"> skills.txt</span> <span class="term-flag">|</span> <span class="term-cmd">wc</span><span class="term-flag"> -l</span>
+          <span class="term-type" data-text="cat skills.txt | wc -l"></span>
         </div>
         <pre class="term-output"><span class="term-result"><span class="type-target" data-text="       5"></span></span></pre>
 
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-          <span class="term-cmd">cat</span><span class="term-arg"> skills.txt</span>
+          <span class="term-type" data-text="cat skills.txt"></span>
         </div>
 <pre class="term-output"><span class="term-result"><span class="type-target" data-text="PHP
 1С-Битрикс
@@ -830,7 +832,7 @@ drwxr-xr-x  istu.edu/promo/95   2024 — промо ИРНИТУ, в коман�
         <div class="term-window tree-block" aria-label="Project tree">
           <div class="term-line">
             <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~/projects</span><span class="term-dollar">$</span></span>
-            <span class="term-cmd">tree</span><span class="term-flag"> -L</span><span class="term-arg"> 1</span>
+            <span class="term-type" data-text="tree -L 1"></span>
           </div>
 <pre class="term-output"><span class="term-result"><span class="type-target" data-text="~/projects/
 ├── elovpark/         # вёрстка + весь интерактив, без конструктора
@@ -854,13 +856,13 @@ drwxr-xr-x  istu.edu/promo/95   2024 — промо ИРНИТУ, в коман�
       <div class="term-window">
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-          <span class="term-cmd">uptime</span>
+          <span class="term-type" data-text="uptime"></span>
         </div>
         <pre class="term-output"><span class="term-result"><span class="type-target" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04"></span></span></pre>
 
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-          <span class="term-cmd">w</span>
+          <span class="term-type" data-text="w"></span>
         </div>
 <pre class="term-output"><span class="term-result"><span class="type-target" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04
 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
@@ -887,7 +889,7 @@ daniil   pts/0    192.168.1.42     10:16    0.00s  0.42s  0.02s w"></span></span
         <div class="term-window">
           <div class="term-line">
             <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-            <span class="term-cmd">cat</span><span class="term-arg"> contact.txt</span>
+            <span class="term-type" data-text="cat contact.txt"></span>
           </div>
 <pre class="term-output"><span class="term-result"><span class="type-target" data-text="# контакты
 telegram : @porkaqq
@@ -979,8 +981,10 @@ fast yes, careful yes.
       const typingEl = document.getElementById('heroTyping');
       if (typingEl) {
         const text = typingEl.dataset.text || 'cat about.txt';
-        const minDelay = 40;
-        const maxDelay = 120;
+        // Hero typing ускорен: та же скорость что и секции (4-12ms),
+        // иначе визуальный дисбаланс — hero печатает медленнее секций.
+        const minDelay = 4;
+        const maxDelay = 12;
 
         const rand = () => minDelay + Math.random() * (maxDelay - minDelay);
 
@@ -1012,8 +1016,9 @@ fast yes, careful yes.
       }
 
       // ── 2. Fade-up секций + scroll-typing через IntersectionObserver ───────
-      // Очищаем type-target перед observer, чтобы текст не «мигнул»
-      const typeTargets = document.querySelectorAll('.type-target');
+      // Очищаем ВСЕ typing-targets (output blocks + команды) перед observer,
+      // чтобы текст не «мигнул»
+      const typeTargets = document.querySelectorAll('.type-target, .term-type');
       typeTargets.forEach(el => { el.textContent = ''; });
 
       const fadeEls = document.querySelectorAll('.fade-section');
@@ -1025,9 +1030,9 @@ fast yes, careful yes.
             if (el.dataset.text) el.textContent = el.dataset.text;
           });
         } else if ('IntersectionObserver' in window) {
-          const minDelay = 18;   // чуть быстрее, чтобы секция не висела вечно
-          const maxDelay = 55;
-          const blockGap = 220;  // пауза между блоками внутри одной секции
+          const minDelay = 4;     // печать быстрая: блок в 446 симв = ~3.5s
+          const maxDelay = 12;    // разброс для естественности, без «долгих пауз»
+          const blockGap = 100;   // короткая пауза между блоками внутри одной секции
 
           const rand = () => minDelay + Math.random() * (maxDelay - minDelay);
 
@@ -1072,7 +1077,7 @@ fast yes, careful yes.
               if (entry.isIntersecting) {
                 entry.target.classList.add('is-visible');
                 const targets = Array.from(
-                  entry.target.querySelectorAll('.type-target')
+                  entry.target.querySelectorAll('.type-target, .term-type')
                 );
                 if (targets.length) {
                   typeSeq(targets, () => {});

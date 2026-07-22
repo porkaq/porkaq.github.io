@@ -1059,22 +1059,36 @@
     }
   }
 
-  /* ---------- 3) Section heading reveal via IO ---------- */
+  /* ---------- 3) Section heading reveal: scroll-based getBoundingClientRect ----------
+     Используем rAF-throttled scroll listener вместо IO — IO не re-fire'ит
+     для секций ниже начального viewport в некоторых конфигурациях. */
   var revealTargets = document.querySelectorAll('[data-reveal]');
-  if ('IntersectionObserver' in window) {
-    var revealObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) {
-          e.target.classList.add('is-revealed');
-          revealObs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.25 });
-    revealTargets.forEach(function (el) { revealObs.observe(el); });
-  } else {
-    // Фолбэк без IO — всё сразу в финале
-    revealTargets.forEach(function (el) { el.classList.add('is-revealed'); });
+  var revealedSet = new WeakSet();
+
+  function checkRevealTargets() {
+    var triggerLine = window.innerHeight * 0.85;
+    for (var i = 0; i < revealTargets.length; i++) {
+      var el = revealTargets[i];
+      if (revealedSet.has(el)) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerLine && rect.bottom >= 0) {
+        revealedSet.add(el);
+        el.classList.add('is-revealed');
+      }
+    }
   }
+  var revealTicking = false;
+  function onScrollReveal() {
+    if (revealTicking) return;
+    revealTicking = true;
+    requestAnimationFrame(function () {
+      checkRevealTargets();
+      revealTicking = false;
+    });
+  }
+  window.addEventListener('scroll', onScrollReveal, { passive: true });
+  window.addEventListener('resize', onScrollReveal, { passive: true });
+  checkRevealTargets();
 
   /* ---------- 4) Contact label char scramble (rotateY, step-end) ---------- */
   var charContainers = document.querySelectorAll('[data-char-scramble]');
@@ -1106,19 +1120,32 @@
       setTimeout(function () { c.classList.add('is-revealed'); }, i * 30);
     });
   }
-  if ('IntersectionObserver' in window) {
-    var charObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) {
-          revealChars(e.target);
-          charObs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.5 });
-    charContainers.forEach(function (el) { charObs.observe(el); });
-  } else {
-    charContainers.forEach(function (el) { revealChars(el); });
+  // Scroll-based reveal для char-scramble (без IO — стабильно работает)
+  var charRevealed = new WeakSet();
+  function checkCharReveals() {
+    var triggerLine = window.innerHeight * 0.85;
+    for (var i = 0; i < charContainers.length; i++) {
+      var el = charContainers[i];
+      if (charRevealed.has(el)) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerLine && rect.bottom >= 0) {
+        charRevealed.add(el);
+        revealChars(el);
+      }
+    }
   }
+  var charRevealTicking = false;
+  function onCharRevealScroll() {
+    if (charRevealTicking) return;
+    charRevealTicking = true;
+    requestAnimationFrame(function () {
+      checkCharReveals();
+      charRevealTicking = false;
+    });
+  }
+  window.addEventListener('scroll', onCharRevealScroll, { passive: true });
+  window.addEventListener('resize', onCharRevealScroll, { passive: true });
+  checkCharReveals();
 
   /* ---------- 5) Magnetic CTA ---------- */
   // Skip entirely under prefers-reduced-motion: hard accessibility off.
