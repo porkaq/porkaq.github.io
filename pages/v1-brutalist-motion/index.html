@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Даниил — портфолио · V1 Brutalist Motion</title>
+  <meta name="description" content="Даниил. Делаю сайты и ботов. Иркутск, удалёнка. Свободен с 27.07. 30+ ч/нед. Telegram @porkaqq.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+    /* =========================================================
+       V1 BRUTALIST MOTION · styles
+       Палитра: #000000 / #FFFFFF / #FF2D2D
+       Шрифты:  Inter 900 (hero) + JetBrains Mono 400/700 (rest)
+       Motion:  hero scramble + underline-grow · h2 scroll-reveal ·
+                contact char-scramble · CTA magnetic · projects hover-tilt
+                + scroll-reveal helpers (clip-path curtain / sweep / scaleX)
+       ========================================================= */
+
+    :root {
+      /* Core */
+      --ink:    #000000;
+      --paper:  #FFFFFF;
+      --accent: #FF2D2D;
+
+      /* Functional aliases */
+      --bg:        var(--paper);
+      --fg:        var(--ink);
+      --fg-invert: var(--paper);
+      --border:    var(--ink);
+      --link:      var(--ink);
+      --link-hover: var(--accent);
+
+      /* Layout */
+      --container-max: 1440px;
+      --gutter: 48px;
+
+      /* Radii — все НОЛЬ */
+      --r-default: 0px;
+
+      /* Strokes */
+      --bw-hair: 1px;
+      --bw-line: 2px;
+      --bw-bold: 4px;
+      --bw-hero: 8px;
+
+      /* Shadows — disabled */
+      --sh-0: none;
+      --sh-1: none;
+      --sh-2: none;
+
+      /* Type scale (fixed, без clamp) */
+      --t-hero:       200px;   /* Inter 900, h1.hero-title */
+      --t-h2:         48px;    /* section headings */
+      --t-h3:         28px;    /* project names, contact values */
+      --t-contact-lbl:48px;    /* contact section labels (same as h2) */
+      --t-lead:       20px;
+      --t-body:       16px;
+      --t-small:      14px;
+      --t-label:      12px;
+      --t-mono-tiny:  11px;
+
+      /* Fonts */
+      --font-display: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      --font-mono:    'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+
+      /* WOW timing tokens */
+      --easing-out: cubic-bezier(.2,.8,.2,1);
+    }
+
+    /* ----- Reset / base ----- */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    body {
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      line-height: 1.6;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    ::selection {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      text-decoration-thickness: 2px;
+    }
+
+    /* Visible focus, accessibility */
+    a:focus-visible,
+    button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    h1, h2, h3, h4, h5, h6, p { margin: 0; }
+    ul, ol { margin: 0; padding: 0; list-style: none; }
+    img { display: block; max-width: 100%; }
+
+    /* =====================================================
+       HERO  ·  black · split 8/4 · 100vh
+       ===================================================== */
+    .hero {
+      width: 100%;
+      min-height: 78vh;
+      background: var(--ink);
+      color: var(--paper);
+      border-bottom: var(--bw-bold) solid var(--ink);
+      padding: var(--gutter);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 8fr 4fr;
+      gap: var(--gutter);
+      align-items: center;
+      min-height: calc(78vh - 96px);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      /* Динамический размер через clamp, чтобы 6 scramble-ячеек помещались
+         в 8fr колонку hero-grid. Учитываем Math.ceil в lockScrambleCellWidths:
+         эффективная ширина h1 ≈ 6.1 × font-size (а не 5.76).
+         Column = (vw - 48*2 - 48 gap) × 8/12 ≈ (vw - 144) × 0.667.
+         Требуется font ≤ column / 6.1 ≈ (vw - 144) × 0.109. */
+      font-size: clamp(60px, min(11vw, min(13vh, 130px), calc((100vw - 144px) * 0.109)), 200px);
+      font-weight: 900;
+      line-height: 0.85;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      color: var(--paper);
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .hero-title-role {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.18em;       /* ~36px на 200px hero — мелкая строка под именем */
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-top: 0.5em;
+      border-top: var(--bw-bold) solid var(--accent);
+      padding-top: 0.4em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title-role { font-size: 0.22em; margin-top: 0.5em; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .hero-title-role { font-size: 0.20em; }
+    }
+
+    /* Hero scramble spans — фиксированная ширина каждой ячейки.
+       JS при boot order измеряет maxCharWidth (самый широкий символ в scramblePool)
+       и ставит эту ширину каждому span'у, чтобы при смене символа
+       содержимое соседей не сдвигалось (был «прыжок» каждые 80ms). */
+    .scramble {
+      display: inline-block;
+      vertical-align: top;
+      text-align: center;
+      white-space: pre;
+    }
+
+    /* Hero manifest (right column) */
+    .hero-manifest {
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      line-height: 1.6;
+      border-left: var(--bw-bold) solid var(--paper);
+      padding-left: 32px;
+      align-self: center;
+    }
+
+    .hero-manifest-row {
+      margin: 0 0 20px;
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 16px;
+      align-items: baseline;
+    }
+
+    .hero-manifest-row:last-child { margin-bottom: 0; }
+
+    .hero-manifest-key {
+      color: var(--accent);
+      font-size: var(--t-label);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-manifest-val {
+      color: var(--paper);
+    }
+
+    .hero-manifest-val a {
+      color: var(--paper);
+      text-decoration: none;
+      border-bottom: var(--bw-line) solid var(--accent);
+      padding-bottom: 2px;
+    }
+
+    /* Hero underline — КЛЮЧЕВОЙ акцент под словом РАБОТАЕТ.
+       WOW: width 0 → 100% за 600ms linear, delay 800ms.
+       Стартовый размер 0 не виден, поэтому геометрия не «скачет». */
+    .hero-underline {
+      position: relative;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .hero-underline-mark {
+      display: block;
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      bottom: 2px;
+      height: var(--bw-hero);
+      background: var(--accent);
+      z-index: -1;
+      width: 0;
+      /* transition вместо keyframe — мгновенный reset, без ожидания */
+      transition: width 600ms linear;
+    }
+
+    /* Класс активируется JS сразу (delay 800ms) */
+    .hero-underline.is-revealed .hero-underline-mark {
+      width: calc(100% + 4px);
+    }
+
+    /* Hero nav */
+    .hero-nav {
+      grid-column: 1 / -1;
+      align-self: end;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px 32px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: var(--bw-line) solid var(--paper);
+    }
+
+    .hero-nav a {
+      color: var(--paper);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      font-weight: 400;
+      letter-spacing: 0;
+      padding: 4px 0;
+      border-bottom: var(--bw-line) solid transparent;
+    }
+
+    .hero-nav a:hover,
+    .hero-nav a:focus-visible {
+      border-bottom-color: var(--accent);
+    }
+
+    /* Mobile hero */
+    @media (max-width: 768px) {
+      .hero { padding: 24px; min-height: auto; }
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        min-height: 0;
+        padding: 32px 0;
+      }
+      .hero-title { /* базовый clamp в .hero-title уже покрывает mobile */ }
+      .hero-manifest { border-left: 0; padding-left: 0; border-top: var(--bw-bold) solid var(--paper); padding-top: 24px; }
+      .hero-nav { margin-top: 24px; gap: 16px; flex-direction: column; }
+    }
+
+    /* Tablet hero — split 6/6. font-size: clamp внутри базового .hero-title
+       учитывает ширину колонки (6fr при grid 6/6 ≈ 50% viewport минус gap).
+       Column = (vw - 48*2 - 32 gap) / 2 ≈ (vw - 128) / 2.
+       Эффективная h1 ширина ≈ 6.1 × font-size. Требуется font ≤ (vw - 128) / 12.2
+       ≈ 8vw. Берём 6.5vw для запаса. */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .hero-grid { grid-template-columns: 6fr 6fr; gap: 32px; }
+      .hero-title { font-size: clamp(52px, min(6.5vw, 11vh, calc((100vw - 128px) / 12.2)), 100px); }
+    }
+
+    /* =====================================================
+       SCROLL-REVEAL · clip-path curtain / sweep / scaleX.
+       Дополнительный слой к [data-reveal] на h2 — даёт тем же
+       JS-хуком возможность раскрывать секции и инлайн-акценты.
+       linear timing only — соответствует брутальной эстетике.
+       ===================================================== */
+    .reveal {
+      clip-path: inset(0 100% 0 0);
+      transform: translate3d(0, 0, 0);
+      transition:
+        clip-path 600ms linear,
+        transform 600ms linear;
+      will-change: clip-path, transform;
+    }
+    .reveal.is-revealed {
+      clip-path: inset(0 0 0 0);
+    }
+
+    /* Альтернативное имя из той же семьи. */
+    .reveal-up {
+      clip-path: inset(0 100% 0 0);
+      transform: translate3d(0, 0, 0);
+      transition:
+        clip-path 600ms linear,
+        transform 600ms linear;
+      will-change: clip-path, transform;
+    }
+    .reveal-up.is-revealed {
+      clip-path: inset(0 0 0 0);
+    }
+
+    /* Sweep: красная черта въезжает слева (для лейблов / индексов). */
+    .reveal-x {
+      transform: translate3d(-100%, 0, 0);
+      transform-origin: left center;
+      transition: transform 500ms linear;
+    }
+    .reveal-x.is-revealed {
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* scaleX: инлайн-чerta растёт из нуля. */
+    .reveal-scale {
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 500ms linear;
+    }
+    .reveal-scale.is-revealed {
+      transform: scaleX(1);
+    }
+
+    /* =====================================================
+       SECTION frame
+       ===================================================== */
+    .section {
+      width: 100%;
+      padding: 96px var(--gutter);
+      border-top: var(--bw-bold) solid var(--ink);
+      box-sizing: border-box;
+    }
+
+    .section-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      gap: var(--gutter);
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: var(--t-label);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    .section-label::before {
+      content: "// ";
+      color: var(--accent);
+    }
+
+    .section-heading {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-h2);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--fg);
+      margin: 0 0 32px;
+      position: relative;
+      /* Только красная ::before-черта анимируется при reveal.
+         Сам заголовок всегда на своём месте (без slide-in transform),
+         иначе пользователь видит «пропадают при скролле». */
+    }
+
+    /* WOW: красная ::before-черта слева (8px), выезжает 0 → 8px
+       Полоска тонкая, чтобы НЕ перекрывать первую букву заголовка.
+       Полностью помещается в зоне left:-12px, без пересечения с текстом. */
+    .section-heading::before {
+      content: "";
+      position: absolute;
+      left: -12px;
+      top: 0.18em;
+      width: 0;
+      height: 0.7em;
+      background: var(--accent);
+      transition: width 500ms linear;
+    }
+
+    .section-heading.is-revealed::before {
+      width: 8px;
+    }
+
+    p { max-width: 65ch; margin: 0 0 16px; }
+    p:last-child { margin-bottom: 0; }
+
+    /* =====================================================
+       #about  ·  paper · split 5/7
+       ===================================================== */
+    .section-about {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .section-about .section-inner {
+      grid-template-columns: 5fr 7fr;
+      gap: var(--gutter);
+    }
+
+    .section-about .section-label {
+      position: sticky;
+      top: 96px;
+    }
+
+    .section-about p {
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      line-height: 1.6;
+    }
+
+    .about-meta {
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin: 24px 0;
+      padding: 16px 0;
+      border-top: var(--bw-line) solid var(--ink);
+      border-bottom: var(--bw-line) solid var(--ink);
+      max-width: 50%;
+    }
+
+    /* =====================================================
+       #stack · ink · split 4/8 · 5×1 grid
+       ===================================================== */
+    .section-stack {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .section-stack .section-inner {
+      grid-template-columns: 4fr 8fr;
+      gap: var(--gutter);
+    }
+
+    .section-stack .section-label,
+    .section-stack .section-heading,
+    .section-stack .stack-intro {
+      color: var(--paper);
+    }
+
+    .stack-intro {
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      line-height: 1.6;
+      max-width: 32ch;
+      margin: 0;
+    }
+
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      border: var(--bw-line) solid var(--paper);
+    }
+
+    .stack-cell {
+      border-right: var(--bw-line) solid var(--paper);
+      padding: 24px;
+      min-height: 200px;
+    }
+
+    .stack-cell:last-child { border-right: 0; }
+
+    .stack-cell h3 {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-h3);
+      line-height: 1.15;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      margin: 0 0 16px;
+      color: var(--paper);
+    }
+
+    .stack-cell p {
+      font-family: var(--font-mono);
+      font-size: var(--t-small);
+      line-height: 1.55;
+      color: var(--paper);
+      margin: 0;
+      max-width: none;
+    }
+
+    /* Stack mobile — 1 column stacked rows */
+    @media (max-width: 1024px) {
+      .stack-grid { grid-template-columns: 1fr 1fr; }
+      .stack-cell { border-right: var(--bw-line) solid var(--paper); border-bottom: var(--bw-line) solid var(--paper); }
+      .stack-cell:nth-child(2n) { border-right: 0; }
+      .stack-cell:nth-last-child(-n+2) { border-bottom: 0; }
+    }
+    @media (max-width: 600px) {
+      .stack-grid { grid-template-columns: 1fr; }
+      .stack-cell { border-right: 0; border-bottom: var(--bw-line) solid var(--paper); }
+      .stack-cell:last-child { border-bottom: 0; }
+    }
+
+    /* =====================================================
+       #projects · paper · split 4/8 · table rows
+       ===================================================== */
+    .section-projects {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .section-projects .section-inner {
+      grid-template-columns: 4fr 8fr;
+      gap: var(--gutter);
+    }
+
+    .projects-table {
+      font-family: var(--font-mono);
+    }
+
+    .projects-row {
+      display: grid;
+      grid-template-columns: 64px 1fr 1fr 1fr;
+      gap: 24px;
+      align-items: baseline;
+      padding: 24px 0;
+      border-bottom: var(--bw-line) solid var(--ink);
+      position: relative;
+      /* WOW: поднимаем строку на 4px, и одновременно красная черта
+         выезжает сверху вниз через clip-path inset 100% → 0. */
+      transform: translate3d(0, 0, 0);
+      transition: transform 250ms var(--easing-out);
+    }
+
+    .projects-row::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent);
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 250ms var(--easing-out);
+    }
+
+    .projects-row:hover,
+    .projects-row:focus-within {
+      transform: translate3d(0, -4px, 0);
+    }
+    .projects-row:hover::before,
+    .projects-row:focus-within::before {
+      clip-path: inset(0 0 0 0);
+    }
+
+    /* WOW: meta (role + link) уезжает вправо на 8px на hover строки */
+    .projects-role,
+    .projects-link {
+      transform: translate3d(0, 0, 0);
+      transition: transform 250ms var(--easing-out);
+    }
+    .projects-row:hover .projects-role,
+    .projects-row:focus-within .projects-role,
+    .projects-row:hover .projects-link,
+    .projects-row:focus-within .projects-link {
+      transform: translate3d(8px, 0, 0);
+    }
+
+    .projects-row:first-child { border-top: var(--bw-line) solid var(--ink); }
+
+    .projects-index {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-h3);
+      line-height: 1.15;
+      color: var(--accent);
+    }
+
+    .projects-name {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-h3);
+      line-height: 1.15;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+    }
+
+    .projects-role {
+      font-family: var(--font-mono);
+      font-weight: 400;
+      font-size: var(--t-body);
+      color: var(--ink);
+    }
+
+    .projects-link {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-body);
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: var(--bw-line) solid var(--accent);
+      padding-bottom: 2px;
+      word-break: break-word;
+    }
+
+    .projects-link:hover,
+    .projects-link:focus-visible {
+      color: var(--accent);
+    }
+
+    .projects-footnote {
+      margin-top: 32px;
+      font-family: var(--font-mono);
+      font-size: var(--t-small);
+      line-height: 1.55;
+      color: var(--ink);
+      max-width: 60ch;
+    }
+
+    @media (max-width: 768px) {
+      .projects-row {
+        grid-template-columns: 48px 1fr;
+        gap: 12px 16px;
+      }
+      .projects-index { grid-column: 1; grid-row: 1; }
+      .projects-name { grid-column: 2; grid-row: 1; }
+      .projects-role { grid-column: 1 / -1; grid-row: 2; font-size: var(--t-small); }
+      .projects-link { grid-column: 1 / -1; grid-row: 3; font-size: var(--t-small); word-break: break-all; }
+      .projects-row::before { left: -4px; }
+    }
+
+    /* =====================================================
+       #contact · ink · split 5/7 · giant rows
+       ===================================================== */
+    .section-contact {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .section-contact .section-inner {
+      grid-template-columns: 5fr 7fr;
+      gap: var(--gutter);
+    }
+
+    .section-contact .section-label,
+    .section-contact .section-heading,
+    .section-contact .contact-intro {
+      color: var(--paper);
+    }
+
+    .contact-intro {
+      font-family: var(--font-mono);
+      font-size: var(--t-body);
+      line-height: 1.6;
+      max-width: 38ch;
+      margin: 0;
+    }
+
+    .contact-rows {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .contact-row {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: var(--gutter);
+      align-items: baseline;
+      padding: 32px 0;
+      border-bottom: var(--bw-bold) solid var(--paper);
+    }
+
+    .contact-row:first-child { border-top: var(--bw-bold) solid var(--paper); }
+
+    .contact-label {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-contact-lbl);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .contact-value {
+      font-family: var(--font-mono);
+      font-weight: 400;
+      font-size: var(--t-h3);
+      line-height: 1.2;
+      color: var(--paper);
+      word-break: break-word;
+    }
+
+    .contact-value a {
+      color: var(--paper);
+      text-decoration: none;
+      border-bottom: var(--bw-line) solid var(--accent);
+      padding-bottom: 4px;
+    }
+
+    .contact-value a:hover,
+    .contact-value a:focus-visible {
+      color: var(--accent);
+    }
+
+    .contact-value-static {
+      font-family: var(--font-mono);
+      font-size: var(--t-h3);
+      color: var(--paper);
+    }
+
+    /* WOW: contact letters — flat rotateY, step-end = кадровый переворот. */
+    .char {
+      display: inline-block;
+      transform: rotateY(90deg);
+      transition: transform 400ms step-end;
+    }
+    .contact-label.is-revealed .char,
+    .char.is-revealed {
+      transform: rotateY(0);
+    }
+
+    /* =====================================================
+       WOW: magnetic CTA — primary «Написать» = contact-telegram link.
+       Был anchor в исходнике; magnetic усиливает его без смены роли.
+       background → #000 / color → #FF2D2D на hover за 150ms step-end.
+       ===================================================== */
+    .cta-magnetic {
+      display: inline-block;
+      padding: 8px 12px;
+      border: var(--bw-line) solid var(--paper);
+      background: transparent;
+      color: var(--paper);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--t-h3);
+      text-decoration: none;
+      cursor: pointer;
+      /* transform обновляется JS через rAF; transition — для mouseleave */
+      transition: transform 200ms var(--easing-out),
+                  background 150ms step-end,
+                  color 150ms step-end;
+      will-change: transform;
+    }
+    .cta-magnetic:hover,
+    .cta-magnetic:focus-visible {
+      background: var(--ink);
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .contact-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 24px 0;
+      }
+      .contact-label { font-size: var(--t-h3); }
+      .contact-value, .contact-value-static { font-size: 20px; }
+    }
+
+    /* =====================================================
+       Tablet sections — 6/6 split
+       ===================================================== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .section-inner {
+        grid-template-columns: 6fr 6fr;
+        gap: 32px;
+      }
+      .section-about .section-inner,
+      .section-stack .section-inner,
+      .section-projects .section-inner,
+      .section-contact .section-inner {
+        grid-template-columns: 6fr 6fr;
+        gap: 32px;
+      }
+    }
+
+    /* =====================================================
+       Mobile section padding
+       ===================================================== */
+    @media (max-width: 768px) {
+      .section {
+        padding: 48px 24px;
+      }
+    }
+
+    /* =====================================================
+       FOOTER  ·  ink
+       ===================================================== */
+    .site-footer {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 24px var(--gutter);
+      border-top: var(--bw-bold) solid var(--ink);
+    }
+
+    .site-footer-row {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 24px;
+      font-family: var(--font-mono);
+      font-size: var(--t-mono-tiny);
+      line-height: 1.4;
+      letter-spacing: 0.06em;
+      color: var(--paper);
+    }
+
+    .site-footer-row span {
+      color: var(--paper);
+    }
+
+    @media (max-width: 768px) {
+      .site-footer { padding: 24px; }
+      .site-footer-row { flex-direction: column; gap: 8px; font-size: 10px; }
+    }
+
+    /* =====================================================
+       prefers-reduced-motion — accessibility hard-off.
+       Любая визуальная анимация принудительно выключается,
+       scramble-цикл прерывается JS и заголовки сразу в финале.
+       ===================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0s !important;
+        scroll-behavior: auto !important;
+      }
+      /* Reduced motion: все анимации и transitions отключены выше.
+         Hero scramble не запускается (runScramble делает early-return при
+         reduced). data-reveal на h2 отключаем — заголовки видны всегда,
+         красная черта показывается сразу без анимации. */
+      .section-heading::before {
+        width: 8px !important;
+      }
+      .hero-underline-mark {
+        width: calc(100% + 4px) !important;
+      }
+      /* scroll-reveal helpers: сразу финальное состояние */
+      .reveal,
+      .reveal-up {
+        clip-path: none !important;
+        transform: none !important;
+      }
+      .reveal-x,
+      .reveal-scale {
+        transform: none !important;
+      }
+      .contact-label .char {
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================================
+     HERO
+     ======================================================== -->
+<section class="hero" aria-label="Главный экран">
+  <div class="hero-grid">
+
+    <h1 class="hero-title" data-scramble-ready="1"><span class="scramble">Д</span><span class="scramble">А</span><span class="scramble">Н</span><span class="scramble">И</span><span class="scramble">И</span><span class="scramble">Л</span><span class="hero-title-role">Разработчик</span></h1>
+
+    <aside class="hero-manifest" aria-label="Карточка контекста">
+      <p class="hero-manifest-row">
+        <span class="hero-manifest-key">// Роль</span>
+        <span class="hero-manifest-val">Делаю сайты и ботов.</span>
+      </p>
+      <p class="hero-manifest-row">
+        <span class="hero-manifest-key">// Локация</span>
+        <span class="hero-manifest-val">Иркутск. Удалёнка.</span>
+      </p>
+      <p class="hero-manifest-row">
+        <span class="hero-manifest-key">// Статус</span>
+        <span class="hero-manifest-val">
+          Свободен с 27.07. 30+ <span class="hero-underline" id="hero-underline">РАБОТАЕТ<span class="hero-underline-mark" aria-hidden="true"></span></span> в неделю.
+        </span>
+      </p>
+      <p class="hero-manifest-row">
+        <span class="hero-manifest-key">// Ставка</span>
+        <span class="hero-manifest-val">от 800 ₽/ч. Фикс за задачу.</span>
+      </p>
+      <p class="hero-manifest-row">
+        <span class="hero-manifest-key">// Контакт</span>
+        <span class="hero-manifest-val">
+          <a href="https://t.me/porkaqq" rel="noopener">@porkaqq</a> · Telegram
+        </span>
+      </p>
+    </aside>
+
+    <nav class="hero-nav" aria-label="Навигация по разделам">
+      <a href="#about">01 — Обо мне</a>
+      <a href="#stack">02 — Стек</a>
+      <a href="#projects">03 — Проекты</a>
+      <a href="#contact">04 — Контакты</a>
+    </nav>
+  </div>
+</section>
+
+<main>
+
+  <!-- ========================================================
+       ABOUT
+       ======================================================== -->
+  <section id="about" class="section section-about" aria-label="Обо мне">
+    <div class="section-inner">
+      <div class="section-label" aria-hidden="true">Обо мне</div>
+      <div>
+        <h2 class="section-heading" data-reveal>Обо мне</h2>
+        <p>Делаю сайты. Ботов. Правки на проде. С 2022 года. Без понтов, по фикс-цене.</p>
+        <p class="about-meta">4 года на проде ИРНИТУ, Иркутск.<br>6 скриптов в проде. 0 проваленных дедлайнов. (2022—2026)</p>
+        <p>Поддержка продуктивных систем. Автоматизация на PHP и Python. Telegram-рассылки, опросы, мини-CRM. Bitrix-кастом и не только.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       STACK
+       ======================================================== -->
+  <section id="stack" class="section section-stack" aria-label="Стек">
+    <div class="section-inner">
+      <div>
+        <div class="section-label">Стек</div>
+        <p class="stack-intro">Что я использую. Сервер, фронт, автоматизация, мессенджеры.</p>
+      </div>
+      <div>
+        <h2 class="section-heading" data-reveal>Стек</h2>
+        <div class="stack-grid" role="list">
+
+          <article class="stack-cell" role="listitem">
+            <h3>PHP</h3>
+            <p>Серверный язык, базы, CMS-API. Сайты на проде с 2022.</p>
+          </article>
+
+          <article class="stack-cell" role="listitem">
+            <h3>1С-Битрикс</h3>
+            <p>Корпоративные порталы и кастомные модули на ИРНИТУ.</p>
+          </article>
+
+          <article class="stack-cell" role="listitem">
+            <h3>HTML / CSS / JS</h3>
+            <p>Вёрстка, интерактив, формы. Лендинги и редактура.</p>
+          </article>
+
+          <article class="stack-cell" role="listitem">
+            <h3>Python</h3>
+            <p>Автоматизация, боты, парсинг, скрипты.</p>
+          </article>
+
+          <article class="stack-cell" role="listitem">
+            <h3>Telegram</h3>
+            <p>Telegram Bot API: рассылки, опросы, мини-CRM.</p>
+          </article>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       PROJECTS
+       ======================================================== -->
+  <section id="projects" class="section section-projects" aria-label="Проекты">
+    <div class="section-inner">
+      <div>
+        <div class="section-label">Проекты</div>
+        <p>Каждый — в проде. Не пет-проекты, не макеты.</p>
+      </div>
+      <div>
+        <h2 class="section-heading" data-reveal>Проекты</h2>
+
+        <div class="projects-table">
+          <article class="projects-row">
+            <span class="projects-index" aria-hidden="true">01</span>
+            <div>
+              <div class="projects-name">ELOV PARK</div>
+            </div>
+            <div class="projects-role">Front + CMS, форма + каталог</div>
+            <a class="projects-link" href="https://elovpark.ru" target="_blank" rel="noopener">elovpark.ru</a>
+          </article>
+
+          <article class="projects-row">
+            <span class="projects-index" aria-hidden="true">02</span>
+            <div>
+              <div class="projects-name">SIBSTALKER</div>
+            </div>
+            <div class="projects-role">Backend + админка, посты, рассылки</div>
+            <a class="projects-link" href="https://sibstalker.ru" target="_blank" rel="noopener">sibstalker.ru</a>
+          </article>
+
+          <article class="projects-row">
+            <span class="projects-index" aria-hidden="true">03</span>
+            <div>
+              <div class="projects-name">ИРНИТУ PROMO 95</div>
+            </div>
+            <div class="projects-role">Лендинг, адаптив, форма заявок</div>
+            <a class="projects-link" href="https://istu.edu/promo/95" target="_blank" rel="noopener">istu.edu/promo/95</a>
+          </article>
+        </div>
+
+        <p class="projects-footnote">Не все проекты публичны. Часть — внутренние для ИРНИТУ. Связь по ним — только при доверии, NDA.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       CONTACT
+       ======================================================== -->
+  <section id="contact" class="section section-contact" aria-label="Контакты">
+    <div class="section-inner">
+      <div>
+        <div class="section-label">Контакт</div>
+        <p class="contact-intro">Если задача с фикс-ценой и сроком — пишите сразу в Telegram. Если вопрос непонятный — почта, отвечу за день.</p>
+      </div>
+      <div>
+        <h2 class="section-heading" data-reveal>Контакт</h2>
+
+        <div class="contact-rows">
+          <div class="contact-row">
+            <div class="contact-label" data-char-scramble>TELEGRAM</div>
+            <div class="contact-value">
+              <a class="cta-magnetic" href="https://t.me/porkaqq" rel="noopener" data-magnetic>@porkaqq</a>
+            </div>
+          </div>
+
+          <div class="contact-row">
+            <div class="contact-label" data-char-scramble>EMAIL</div>
+            <div class="contact-value">
+              <a href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
+            </div>
+          </div>
+
+          <div class="contact-row">
+            <div class="contact-label" data-char-scramble>GITHUB</div>
+            <div class="contact-value">
+              <a href="https://github.com/porkaq" target="_blank" rel="noopener">github.com/porkaq</a>
+            </div>
+          </div>
+
+          <div class="contact-row">
+            <div class="contact-label">LAST DEPLOY</div>
+            <div class="contact-value-static">2026-07-22</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========================================================
+     FOOTER
+     ======================================================== -->
+<footer class="site-footer">
+  <div class="site-footer-row">
+    <span>© 2026 Даниил · porkaq</span>
+    <span>Иркутск · 52°17'N 104°18'E</span>
+    <span>v1-brutalist-motion</span>
+    <span>built static · motion edition · scramble + magnetic + scroll-reveal</span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   V1 BRUTALIST · WOW motion layer
+   Без зависимостей. Один rAF, один IO, всё отключаемо.
+   ========================================================= */
+(function () {
+  'use strict';
+
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 1) Hero scramble ---------- */
+  var heroTitle = document.querySelector('.hero-title');
+  var scrambleChars = heroTitle ? heroTitle.querySelectorAll('.scramble') : [];
+  var scramblePool = ['Д', 'Н', 'И', 'Л', '0', '1', '2', '3', '#', '@', '&'];
+  var SCRAMBLE_STEP = 80;     // ms между сменой случайного символа
+  var SCRAMBLE_STAGGER = 100; // ms между стартами букв
+  var SCRAMBLE_TICKS = 6;     // сколько случайных символов перед финалом
+
+  // Фиксируем ширину каждой scramble-ячейки равной самому широкому символу,
+  // чтобы при смене символа соседние буквы не сдвигались.
+  function lockScrambleCellWidths() {
+    if (!heroTitle || !scrambleChars.length) return;
+    var measure = document.createElement('span');
+    measure.className = 'scramble';
+    measure.style.visibility = 'hidden';
+    measure.style.position = 'absolute';
+    measure.style.left = '-9999px';
+    // Используем тот же шрифт и размер, что у .hero-title
+    var heroCS = getComputedStyle(heroTitle);
+    measure.style.fontFamily = heroCS.fontFamily;
+    measure.style.fontSize = heroCS.fontSize;
+    measure.style.fontWeight = heroCS.fontWeight;
+    measure.style.letterSpacing = heroCS.letterSpacing;
+    document.body.appendChild(measure);
+    var maxW = 0;
+    for (var i = 0; i < scramblePool.length; i++) {
+      measure.textContent = scramblePool[i];
+      var w = measure.getBoundingClientRect().width;
+      if (w > maxW) maxW = w;
+    }
+    document.body.removeChild(measure);
+    // Применяем фиксированную ширину каждой ячейке + text-align: center
+    // уже в CSS, так что содержимое центрируется внутри.
+    for (var j = 0; j < scrambleChars.length; j++) {
+      scrambleChars[j].style.width = Math.ceil(maxW) + 'px';
+    }
+  }
+
+  function runScramble() {
+    if (!heroTitle || !scrambleChars.length) return;
+    if (reduced) {
+      return;
+    }
+    lockScrambleCellWidths();
+
+    // При resize/rotation браузера font-size (через clamp) может измениться —
+    // пересчитываем ширину scramble-ячеек, чтобы h1 не вылезал за колонку.
+    var resizeTimer = null;
+    function onResize() {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(lockScrambleCellWidths, 150);
+    }
+    window.addEventListener('resize', onResize);
+
+    var finished = 0;
+    scrambleChars.forEach(function (node, i) {
+      var finalChar = node.textContent;
+      // Сохраняем цель, сразу показываем случайный символ до старта своей очереди,
+      // чтобы исключить flash «финал → случайная» в первом кадре.
+      node.dataset.final = finalChar;
+      node.textContent = scramblePool[Math.floor(Math.random() * scramblePool.length)];
+      setTimeout(function () {
+        var ticks = 0;
+        var timer = setInterval(function () {
+          ticks += 1;
+          if (ticks >= SCRAMBLE_TICKS) {
+            clearInterval(timer);
+            node.textContent = finalChar;
+            finished += 1;
+            return;
+          }
+          node.textContent = scramblePool[Math.floor(Math.random() * scramblePool.length)];
+        }, SCRAMBLE_STEP);
+      }, i * SCRAMBLE_STAGGER);
+    });
+  }
+
+  var UNDERLINE_REVEAL_DELAY_MS = 800;
+
+  /* ---------- 2) Hero underline grow ---------- */
+  var heroUnderline = document.getElementById('hero-underline');
+  if (heroUnderline) {
+    if (reduced) {
+      heroUnderline.classList.add('is-revealed');
+    } else {
+      setTimeout(function () {
+        heroUnderline.classList.add('is-revealed');
+      }, UNDERLINE_REVEAL_DELAY_MS);
+    }
+  }
+
+  /* ---------- 3) Section heading reveal: scroll-based getBoundingClientRect ----------
+     Используем rAF-throttled scroll listener вместо IO — IO не re-fire'ит
+     для секций ниже начального viewport в некоторых конфигурациях. */
+  var revealTargets = document.querySelectorAll('[data-reveal]');
+  var revealedSet = new WeakSet();
+
+  function checkRevealTargets() {
+    var triggerLine = window.innerHeight * 0.85;
+    for (var i = 0; i < revealTargets.length; i++) {
+      var el = revealTargets[i];
+      if (revealedSet.has(el)) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerLine && rect.bottom >= 0) {
+        revealedSet.add(el);
+        el.classList.add('is-revealed');
+      }
+    }
+  }
+  var revealTicking = false;
+  function onScrollReveal() {
+    if (revealTicking) return;
+    revealTicking = true;
+    requestAnimationFrame(function () {
+      checkRevealTargets();
+      revealTicking = false;
+    });
+  }
+  window.addEventListener('scroll', onScrollReveal, { passive: true });
+  window.addEventListener('resize', onScrollReveal, { passive: true });
+  checkRevealTargets();
+
+  /* ---------- 4) Contact label char scramble (rotateY, step-end) ---------- */
+  var charContainers = document.querySelectorAll('[data-char-scramble]');
+  function wrapChars(node) {
+    var text = node.textContent;
+    node.textContent = '';
+    var chars = [];
+    for (var i = 0; i < text.length; i++) {
+      var ch = text.charAt(i);
+      if (ch === ' ') {
+        node.appendChild(document.createTextNode(' '));
+        continue;
+      }
+      var span = document.createElement('span');
+      span.className = 'char';
+      span.textContent = ch;
+      node.appendChild(span);
+      chars.push(span);
+    }
+    return chars;
+  }
+  function revealChars(node) {
+    var chars = wrapChars(node);
+    if (reduced) {
+      chars.forEach(function (c) { c.classList.add('is-revealed'); });
+      return;
+    }
+    chars.forEach(function (c, i) {
+      setTimeout(function () { c.classList.add('is-revealed'); }, i * 30);
+    });
+  }
+  // Scroll-based reveal для char-scramble (без IO — стабильно работает)
+  var charRevealed = new WeakSet();
+  function checkCharReveals() {
+    var triggerLine = window.innerHeight * 0.85;
+    for (var i = 0; i < charContainers.length; i++) {
+      var el = charContainers[i];
+      if (charRevealed.has(el)) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerLine && rect.bottom >= 0) {
+        charRevealed.add(el);
+        revealChars(el);
+      }
+    }
+  }
+  var charRevealTicking = false;
+  function onCharRevealScroll() {
+    if (charRevealTicking) return;
+    charRevealTicking = true;
+    requestAnimationFrame(function () {
+      checkCharReveals();
+      charRevealTicking = false;
+    });
+  }
+  window.addEventListener('scroll', onCharRevealScroll, { passive: true });
+  window.addEventListener('resize', onCharRevealScroll, { passive: true });
+  checkCharReveals();
+
+  /* ---------- 5) Magnetic CTA ---------- */
+  // Skip entirely under prefers-reduced-motion: hard accessibility off.
+  if (reduced) {
+    // (no magneticNodes wired; button is static.)
+  } else {
+    var magneticNodes = document.querySelectorAll('[data-magnetic]');
+  magneticNodes.forEach(function (btn) {
+    var rectCache = null;
+    var rafId = null;
+    var tx = 0, ty = 0;
+
+    function refreshRect() { rectCache = btn.getBoundingClientRect(); }
+
+    function apply() {
+      btn.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px, 0)';
+      rafId = null;
+    }
+
+    function onMove(e) {
+      if (!rectCache) refreshRect();
+      var cx = rectCache.left + rectCache.width / 2;
+      var cy = rectCache.top + rectCache.height / 2;
+      var dx = e.clientX - cx;
+      var dy = e.clientY - cy;
+      // Нормализуем в диапазон ±6px
+      var nx = Math.max(-6, Math.min(6, dx * 0.15));
+      var ny = Math.max(-6, Math.min(6, dy * 0.15));
+      tx = nx; ty = ny;
+      if (rafId === null) rafId = requestAnimationFrame(apply);
+    }
+
+    function onEnter() { refreshRect(); }
+
+    function onLeave() {
+      tx = 0; ty = 0;
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+      btn.style.transform = '';
+    }
+
+    btn.addEventListener('mouseenter', onEnter);
+    btn.addEventListener('mousemove', onMove);
+    btn.addEventListener('mouseleave', onLeave);
+    window.addEventListener('scroll', function () { rectCache = null; }, { passive: true });
+    window.addEventListener('resize', function () { rectCache = null; });
+  });
+  }
+
+  /* ---------- boot order ---------- */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runScramble);
+  } else {
+    runScramble();
+  }
+})();
+</script>
+</body>
+</html>

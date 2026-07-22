@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Даниил — каталог портфолио</title>
-  <meta name="description" content="Каталог активных вариантов портфолио Даниила: V1 Brutalist (3 варианта — base, scroll, wow), V3 Terminal (base, scroll-typing), V4 Minimalist (base, hover). V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive.">
+  <meta name="description" content="Каталог активных вариантов портфолио Даниила: V1 Brutalist Motion (объединение scroll + wow), V3 Terminal (base + typing), V4 Minimalist (base + hover). V1-Brutalist-base/scroll/wow, V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -104,11 +104,11 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="eyebrow">CATALOG · 22 JULY 2026 · 7 VARIANTS · 3 BASE + 4 ANIMATED</div>
+      <div class="eyebrow">CATALOG · 22 JULY 2026 · 5 ACTIVE VARIANTS · 2 BASE + 3 ANIMATED</div>
       <h1>Один Даниил — три эстетики, семь живых страниц.</h1>
       <p class="lede">Три standalone-страницы одного портфолио. Контент, контакты и проекты одинаковые. Тон, типографика, цвет и анимации — разные. К каждой базовой странице есть animated-вариант: scroll-эффекты, hover-микро-анимации, scroll-typing, scramble, magnetic. Это каталог для выбора финального варианта, не финальный сайт.</p>
       <div class="note">
-        V2 Editorial, V5 Swiss Grid и V6 Playful выведены в inactive 22 июля 2026 — «не попадание по настроению полное». Файлы страниц и спеки <strong>сохранены</strong> в репо как negative references. V1 Brutalist имеет <strong>три варианта</strong>: base (статика), scroll (clip-path curtain), wow (scramble + magnetic).
+        V1 Brutalist имеет <strong>один активный вариант</strong> — Motion (объединённый scroll + wow). Варианты <code>v1-brutalist</code> (base), <code>v1-brutalist-scroll</code> и <code>v1-brutalist-wow</code> выведены в inactive 22 июля 2026 — <strong>сохранены</strong> в репо как negative references (motion-редакция оказалась сильнейшей, остальные стали избыточны). V2 Editorial, V5 Swiss Grid и V6 Playful также inactive с этой же даты.
       </div>
     </header>
 
@@ -124,49 +124,21 @@
     <main>
       <div class="catalog">
 
-        <!-- V1 BRUTALIST · BASE (статика) -->
+        <!-- V1 BRUTALIST · MOTION (scramble + scroll-reveal + magnetic) -->
         <article class="card">
-          <a href="pages/v1-brutalist/index.html">
-            <div class="thumb"><img src="assets/previews/v1-brutalist-hero.jpg" alt="V1 Brutalist hero preview — чёрный фон, имя ДАНИИЛ 200px" loading="lazy"></div>
+          <a href="pages/v1-brutalist-motion/index.html">
+            <div class="thumb"><img src="assets/previews/v1-brutalist-motion-hero.jpg" alt="V1 Brutalist motion — scramble имени, scroll-reveal секций, magnetic CTA" loading="lazy"></div>
             <div class="meta-line">
-              <span class="num">V1 · BASE</span>
+              <span class="num">V1 · MOTION</span>
               <span class="tag">Brutalist</span>
+              <span class="tag-anim">motion</span>
             </div>
-            <h2>Бетон и манифест</h2>
-            <p class="desc">Чёрный фон, белая типографика, красный акцент. «ДАНИИЛ» 200px, рубленый тон, без анимаций — статика как statement. Эстетика Bloomberg Businessweek и брутализма 2010-х.</p>
-            <span class="open">→ Открыть v1-brutalist</span>
+            <h2>Brutalist Motion</h2>
+            <p class="desc">Объединение scroll-анимаций (reveal секций) и wow-фич (scramble h1, magnetic CTA, hover-tilt карточек).</p>
+            <span class="open">→ Открыть v1-brutalist-motion</span>
           </a>
         </article>
 
-        <!-- V1 BRUTALIST · SCROLL (clip-path curtain) -->
-        <article class="card">
-          <a href="pages/v1-brutalist-scroll/index.html">
-            <div class="thumb"><img src="assets/previews/v1-brutalist-scroll-hero.jpg" alt="V1 Brutalist scroll — clip-path curtain reveal секций при скролле" loading="lazy"></div>
-            <div class="meta-line">
-              <span class="num">V1 · SCROLL</span>
-              <span class="tag">Brutalist</span>
-              <span class="tag-anim">scroll</span>
-            </div>
-            <h2>Brutalist · scroll-clip</h2>
-            <p class="desc">Та же палитра и типографика, что в base. Жёсткие шторы clip-path на секциях, translate3d на h1 при скролле. Никакого fade, никакого easing — линейный механический scroll.</p>
-            <span class="open">→ Открыть v1-brutalist-scroll</span>
-          </a>
-        </article>
-
-        <!-- V1 BRUTALIST · WOW (scramble + magnetic) -->
-        <article class="card">
-          <a href="pages/v1-brutalist-wow/index.html">
-            <div class="thumb"><img src="assets/previews/v1-brutalist-wow-hero.jpg" alt="V1 Brutalist wow — scramble имени, magnetic CTA, draw-underline" loading="lazy"></div>
-            <div class="meta-line">
-              <span class="num">V1 · WOW</span>
-              <span class="tag">Brutalist</span>
-              <span class="tag-anim">wow</span>
-            </div>
-            <h2>Brutalist · анимация + вау</h2>
-            <p class="desc">Брутализм с анимацией. Scramble «ДАНИИЛ» при загрузке, красный underline вырастает под «РАБОТАЕТ», magnetic-CTA на Telegram-ссылке, char-flip на TELEGRAM/EMAIL/GITHUB. Палитра и типографика сохранены.</p>
-            <span class="open">→ Открыть v1-brutalist-wow</span>
-          </a>
-        </article>
 
         <!-- V3 TERMINAL · BASE -->
         <article class="card">
@@ -230,7 +202,7 @@
     </main>
 
     <footer>
-      <span>© 2026 · Даниил · porkaq · Каталог из 7 вариантов (3 base + 4 animated)</span>
+      <span>© 2026 · Даниил · porkaq · Каталог из 5 активных вариантов (2 base + 3 animated)</span>
       <span><a href="https://t.me/porkaqq">Telegram @porkaqq</a> · <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a> · <a href="https://github.com/porkaq">GitHub</a></span>
     </footer>
   </div>
