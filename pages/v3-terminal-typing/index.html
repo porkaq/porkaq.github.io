@@ -1055,6 +1055,7 @@ fast yes, careful yes.
       const shellInput = document.getElementById('shellInput');
       const shellOutput = document.getElementById('shellOutput');
       if (shellInput && shellOutput) {
+        shellInput.focus({ preventScroll: true });
         const fileText = selector => Array.from(document.querySelectorAll(selector))
           .map(el => el.dataset.text || '').filter(Boolean).join('\n');
         const files = {
@@ -1207,7 +1208,14 @@ fast yes, careful yes.
                   entry.target.querySelectorAll('.type-target, .term-type')
                 );
                 if (targets.length) {
-                  typeSeq(targets, () => {});
+                  const instant = entry.target.id === 'about' || entry.target.id === 'projects';
+                  if (instant) {
+                    targets.forEach(target => {
+                      target.textContent = target.dataset.text || '';
+                    });
+                  } else {
+                    typeSeq(targets, () => {});
+                  }
                 }
                 io.unobserve(entry.target);
               }
