@@ -141,17 +141,11 @@
     }
 
     /* Hero scramble spans — fixed-width cells, текст без переноса.
-       visibility:hidden до JS-активации, чтобы исключить FOUC и не
-       сдвигать геометрию. Для reduced-motion JS сразу покажет финал. */
+       data-scramble-ready="1" сразу в HTML — буквы видны постоянно;
+       scramble-цикл JS просто меняет textContent быстро, без visibility-флипа. */
     .scramble {
       display: inline-block;
       vertical-align: top;
-    }
-    .hero-title[data-scramble-ready="0"] .scramble {
-      visibility: hidden;
-    }
-    .hero-title[data-scramble-ready="1"] .scramble {
-      visibility: visible;
     }
 
     /* Hero manifest (right column) */
@@ -320,11 +314,13 @@
       transform: translate3d(0, 0, 0);
     }
 
-    /* WOW: красная ::before-черта слева (8px), выезжает 0 → 60px */
+    /* WOW: красная ::before-черта слева (8px), выезжает 0 → 8px
+       Полоска тонкая, чтобы НЕ перекрывать первую букву заголовка.
+       Полностью помещается в зоне left:-12px, без пересечения с текстом. */
     .section-heading::before {
       content: "";
       position: absolute;
-      left: -16px;
+      left: -12px;
       top: 0.18em;
       width: 0;
       height: 0.7em;
@@ -333,7 +329,7 @@
     }
 
     .section-heading.is-revealed::before {
-      width: 60px;
+      width: 8px;
     }
 
     p { max-width: 65ch; margin: 0 0 16px; }
@@ -780,9 +776,20 @@
         transition-duration: 0s !important;
         scroll-behavior: auto !important;
       }
-      /* Возвращаем заголовки и черту в финальное состояние немедленно.
-         Scramble visibility снимается классом ready, который JS ставит
-         даже при reduced-motion (вместе с data-scramble-ready="1"). */
+      /* Reduced motion: все анимации и transitions отключены выше.
+         Hero scramble не запускается (runScramble делает early-return при
+         reduced), и заголовки имеют data-reveal без .is-revealed →
+         остаются в initial-состоянии (translate3d(-100%, 0, 0)).
+         Чтобы контент был виден при reduced, убираем этот initial-transform. */
+      .section-heading {
+        transform: none !important;
+      }
+      .section-heading::before {
+        width: 8px !important;
+      }
+      .hero-underline-mark {
+        width: calc(100% + 4px) !important;
+      }
     }
   </style>
 </head>
@@ -794,7 +801,7 @@
 <section class="hero" aria-label="Главный экран">
   <div class="hero-grid">
 
-    <h1 class="hero-title" data-scramble-ready="0"><span class="scramble">Д</span><span class="scramble">А</span><span class="scramble">Н</span><span class="scramble">И</span><span class="scramble">И</span><span class="scramble">Л</span></h1>
+    <h1 class="hero-title" data-scramble-ready="1"><span class="scramble">Д</span><span class="scramble">А</span><span class="scramble">Н</span><span class="scramble">И</span><span class="scramble">И</span><span class="scramble">Л</span></h1>
 
     <aside class="hero-manifest" aria-label="Карточка контекста">
       <p class="hero-manifest-row">
@@ -1016,14 +1023,13 @@
   function runScramble() {
     if (!heroTitle || !scrambleChars.length) return;
     if (reduced) {
-      heroTitle.setAttribute('data-scramble-ready', '1');
       return;
     }
     var finished = 0;
     scrambleChars.forEach(function (node, i) {
       var finalChar = node.textContent;
-      // Сохраняем цель, прячем до старта своей очереди, чтобы исключить
-      // FOUC и flash «финал → случайная» в первом кадре.
+      // Сохраняем цель, сразу показываем случайный символ до старта своей очереди,
+      // чтобы исключить flash «финал → случайная» в первом кадре.
       node.dataset.final = finalChar;
       node.textContent = scramblePool[Math.floor(Math.random() * scramblePool.length)];
       setTimeout(function () {
@@ -1034,9 +1040,6 @@
             clearInterval(timer);
             node.textContent = finalChar;
             finished += 1;
-            if (finished === scrambleChars.length) {
-              heroTitle.setAttribute('data-scramble-ready', '1');
-            }
             return;
           }
           node.textContent = scramblePool[Math.floor(Math.random() * scramblePool.length)];
