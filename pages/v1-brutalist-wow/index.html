@@ -307,14 +307,9 @@
       color: var(--fg);
       margin: 0 0 32px;
       position: relative;
-      /* initial state for reveal — overridden by .is-revealed */
-      transform: translate3d(-100%, 0, 0);
-      transition: transform 500ms var(--easing-out);
-    }
-
-    /* WOW: heading reveal on viewport entry */
-    .section-heading.is-revealed {
-      transform: translate3d(0, 0, 0);
+      /* Только красная ::before-черта анимируется при reveal.
+         Сам заголовок всегда на своём месте (без slide-in transform),
+         иначе пользователь видит «пропадают при скролле». */
     }
 
     /* WOW: красная ::before-черта слева (8px), выезжает 0 → 8px
@@ -781,12 +776,8 @@
       }
       /* Reduced motion: все анимации и transitions отключены выше.
          Hero scramble не запускается (runScramble делает early-return при
-         reduced), и заголовки имеют data-reveal без .is-revealed →
-         остаются в initial-состоянии (translate3d(-100%, 0, 0)).
-         Чтобы контент был виден при reduced, убираем этот initial-transform. */
-      .section-heading {
-        transform: none !important;
-      }
+         reduced). data-reveal на h2 отключаем — заголовки видны всегда,
+         красная черта показывается сразу без анимации. */
       .section-heading::before {
         width: 8px !important;
       }
