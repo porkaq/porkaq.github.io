@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Даниил — V3 Terminal</title>
+  <meta name="description" content="Даниил Варламов — fullstack developer, Иркутск. Портфолио в виде CLI-сеанса: terminal, JetBrains Mono, реальные команды, никаких клише.">
+  <meta name="color-scheme" content="dark">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+
+  <style>
+    /* ============================================================
+       V3 Terminal — implementer pass (2026-07-22)
+       Strict spec compliance: JetBrains Mono everywhere, palette only,
+       no gradient, no backdrop-filter, no Matrix rain, no running 0/1.
+       ============================================================ */
+
+    :root {
+      /* ── Backgrounds (3 surface levels) ───────────────────── */
+      --bg:           #0A0E0A;
+      --surface-1:    #11161A;
+      --surface-2:    #1A2220;
+
+      /* ── Borders / dividers ───────────────────────────────── */
+      --border:        #1F2A1F;
+      --border-strong: #2D3D2D;
+
+      /* ── Text / foreground ────────────────────────────────── */
+      --text:         #4ADE80;
+      --muted:        #3A8C5A;
+      --dim:          #2A6640;
+      --fg-inverse:   #0A0E0A;
+
+      /* ── Accent (warning / CTA — единственный вторичный) ── */
+      --accent:       #FBBF24;
+      --accent-hover: #F59E0B;
+      --accent-dim:   #8A6E10;
+
+      /* ── Prompt semantic alias ───────────────────────────── */
+      --prompt:       #4ADE80;
+      --path:         #FBBF24;
+      --host:         #4ADE80;
+      --user:         #FBBF24;
+
+      /* ── Syntax highlight ────────────────────────────────── */
+      --syn-cmd:      #4ADE80;
+      --syn-str:      #FBBF24;
+      --syn-flag:     #FBBF24;
+      --syn-num:      #4ADE80;
+
+      /* ── Pixel & motion ──────────────────────────────────── */
+      --radius:       6px;
+      --radius-pill:  9999px;
+      --gap:          16px;
+      --gap-lg:       32px;
+      --gap-xl:       64px;
+
+      --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono',
+                      Menlo, Monaco, Consolas, 'Liberation Mono',
+                      'Courier New', monospace;
+
+      --fs-prompt:    14px;
+      --fs-h1:        32px;
+      --fs-h2:        20px;
+      --fs-line:      1.55;
+
+      --d-cursor:     1100ms;
+      --d-type-min:   40ms;
+      --d-type-max:   120ms;
+      --d-line:       200ms;
+      --d-fade:       300ms;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: var(--fs-prompt);
+      line-height: var(--fs-line);
+      font-feature-settings: "ss01" on, "calt" on;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      min-height: 100vh;
+    }
+    a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+    a:focus-visible,
+    button:focus-visible,
+    .cta-button:focus-visible,
+    .project-link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+    pre, code, kbd, samp {
+      font-family: var(--font-mono);
+      margin: 0;
+    }
+    hr { border: 0; height: auto; }
+
+    /* ── Site-wide nav (4 items, mono) ─────────────────────── */
+    .site-nav {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 50px;
+      display: flex;
+      align-items: center;
+      gap: var(--gap-lg);
+      font-size: 13px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .site-nav .nav-brand {
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+    .site-nav .nav-brand .at { color: var(--accent); }
+    .site-nav .nav-links { display: flex; gap: var(--gap); }
+    .site-nav .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 2px 6px;
+      transition: color 200ms ease-out;
+    }
+    .site-nav .nav-links a:hover,
+    .site-nav .nav-links a[aria-current="page"] {
+      color: var(--text);
+    }
+    @media (max-width: 720px) {
+      .site-nav { padding: 14px 24px; gap: var(--gap); flex-wrap: wrap; }
+      .site-nav .nav-links { gap: 10px; }
+    }
+
+    /* ============================================================
+       HERO
+       ============================================================ */
+    .hero {
+      background: var(--bg);
+      padding: var(--gap-xl) 0;
+      min-height: calc(100vh - 64px);
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 45fr 55fr;
+      gap: var(--gap-xl);
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 50px;
+      width: 100%;
+    }
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: var(--gap-lg);
+        padding: 0 24px;
+      }
+    }
+
+    /* ── Terminal window (left) ─────────────────────────────── */
+    .hero-terminal { min-width: 0; }
+
+    .terminal-window {
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: var(--fs-prompt);
+      line-height: var(--fs-line);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.02),
+        0 0 0 1px rgba(0,0,0,0.6),
+        0 24px 60px -20px rgba(0,0,0,0.6);
+      overflow: hidden;
+      min-height: 460px;
+    }
+
+    .terminal-titlebar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-dots { display: flex; gap: 8px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .dot-red    { background: #5C2A2A; }
+    .dot-yellow { background: #5C502A; }
+    .dot-green  { background: #2A5C2A; }
+
+    .terminal-title {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+    .terminal-titlebar-spacer { width: 52px; }
+
+    .terminal-body {
+      padding: 20px 18px 22px;
+      min-height: 380px;
+    }
+
+    .term-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      line-height: var(--fs-line);
+    }
+    .term-prompt { margin-right: 8px; white-space: pre; }
+    .term-prompt .term-user { color: var(--user); }
+    .term-prompt .term-at   { color: var(--text); }
+    .term-prompt .term-host { color: var(--host); }
+    .term-prompt .term-colon { color: var(--text); }
+    .term-prompt .term-path { color: var(--path); }
+    .term-prompt .term-dollar { color: var(--text); }
+
+    .term-cmd  { font-weight: 700; color: var(--syn-cmd); }
+    .term-flag { color: var(--syn-flag); }
+    .term-arg  { color: var(--syn-str); }
+    .term-com  { color: var(--dim); font-style: italic; opacity: 0.85; }
+
+    .term-output {
+      display: block;
+      margin: 4px 0 14px;
+      white-space: pre-wrap;
+      color: var(--text);
+    }
+    .term-output .term-result { color: var(--text); margin: 0; }
+    .term-ls .term-result { margin: 0; }
+
+    .term-active { display: flex; align-items: baseline; margin-top: 6px; }
+    .term-typing { color: var(--text); }
+
+    .term-cursor {
+      display: inline-block;
+      width: 0.55em;
+      height: 1em;
+      background: var(--text);
+      color: var(--bg);
+      vertical-align: text-bottom;
+      margin-left: 1px;
+      animation: cursor-blink var(--d-cursor) steps(2, start) infinite;
+    }
+    @keyframes cursor-blink {
+      0%, 49%   { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* ── Hero meta (right) ──────────────────────────────────── */
+    .hero-meta { min-width: 0; }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      text-transform: lowercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .hero-h1 {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: clamp(28px, 4vw, 32px);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin: 0 0 var(--gap-lg) 0;
+    }
+    .hero-h1 .comment { color: var(--muted); }
+
+    .hero-comment {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--dim);
+      font-style: italic;
+      margin-bottom: var(--gap-lg);
+      white-space: pre-line;
+    }
+
+    .hero-ascii {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.3;
+      color: var(--text);
+      margin: 0;
+      padding: 14px 16px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ============================================================
+       Sections (shared)
+       ============================================================ */
+    section.section { padding: var(--gap-xl) 0; }
+    section.section.alt { background: var(--surface-1); }
+    section.section.bg  { background: var(--bg); }
+
+    .section-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 50px;
+    }
+    @media (max-width: 720px) {
+      .section-inner { padding: 0 24px; }
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .eyebrow .term-cmd { font-weight: 700; text-transform: none; }
+    .eyebrow .term-arg { color: var(--accent); }
+
+    h2.section-h2 {
+      font-family: var(--font-mono);
+      font-size: clamp(18px, 2.4vw, 20px);
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: 0;
+      color: var(--text);
+      margin: 0 0 var(--gap) 0;
+    }
+
+    .term-window {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: var(--fs-line);
+      white-space: pre-wrap;
+    }
+    section.section.alt .term-window {
+      background: var(--surface-2);
+      border-color: var(--border);
+    }
+
+    .term-window .term-line { margin-bottom: 2px; }
+    .term-window .term-output { margin: 4px 0 14px; }
+    .term-window .hr-dashes {
+      color: var(--dim);
+      margin: 14px 0;
+      letter-spacing: 0;
+    }
+    .term-window .field-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px;
+      margin: 2px 0;
+    }
+    .term-window .field-row .field-name { color: var(--muted); }
+    .term-window .field-row .field-value { color: var(--text); }
+    .term-window .comment-line {
+      color: var(--dim);
+      font-style: italic;
+    }
+    .term-window .list-line { color: var(--text); padding-left: 0; }
+    .term-window a { color: var(--accent); }
+    .term-window a:hover { color: var(--accent-hover); }
+
+    /* ============================================================
+       About
+       ============================================================ */
+    .about-wrap { max-width: 760px; }
+
+    /* ============================================================
+       Skills
+       ============================================================ */
+    .skills-wrap { max-width: 720px; margin: 0 auto; }
+
+    /* ============================================================
+       Projects (split 60/40 inverse)
+       ============================================================ */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 60fr 40fr;
+      gap: var(--gap-lg);
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .projects-grid { grid-template-columns: 1fr; gap: var(--gap); }
+    }
+
+    .project-rows {
+      border-top: 1px solid var(--border);
+    }
+    .project-row {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      transition: background 200ms ease-out;
+    }
+    .project-row:hover { background: var(--surface-2); }
+    .project-row .project-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--gap);
+      margin-bottom: 6px;
+    }
+    .project-row .project-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .project-row .project-tag {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .project-row .project-desc {
+      color: var(--text);
+      line-height: var(--fs-line);
+      white-space: pre-line;
+      margin-bottom: 8px;
+    }
+    .project-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dashed var(--accent);
+      font-weight: 500;
+    }
+    .project-link:hover { border-bottom-style: solid; }
+
+    /* tree (правая колонка в проектах) */
+    .tree-block pre {
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.55;
+    }
+
+    /* ============================================================
+       Experience
+       ============================================================ */
+    .experience-wrap { max-width: 640px; margin: 0 auto; }
+
+    /* ============================================================
+       Contact (split 60/40 + CTA)
+       ============================================================ */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 60fr 40fr;
+      gap: var(--gap-lg);
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .contact-grid { grid-template-columns: 1fr; gap: var(--gap); }
+    }
+    .cta-button {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--fg-inverse);
+      font: 600 16px/1 var(--font-mono);
+      letter-spacing: 0.01em;
+      padding: 16px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      border: 0;
+      transition: background 200ms ease-out, transform 200ms ease-out;
+    }
+    .cta-button:hover  { background: var(--accent-hover); color: var(--fg-inverse); }
+    .cta-button:active { transform: translateY(1px); }
+    .cta-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--gap);
+    }
+    .cta-block .cta-note {
+      color: var(--dim);
+      font-style: italic;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    /* ============================================================
+       Footer (`man daniil`)
+       ============================================================ */
+    .site-footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: var(--gap-xl) 0;
+      color: var(--muted);
+    }
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 50px;
+    }
+    @media (max-width: 720px) {
+      .footer-inner { padding: 0 24px; }
+    }
+    .man-block {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .man-block .man-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .man-block .man-section {
+      margin: 12px 0 4px;
+    }
+    .man-block .man-name {
+      color: var(--text);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      font-size: 12px;
+    }
+    .man-block .man-body { padding-left: 0; white-space: pre-line; }
+    .man-block .man-body .arg { color: var(--accent); }
+    .man-block .man-body .opt-name { color: var(--accent); }
+    .footer-meta {
+      margin-top: var(--gap-lg);
+      padding-top: var(--gap);
+      border-top: 1px solid var(--border);
+      color: var(--dim);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .footer-meta .echo-line { white-space: pre; }
+    .footer-meta .echo-line .accent { color: var(--accent); }
+    .footer-meta .credit { margin-top: 8px; white-space: pre-line; }
+
+    /* ============================================================
+       Motion: fade-up секций + scroll-typing
+       ============================================================ */
+    .fade-section {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity var(--d-fade) ease-out,
+                  transform var(--d-fade) ease-out;
+    }
+    .fade-section.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* type-target изначально пустой, JS печатает */
+    .type-target {
+      display: inline;
+      white-space: pre-wrap;
+    }
+    .type-target::after {
+      content: '';
+    }
+    .term-section-cursor {
+      display: inline-block;
+      width: 0.55em;
+      height: 1em;
+      background: var(--text);
+      color: var(--bg);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: cursor-blink var(--d-cursor) steps(2, start) infinite;
+    }
+    .term-section-cursor.is-done { animation: none; opacity: 0; }
+
+    /* ============================================================
+       Reduced motion
+       ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      .term-cursor, .term-section-cursor { animation: none; opacity: 1; }
+      .fade-section {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .nav-links a, .cta-button, .project-row, .project-link {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Top nav (4 items max, mono) ────────────────────────── -->
+  <nav class="site-nav" aria-label="Site navigation">
+    <span class="nav-brand">daniil<span class="at">@</span>irkutsk:~$</span>
+    <span class="nav-links">
+      <a href="#about">~/about</a>
+      <a href="#skills">~/skills</a>
+      <a href="#projects">~/projects</a>
+      <a href="#contact">~/contact</a>
+    </span>
+  </nav>
+
+  <!-- ============================================================
+       HERO — split 45/55
+       ============================================================ -->
+  <section class="hero" aria-label="Hero terminal">
+    <div class="hero-grid">
+
+      <!-- LEFT: terminal window (~45%) -->
+      <div class="hero-terminal">
+        <div class="terminal-window" role="region" aria-label="Terminal session">
+
+          <div class="terminal-titlebar">
+            <div class="terminal-dots" aria-hidden="true">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="terminal-title">daniil@irkutsk: ~</div>
+            <div class="terminal-titlebar-spacer"></div>
+          </div>
+
+          <div class="terminal-body" id="heroBody" aria-live="polite">
+
+            <!-- prompt + whoami -->
+            <div class="term-line">
+              <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+              <span class="term-cmd">whoami</span>
+            </div>
+            <div class="term-line term-output">
+              <pre class="term-result">daniil</pre>
+            </div>
+
+            <!-- prompt + ls ~/projects -->
+            <div class="term-line">
+              <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+              <span class="term-cmd">ls</span>
+              <span class="term-arg">~/projects</span>
+            </div>
+            <div class="term-line term-output term-ls">
+              <pre class="term-result">drwxr-xr-x  elovpark
+drwxr-xr-x  sibstalker
+drwxr-xr-x  istu95
+drwxr-xr-x  porkaq.github.io</pre>
+            </div>
+
+            <!-- prompt + cat skills.txt -->
+            <div class="term-line">
+              <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+              <span class="term-cmd">cat</span>
+              <span class="term-arg">skills.txt</span>
+            </div>
+            <div class="term-line term-output">
+              <pre class="term-result">PHP · 1С-Битрикс · HTML/CSS/JS · Python · Telegram
+4 yrs IRNITU prod · Irkutsk · remote-ready from 27 July
+Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
+            </div>
+
+            <!-- ACTIVE: typing line -->
+            <div class="term-line term-active">
+              <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+              <span class="term-typing" id="heroTyping" data-text="cat about.txt"></span><span class="term-cursor" aria-hidden="true"></span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: meta + ASCII (no CTA here, anti-slop #1) -->
+      <div class="hero-meta">
+        <div class="hero-eyebrow">// v3 — terminal</div>
+
+        <h1 class="hero-h1">
+          <span class="comment">//</span> Профиль Даниила<br>
+          <span class="comment">//</span> в виде CLI-сеанса.<br>
+          <span class="comment">//</span> Без буллшита, с реальными<br>
+          <span class="comment">//</span> командами.
+        </h1>
+
+        <div class="hero-comment"># hero — это окно терминала слева.
+# справа — то, что я обычно делаю.
+# можно скроллить дальше, это весь сайт.</div>
+
+<pre class="hero-ascii" aria-hidden="true">
+   ╔══════════════════════╗
+   ║  daniil@irkutsk      ║
+   ║  ─────────────       ║
+   ║  ◆ web dev (4 yrs)   ║
+   ║  ◆ bots (Telegram)   ║
+   ║  ◆ prod (IRNITU)     ║
+   ╚══════════════════════╝
+</pre>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 1 · cat about.txt
+       ============================================================ -->
+  <section id="about" class="section bg fade-section" aria-labelledby="about-h2">
+    <div class="section-inner about-wrap">
+      <span class="eyebrow"><span class="term-cmd">cat</span> <span class="term-arg">about.txt</span></span>
+      <h2 id="about-h2" class="section-h2">// who am i</h2>
+
+      <div class="term-window">
+        <div class="term-line">
+          <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+          <span class="term-cmd">ls</span><span class="term-flag"> -la</span><span class="term-arg"> about.txt</span>
+        </div>
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-text="-rw-r--r--  1 daniil daniil  1.2K  Jul 22 10:16  ./about.txt"></span></span></pre>
+
+        <div class="term-line">
+          <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+          <span class="term-cmd">cat</span><span class="term-arg"> about.txt</span>
+        </div>
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-text="# Daniil Varlamov
+# Иркутск → remote
+# developer, не manager
+
+Делаю сайты и ботов для команд, у которых нет
+выделенного фронта. 4 года на проде ИРНИТУ — это
+значит, что мои правки не ломают сайт тысячам
+студентов в начале семестра.
+
+──────────────────────────────────────────────
+location    : Иркутск · remote-ready
+available   : с 27 июля, 30+ ч/нед
+rate        : от 800 ₽/ч · фикс за задачу
+languages   : русский (native), english (read/write)"></span></span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 2 · cat skills.txt | wc -l
+       ============================================================ -->
+  <section id="skills" class="section alt fade-section" aria-labelledby="skills-h2">
+    <div class="section-inner skills-wrap">
+      <span class="eyebrow"><span class="term-cmd">cat</span> <span class="term-arg">skills.txt</span> <span class="term-flag">|</span> <span class="term-cmd">wc</span> <span class="term-flag">-l</span></span>
+      <h2 id="skills-h2" class="section-h2">// stack</h2>
+
+      <div class="term-window">
+        <div class="term-line">
+          <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+          <span class="term-cmd">cat</span><span class="term-arg"> skills.txt</span> <span class="term-flag">|</span> <span class="term-cmd">wc</span><span class="term-flag"> -l</span>
+        </div>
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-text="       5"></span></span></pre>
+
+        <div class="term-line">
+          <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+          <span class="term-cmd">cat</span><span class="term-arg"> skills.txt</span>
+        </div>
+<pre class="term-output"><span class="term-result"><span class="type-target" data-text="PHP
+1С-Битрикс
+HTML / CSS / JavaScript
+Python
+Telegram Bot API"></span></span></pre>
+
+        <div class="term-line comment-line">// основное — на проде каждый день, остальное — по запросу.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 3 · ls && tree -L 1 (split 60/40)
+       ============================================================ -->
+  <section id="projects" class="section bg fade-section" aria-labelledby="projects-h2">
+    <div class="section-inner">
+      <span class="eyebrow"><span class="term-cmd">cd</span> <span class="term-arg">~/projects</span> <span class="term-flag">&amp;&amp;</span> <span class="term-cmd">ls</span> <span class="term-flag">-la</span></span>
+      <h2 id="projects-h2" class="section-h2">// ~/projects</h2>
+
+      <div class="projects-grid">
+
+        <!-- LEFT col: ls output as rows -->
+        <div class="term-window">
+<pre class="term-output"><span class="term-result"><span class="type-target" data-text="drwxr-xr-x  elovpark.ru         2026 — интернет-магазин, vanilla JS
+drwxr-xr-x  sibstalker.ru       2026 — магазин вездеходов, full-cycle
+drwxr-xr-x  istu.edu/promo/95   2024 — промо ИРНИТУ, в команде вуза
+-rw-r--r--  README.md"></span></span></pre>
+
+          <div class="term-line comment-line" style="margin-top:10px;">// все проекты живые на момент 2026-07-22.</div>
+
+          <div class="project-rows" role="list">
+
+            <article class="project-row" role="listitem">
+              <div class="project-head">
+                <span class="project-name">elovpark.ru</span>
+                <span class="project-tag">2026 · vanilla-JS</span>
+              </div>
+              <div class="project-desc">Интернет-магазин «Еловый парк»: вёрстка и весь
+интерактив (каталог, карточки, галерея, модалки,
+форма заказа). Полный адаптив + тёмная тема.</div>
+              <a class="project-link" href="https://elovpark.ru/" target="_blank" rel="noopener noreferrer">→ elovpark.ru</a>
+            </article>
+
+            <article class="project-row" role="listitem">
+              <div class="project-head">
+                <span class="project-name">sibstalker.ru</span>
+                <span class="project-tag">2026 · full-cycle</span>
+              </div>
+              <div class="project-desc">Магазин вездеходной техники «Сибсталкер»: полный
+цикл (дизайн → вёрстка → JS). Каталог с фильтрами,
+карточки, фотогалерея, форма обратной связи.</div>
+              <a class="project-link" href="https://sibstalker.ru/" target="_blank" rel="noopener noreferrer">→ sibstalker.ru</a>
+            </article>
+
+            <article class="project-row" role="listitem">
+              <div class="project-head">
+                <span class="project-name">istu.edu/promo/95</span>
+                <span class="project-tag">2024 · team</span>
+              </div>
+              <div class="project-desc">Промо к 95-летию ИРНИТУ: вёрстка + JS + адаптив,
+в команде с разработчиками вуза. Юбилейный лендинг.</div>
+              <a class="project-link" href="https://www.istu.edu/promo/95/" target="_blank" rel="noopener noreferrer">→ istu.edu/promo/95</a>
+            </article>
+
+          </div>
+        </div>
+
+        <!-- RIGHT col: tree -->
+        <div class="term-window tree-block" aria-label="Project tree">
+          <div class="term-line">
+            <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~/projects</span><span class="term-dollar">$</span></span>
+            <span class="term-cmd">tree</span><span class="term-flag"> -L</span><span class="term-arg"> 1</span>
+          </div>
+<pre class="term-output"><span class="term-result"><span class="type-target" data-text="~/projects/
+├── elovpark/         # вёрстка + весь интерактив, без конструктора
+├── sibstalker/       # дизайн + вёрстка + JS
+├── istu95/           # вёрстка + JS, в команде с разработчиками вуза
+└── README.md"></span></span></pre>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 4 · uptime && w
+       ============================================================ -->
+  <section id="experience" class="section bg fade-section" aria-labelledby="experience-h2">
+    <div class="section-inner experience-wrap">
+      <span class="eyebrow"><span class="term-cmd">uptime</span> <span class="term-flag">&amp;&amp;</span> <span class="term-cmd">w</span></span>
+      <h2 id="experience-h2" class="section-h2">// experience</h2>
+
+      <div class="term-window">
+        <div class="term-line">
+          <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+          <span class="term-cmd">uptime</span>
+        </div>
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04"></span></span></pre>
+
+        <div class="term-line">
+          <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+          <span class="term-cmd">w</span>
+        </div>
+<pre class="term-output"><span class="term-result"><span class="type-target" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+daniil   pts/0    192.168.1.42     10:16    0.00s  0.42s  0.02s w"></span></span></pre>
+
+        <div class="term-line comment-line" style="margin-top:6px;">// 4 года на проде ИРНИТУ, всё ещё в строю.</div>
+        <div class="term-line comment-line">// load average — для наглядности, не реальные цифры.</div>
+        <div class="term-line comment-line">// это сеанс в моём терминале, а не на сервере вуза.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 5 · cat contact.txt (split 60/40 + CTA)
+       ============================================================ -->
+  <section id="contact" class="section alt fade-section" aria-labelledby="contact-h2">
+    <div class="section-inner">
+      <span class="eyebrow"><span class="term-cmd">cat</span> <span class="term-arg">contact.txt</span></span>
+      <h2 id="contact-h2" class="section-h2">// contact</h2>
+
+      <div class="contact-grid">
+
+        <!-- LEFT col: contact.txt -->
+        <div class="term-window">
+          <div class="term-line">
+            <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+            <span class="term-cmd">cat</span><span class="term-arg"> contact.txt</span>
+          </div>
+<pre class="term-output"><span class="term-result"><span class="type-target" data-text="# контакты
+telegram : @porkaqq
+email    : varlamovdaniil-2004@mail.ru
+github   : github.com/porkaq
+location : Иркутск → remote
+
+# доступность
+from     : 27 июля 2026
+hours    : 30+ ч/нед
+rate     : от 800 ₽/h · фикс за задачу
+
+# как пишу
+fast yes, careful yes.
+если удобно — договариваемся голосом на 5 минут."></span></span></pre>
+
+          <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:8px;">
+            <a href="https://t.me/porkaqq" target="_blank" rel="noopener noreferrer">t.me/porkaqq ↗</a>
+            <a href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
+            <a href="https://github.com/porkaq" target="_blank" rel="noopener noreferrer">github.com/porkaq ↗</a>
+          </div>
+        </div>
+
+        <!-- RIGHT col: CTA block (единственное жёлтое) -->
+        <div class="cta-block">
+          <a class="cta-button" href="https://t.me/porkaqq" target="_blank" rel="noopener noreferrer">→ написать в Telegram</a>
+
+          <div class="cta-note">// или email: varlamovdaniil-2004@mail.ru
+// жду брифа — 1-2 строки хватит.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER · man daniil
+       ============================================================ -->
+  <footer class="site-footer fade-section" aria-labelledby="footer-h2">
+    <div class="footer-inner">
+      <span class="eyebrow"><span class="term-cmd">man</span> <span class="term-arg">daniil</span> <span class="term-flag">|</span> <span class="term-cmd">head</span><span class="term-flag"> -10</span></span>
+      <h2 id="footer-h2" class="section-h2" style="margin-top:14px;">// man daniil</h2>
+
+      <div class="man-block">
+        <div class="man-head"><span>DANIIL(1)</span><span>User Commands</span><span>DANIIL(1)</span></div>
+
+        <div class="man-section"><span class="man-name">NAME</span></div>
+        <div class="man-body">       daniil - fullstack developer, Иркутск</div>
+
+        <div class="man-section"><span class="man-name">SYNOPSIS</span></div>
+        <div class="man-body">       daniil [<span class="opt-name">OPTIONS</span>] <span class="arg">&lt;task&gt;</span></div>
+
+        <div class="man-section"><span class="man-name">DESCRIPTION</span></div>
+        <div class="man-body">       С 2022 на проде ИРНИТУ. Делаю сайты и ботов.
+       remote-ready. Стек: PHP, 1С-Битрикс, JS, Python.</div>
+
+        <div class="man-section"><span class="man-name">OPTIONS</span></div>
+        <div class="man-body">       <span class="opt-name">--fast</span>      work in 24 hours
+       <span class="opt-name">--fixed</span>     fixed price per task</div>
+
+        <div class="man-section"><span class="man-name">SEE ALSO</span></div>
+        <div class="man-body">       telegram(1), porkaq.github.io(7)</div>
+
+        <div class="footer-meta">
+          <div class="term-line">
+            <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
+            <span class="term-cmd">echo</span> <span class="term-arg">"site last updated: 2026-07-22"</span>
+          </div>
+          <div class="term-line comment-line">// refresh честный</div>
+
+          <div class="echo-line"><span class="accent">built with vanilla HTML/CSS/JS</span> · no frameworks · no analytics</div>
+          <div class="echo-line">hosted on github pages · 6 variants in /pages/</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       JS · hero typing (rAF) + IntersectionObserver fade-up
+       ============================================================ -->
+  <script>
+    (() => {
+      'use strict';
+
+      // ── 1. Hero typing effect (requestAnimationFrame) ────────
+      const REDUCE_MOTION = window.matchMedia(
+        '(prefers-reduced-motion: reduce)').matches;
+
+      const typingEl = document.getElementById('heroTyping');
+      if (typingEl) {
+        const text = typingEl.dataset.text || 'cat about.txt';
+        const minDelay = 40;
+        const maxDelay = 120;
+
+        const rand = () => minDelay + Math.random() * (maxDelay - minDelay);
+
+        function type(i) {
+          if (REDUCE_MOTION) {
+            typingEl.textContent = text;
+            return;
+          }
+          if (i > text.length) return;
+          typingEl.textContent = text.slice(0, i);
+          requestAnimationFrame(() => {
+            setTimeout(() => type(i + 1), rand());
+          });
+        }
+
+        const startTyping = () => type(0);
+
+        if ('IntersectionObserver' in window) {
+          const io = new IntersectionObserver((entries) => {
+            if (entries.some(e => e.isIntersecting)) {
+              io.disconnect();
+              startTyping();
+            }
+          }, { threshold: 0.3 });
+          io.observe(typingEl);
+        } else {
+          startTyping();
+        }
+      }
+
+      // ── 2. Fade-up секций + scroll-typing через IntersectionObserver ───────
+      // Очищаем type-target перед observer, чтобы текст не «мигнул»
+      const typeTargets = document.querySelectorAll('.type-target');
+      typeTargets.forEach(el => { el.textContent = ''; });
+
+      const fadeEls = document.querySelectorAll('.fade-section');
+      if (fadeEls.length) {
+        if (REDUCE_MOTION) {
+          // Reduced motion: показать всё сразу, никакого typing
+          fadeEls.forEach(el => el.classList.add('is-visible'));
+          typeTargets.forEach(el => {
+            if (el.dataset.text) el.textContent = el.dataset.text;
+          });
+        } else if ('IntersectionObserver' in window) {
+          const minDelay = 18;   // чуть быстрее, чтобы секция не висела вечно
+          const maxDelay = 55;
+          const blockGap = 220;  // пауза между блоками внутри одной секции
+
+          const rand = () => minDelay + Math.random() * (maxDelay - minDelay);
+
+          // Один observer на section: запускает печать всех type-target внутри
+          const typeSeq = (targets, onDone) => {
+            let i = 0;
+            const next = () => {
+              if (i >= targets.length) {
+                if (onDone) onDone();
+                return;
+              }
+              const target = targets[i];
+              const text = target.dataset.text || '';
+              let j = 0;
+
+              // Курсор рядом с текущим блоком
+              const cursor = document.createElement('span');
+              cursor.className = 'term-section-cursor';
+              cursor.setAttribute('aria-hidden', 'true');
+              target.parentNode.insertBefore(cursor, target.nextSibling);
+
+              const tick = () => {
+                if (j > text.length) {
+                  cursor.classList.add('is-done');
+                  i += 1;
+                  setTimeout(next, blockGap);
+                  return;
+                }
+                target.textContent = text.slice(0, j);
+                requestAnimationFrame(() => {
+                  setTimeout(tick, rand());
+                });
+                j += 1;
+              };
+              tick();
+            };
+            next();
+          };
+
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                const targets = Array.from(
+                  entry.target.querySelectorAll('.type-target')
+                );
+                if (targets.length) {
+                  typeSeq(targets, () => {});
+                }
+                io.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+
+          fadeEls.forEach(el => io.observe(el));
+        } else {
+          fadeEls.forEach(el => el.classList.add('is-visible'));
+          typeTargets.forEach(el => {
+            if (el.dataset.text) el.textContent = el.dataset.text;
+          });
+        }
+      }
+
+      // ── 3. Nav: aria-current для активной секции ───────────
+      const navLinks = document.querySelectorAll('.site-nav .nav-links a');
+      const sectionIds = ['about', 'skills', 'projects', 'contact'];
+      const sections = sectionIds
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+
+      if (sections.length && 'IntersectionObserver' in window) {
+        const navIo = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const id = entry.target.id;
+              navLinks.forEach(a => {
+                const active = a.getAttribute('href') === '#' + id;
+                if (active) a.setAttribute('aria-current', 'page');
+                else a.removeAttribute('aria-current');
+              });
+            }
+          });
+        }, { threshold: 0.4 });
+        sections.forEach(s => navIo.observe(s));
+      }
+    })();
+  </script>
+</body>
+</html>
