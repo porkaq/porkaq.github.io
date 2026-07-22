@@ -375,6 +375,19 @@
       width: 8px;
     }
 
+    /* Section curtain — clip-path открывается слева направо при входе в viewport.
+       Brutalist motion: 600ms linear, без easing. Применяется к каждой
+       .section (4 штуки: about, stack, projects, contact) — JS добавляет
+       .is-revealed в checkRevealTargets при rect.top <= 85vh. */
+    .section-curtain {
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 600ms linear;
+      will-change: clip-path;
+    }
+    .section-curtain.is-revealed {
+      clip-path: inset(0 0 0 0);
+    }
+
     p { max-width: 65ch; margin: 0 0 16px; }
     p:last-child { margin-bottom: 0; }
 
@@ -826,6 +839,12 @@
       .section-heading::before {
         width: 8px !important;
       }
+      /* Section curtain: при reduced motion открываем сразу, иначе
+         clip-path оставит контент скрытым без анимации. */
+      .section-curtain,
+      .section-curtain.is-revealed {
+        clip-path: none !important;
+      }
       .hero-underline-mark {
         width: calc(100% + 4px) !important;
       }
@@ -886,7 +905,7 @@
   <!-- ========================================================
        ABOUT
        ======================================================== -->
-  <section id="about" class="section section-about" aria-label="Обо мне">
+  <section id="about" class="section section-about section-curtain" aria-label="Обо мне">
     <div class="section-inner">
       <div class="section-label" aria-hidden="true">Обо мне</div>
       <div>
@@ -901,7 +920,7 @@
   <!-- ========================================================
        STACK
        ======================================================== -->
-  <section id="stack" class="section section-stack" aria-label="Стек">
+  <section id="stack" class="section section-stack section-curtain" aria-label="Стек">
     <div class="section-inner">
       <div>
         <div class="section-label">Стек</div>
@@ -944,7 +963,7 @@
   <!-- ========================================================
        PROJECTS
        ======================================================== -->
-  <section id="projects" class="section section-projects" aria-label="Проекты">
+  <section id="projects" class="section section-projects section-curtain" aria-label="Проекты">
     <div class="section-inner">
       <div>
         <div class="section-label">Проекты</div>
@@ -990,7 +1009,7 @@
   <!-- ========================================================
        CONTACT
        ======================================================== -->
-  <section id="contact" class="section section-contact" aria-label="Контакты">
+  <section id="contact" class="section section-contact section-curtain" aria-label="Контакты">
     <div class="section-inner">
       <div>
         <div class="section-label">Контакт</div>
@@ -1175,6 +1194,36 @@
   window.addEventListener('scroll', onScrollReveal, { passive: true });
   window.addEventListener('resize', onScrollReveal, { passive: true });
   checkRevealTargets();
+
+  /* ---------- 3a) Section curtain — clip-path open left-to-right ----------
+     Тот же trigger (rect.top <= 85vh), отдельный WeakSet чтобы не мешать
+     data-reveal. По клику runScramble/sticky-логике не задевает. */
+  var curtainTargets = document.querySelectorAll('.section-curtain');
+  var curtainRevealed = new WeakSet();
+  function checkCurtainTargets() {
+    var triggerLine = window.innerHeight * 0.85;
+    for (var i = 0; i < curtainTargets.length; i++) {
+      var el = curtainTargets[i];
+      if (curtainRevealed.has(el)) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerLine && rect.bottom >= 0) {
+        curtainRevealed.add(el);
+        el.classList.add('is-revealed');
+      }
+    }
+  }
+  var curtainTicking = false;
+  function onScrollCurtain() {
+    if (curtainTicking) return;
+    curtainTicking = true;
+    requestAnimationFrame(function () {
+      checkCurtainTargets();
+      curtainTicking = false;
+    });
+  }
+  window.addEventListener('scroll', onScrollCurtain, { passive: true });
+  window.addEventListener('resize', onScrollCurtain, { passive: true });
+  checkCurtainTargets();
 
   /* ---------- 4) Contact label char scramble (rotateY, step-end) ---------- */
   var charContainers = document.querySelectorAll('[data-char-scramble]');
