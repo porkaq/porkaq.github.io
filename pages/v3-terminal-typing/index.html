@@ -245,6 +245,36 @@
     .term-active { display: flex; align-items: baseline; margin-top: 6px; }
     .term-typing { color: var(--text); }
 
+    .shell-output {
+      min-height: 110px;
+      max-height: 190px;
+      overflow-y: auto;
+      margin-top: 8px;
+      color: var(--text);
+      white-space: pre-wrap;
+      scrollbar-color: var(--border-strong) transparent;
+    }
+    .shell-entry { margin: 0 0 7px; }
+    .shell-entry-command { color: var(--muted); }
+    .shell-entry-command::before { content: '$ '; color: var(--accent); }
+    .shell-input {
+      min-width: 0;
+      flex: 1;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      caret-color: var(--text);
+    }
+    .shell-input::placeholder { color: var(--dim); opacity: 1; }
+    .term-active:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 5px;
+      border-radius: 2px;
+    }
+
     .term-cursor {
       display: inline-block;
       width: 0.55em;
@@ -630,7 +660,7 @@
             <div class="terminal-titlebar-spacer"></div>
           </div>
 
-          <div class="terminal-body" id="heroBody" aria-live="polite">
+          <div class="terminal-body" id="heroBody">
 
             <!-- prompt + whoami -->
             <div class="term-line">
@@ -666,11 +696,12 @@ drwxr-xr-x  porkaq.github.io</pre>
 Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
             </div>
 
-            <!-- ACTIVE: typing line -->
+            <!-- ACTIVE: interactive browser shell -->
             <div class="term-line term-active">
               <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
-              <span class="term-typing" id="heroTyping" data-text="cat about.txt"></span><span class="term-cursor" aria-hidden="true"></span>
+              <input class="shell-input" id="shellInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Команда терминала" placeholder="help" data-text="cat about.txt">
             </div>
+            <div class="shell-output" id="shellOutput" role="log" aria-live="polite" aria-relevant="additions"></div>
 
           </div>
         </div>
@@ -978,7 +1009,7 @@ fast yes, careful yes.
       const REDUCE_MOTION = window.matchMedia(
         '(prefers-reduced-motion: reduce)').matches;
 
-      const typingEl = document.getElementById('heroTyping');
+      const typingEl = document.getElementById('shellInput');
       if (typingEl) {
         const text = typingEl.dataset.text || 'cat about.txt';
         // Hero typing ускорен: та же скорость что и секции (4-12ms),
@@ -990,11 +1021,11 @@ fast yes, careful yes.
 
         function type(i) {
           if (REDUCE_MOTION) {
-            typingEl.textContent = text;
+            typingEl.placeholder = text;
             return;
           }
           if (i > text.length) return;
-          typingEl.textContent = text.slice(0, i);
+          typingEl.placeholder = text.slice(0, i);
           requestAnimationFrame(() => {
             setTimeout(() => type(i + 1), rand());
           });
@@ -1015,7 +1046,98 @@ fast yes, careful yes.
         }
       }
 
-      // Резервируем финальную высоту терминалов до очистки typing-targets.
+      // ── 2. Safe in-browser shell over portfolio content ─────
+      const shellInput = document.getElementById('shellInput');
+      const shellOutput = document.getElementById('shellOutput');
+      if (shellInput && shellOutput) {
+        const fileText = selector => Array.from(document.querySelectorAll(selector))
+          .map(el => el.dataset.text || '').filter(Boolean).join('\n');
+        const files = {
+          'about.txt': fileText('#about .type-target[data-text]'),
+          'skills.txt': fileText('#skills .term-output:last-of-type .type-target[data-text]'),
+          'contact.txt': fileText('#contact .type-target[data-text]'),
+          'projects.txt': fileText('#projects .type-target[data-text]')
+        };
+        const fileSections = {
+          'about.txt': 'about', 'skills.txt': 'skills',
+          'projects.txt': 'projects', 'contact.txt': 'contact'
+        };
+        const history = [];
+        let historyIndex = 0;
+
+        const appendEntry = (command, result = '') => {
+          const entry = document.createElement('div');
+          entry.className = 'shell-entry';
+          const commandLine = document.createElement('div');
+          commandLine.className = 'shell-entry-command';
+          commandLine.textContent = command;
+          entry.appendChild(commandLine);
+          if (result) {
+            const output = document.createElement('div');
+            output.textContent = result;
+            entry.appendChild(output);
+          }
+          shellOutput.appendChild(entry);
+          shellOutput.scrollTop = shellOutput.scrollHeight;
+        };
+        const visit = file => {
+          const id = fileSections[file];
+          if (id) document.getElementById(id)?.scrollIntoView({ behavior: REDUCE_MOTION ? 'auto' : 'smooth' });
+        };
+        const run = raw => {
+          const command = raw.trim();
+          if (!command) return;
+          const parts = command.split(/\s+/);
+          const name = parts.shift().toLowerCase();
+          const arg = parts.join(' ');
+          const noArgCommands = ['help', 'ls', 'tree', 'pwd', 'whoami', 'clear'];
+          let result = '';
+          if (noArgCommands.includes(name) && parts.length) result = `${name}: too many arguments`;
+          else if (name === 'help') result = 'help  ls  tree  pwd  whoami  cat FILE  wc -l FILE  head FILE  clear';
+          else if (name === 'ls') result = Object.keys(files).join('  ');
+          else if (name === 'tree') result = '.\n├── about.txt\n├── skills.txt\n├── projects.txt\n└── contact.txt';
+          else if (name === 'pwd') result = '/home/daniil/portfolio';
+          else if (name === 'whoami') result = 'daniil';
+          else if (name === 'clear') { shellOutput.replaceChildren(); return; }
+          else if (name === 'cat') {
+            result = parts.length === 1 && Object.hasOwn(files, arg) ? files[arg] : `cat: ${arg || 'missing operand'}: ${parts.length > 1 ? 'too many arguments' : 'No such file'}`;
+            if (parts.length === 1 && Object.hasOwn(files, arg)) visit(arg);
+          } else if (name === 'head') {
+            result = parts.length === 1 && Object.hasOwn(files, arg) ? files[arg].split('\n').slice(0, 5).join('\n') : `head: ${arg || 'missing operand'}: ${parts.length > 1 ? 'too many arguments' : 'No such file'}`;
+            if (parts.length === 1 && Object.hasOwn(files, arg)) visit(arg);
+          } else if (name === 'wc') {
+            const file = parts[1] || '';
+            if (parts.length !== 2 || parts[0] !== '-l') result = 'usage: wc -l FILE';
+            else if (!Object.hasOwn(files, file)) result = `wc: ${file}: No such file`;
+            else { result = `${files[file].split('\n').length} ${file}`; visit(file); }
+          } else result = `${name}: command not found`;
+          appendEntry(command, result);
+        };
+
+        shellInput.addEventListener('keydown', event => {
+          if (event.isComposing) return;
+          if (event.key === 'Enter') {
+            const command = shellInput.value;
+            if (command.trim()) { history.push(command); historyIndex = history.length; }
+            run(command);
+            shellInput.value = '';
+          } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            historyIndex = Math.max(0, Math.min(history.length, historyIndex + (event.key === 'ArrowUp' ? -1 : 1)));
+            shellInput.value = history[historyIndex] || '';
+          } else if (event.key === 'Tab') {
+            event.preventDefault();
+            const candidates = [...Object.keys(files), 'help', 'ls', 'tree', 'pwd', 'whoami', 'cat', 'wc', 'head', 'clear'];
+            const token = shellInput.value.split(/\s+/).pop();
+            const match = candidates.find(candidate => candidate.startsWith(token));
+            if (match) shellInput.value = shellInput.value.slice(0, -token.length) + match;
+          } else if (event.ctrlKey && event.key.toLowerCase() === 'l') {
+            event.preventDefault(); shellOutput.replaceChildren();
+          }
+        });
+      }
+
+      // ── 3. Scroll typing with reserved final heights ─────────
       // Иначе рамки растут вместе с текстом и создают заметный layout shift.
       const typeTargets = document.querySelectorAll('.type-target, .term-type');
       const animatedWindows = document.querySelectorAll('.term-window');
