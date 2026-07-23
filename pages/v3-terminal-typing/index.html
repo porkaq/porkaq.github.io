@@ -789,7 +789,7 @@ Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
           <span class="term-type" data-text="cat about.txt"></span>
         </div>
-        <pre class="term-output"><span class="term-result"><span class="type-target" data-text="# Daniil Varlamov
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-shell-file="about.txt" data-text="# Daniil Varlamov
 # Иркутск → remote
 # developer, не manager
 
@@ -826,7 +826,7 @@ languages   : русский (native), english (read/write)"></span></span></pre
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
           <span class="term-type" data-text="cat skills.txt"></span>
         </div>
-<pre class="term-output"><span class="term-result"><span class="type-target" data-text="PHP
+<pre class="term-output"><span class="term-result"><span class="type-target" data-shell-file="skills.txt" data-text="PHP
 1С-Битрикс
 HTML / CSS / JavaScript
 Python
@@ -956,7 +956,7 @@ daniil   pts/0    192.168.1.42     10:16    0.00s  0.42s  0.02s w"></span></span
             <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
             <span class="term-type" data-text="cat contact.txt"></span>
           </div>
-<pre class="term-output"><span class="term-result"><span class="type-target" data-text="# контакты
+<pre class="term-output"><span class="term-result"><span class="type-target" data-shell-file="contact.txt" data-text="# контакты
 telegram : @porkaqq
 email    : varlamovdaniil-2004@mail.ru
 github   : github.com/porkaq
@@ -1085,13 +1085,19 @@ fast yes, careful yes.
       const shellOutput = document.getElementById('shellOutput');
       if (shellInput && shellOutput) {
         shellInput.focus({ preventScroll: true });
-        const fileText = selector => Array.from(document.querySelectorAll(selector))
-          .map(el => el.dataset.text || '').filter(Boolean).join('\n');
+        const fileText = file => {
+          // Each .txt file has exactly one <pre class="type-target"
+          // data-shell-file="X"> in its section — that element's
+          // data-text IS the file contents. Use the attribute, not
+          // a section-wide query (which used to grab the ls -la line
+          // and the wc -l result, contaminating cat/wc/head).
+          const el = document.querySelector(`.type-target[data-shell-file="${file}"]`);
+          return el ? (el.dataset.text || '') : '';
+        };
         const files = {
-          'about.txt': fileText('#about .type-target[data-text]'),
-          'skills.txt': fileText('#skills .term-output:last-of-type .type-target[data-text]'),
-          'contact.txt': fileText('#contact .type-target[data-text]'),
-          'projects.txt': fileText('#projects .type-target[data-text]')
+          'about.txt': fileText('about.txt'),
+          'skills.txt': fileText('skills.txt'),
+          'contact.txt': fileText('contact.txt')
         };
 
         const history = [];
@@ -1124,7 +1130,7 @@ fast yes, careful yes.
           if (noArgCommands.includes(name) && parts.length) result = `${name}: too many arguments`;
           else if (name === 'help') result = 'help  ls  tree  pwd  whoami  cat FILE  wc -l FILE  head FILE  clear';
           else if (name === 'ls') result = Object.keys(files).join('  ');
-          else if (name === 'tree') result = '.\n├── about.txt\n├── skills.txt\n├── projects.txt\n└── contact.txt';
+          else if (name === 'tree') result = '.\n├── about.txt\n├── skills.txt\n├── contact.txt\n└── projects/   # use: ls -la ~/projects';
           else if (name === 'pwd') result = '/home/daniil/portfolio';
           else if (name === 'whoami') result = 'daniil';
           else if (name === 'clear') { shellOutput.replaceChildren(); return; }
