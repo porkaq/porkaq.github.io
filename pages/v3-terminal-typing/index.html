@@ -395,6 +395,11 @@
       line-height: var(--fs-line);
       white-space: pre-wrap;
     }
+    /* Contact window: pin CTA row to the bottom so it doesn't jump
+       as the scroll-typing output above grows from 0 → full height. */
+    .term-window.has-cta { display: flex; flex-direction: column; min-height: 320px; }
+    .term-window.has-cta > .term-cta { margin-top: auto; }
+    .term-cta { display: flex; gap: 14px; flex-wrap: wrap; }
     section.section.alt .term-window {
       background: var(--surface-2);
       border-color: var(--border);
@@ -932,7 +937,7 @@ daniil   pts/0    192.168.1.42     10:16    0.00s  0.42s  0.02s w"></span></span
       <div class="contact-grid">
 
         <!-- LEFT col: contact.txt -->
-        <div class="term-window">
+        <div class="term-window has-cta">
           <div class="term-line">
             <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
             <span class="term-type" data-text="cat contact.txt"></span>
@@ -952,7 +957,7 @@ rate     : от 800 ₽/h · фикс за задачу
 fast yes, careful yes.
 если удобно — договариваемся голосом на 5 минут."></span></span></pre>
 
-          <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:8px;">
+          <div class="term-cta">
             <a href="https://t.me/porkaqq" target="_blank" rel="noopener noreferrer">t.me/porkaqq ↗</a>
             <a href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
             <a href="https://github.com/porkaq" target="_blank" rel="noopener noreferrer">github.com/porkaq ↗</a>
