@@ -1145,16 +1145,17 @@ SEE ALSO
         };
 
         // Look up a typed output block by command string. Matches exact
-        // first, then tries stripping a leading -flag (e.g. "ls -la about.txt"
-        // → "ls about.txt"). Returns data-text or null.
+        // first, then tries stripping all -flag tokens (e.g.
+        // "ls -la about.txt" → "ls about.txt"; "ls -la -L 1" → "ls").
+        // Returns data-text or null.
         // Wrapped in try/catch — a stray `]` or quote in the user's input
         // would otherwise throw on querySelector and freeze the shell.
         const lookupShellOutput = cmdStr => {
           try {
             const exact = document.querySelector(`[data-shell-cmd="${cmdStr}"]`);
             if (exact) return exact.dataset.text || '';
-            // strip leading "-flag " for ls/tree-style invocations
-            const stripped = cmdStr.replace(/^(\w+)\s+-\S+\s*/, '$1 ').trim();
+            // strip every " -flag " or leading "-flag" anywhere in the string
+            const stripped = cmdStr.replace(/(^|\s)-\S+/g, '$1').replace(/\s+/g, ' ').trim();
             if (stripped && stripped !== cmdStr) {
               const m = document.querySelector(`[data-shell-cmd="${stripped}"]`);
               if (m) return m.dataset.text || '';
@@ -1175,7 +1176,7 @@ SEE ALSO
           if (name === 'help') {
             result = 'help  ls [PATH]  tree [-L N]  pwd  whoami  cat FILE  head [-N] [FILE]  wc -l FILE  man PAGE  uptime  w  echo TEXT  clear';
           }
-          else if (noArgCommands.includes(name) && parts.length && name !== 'echo') {
+          else if (noArgCommands.includes(name) && parts.length) {
             result = `${name}: too many arguments`;
           }
           else if (name === 'pwd') result = '/home/daniil/portfolio';
@@ -1184,14 +1185,22 @@ SEE ALSO
           else if (name === 'w') result = lookupShellOutput('w') || `${name}: command not found`;
           else if (name === 'man') {
             // `man daniil` → daniil.1 ; alias `man` alone → daniil.
-            const page = arg || 'daniil';
-            const file = `${page}.1`;
-            result = Object.hasOwn(files, file) ? files[file] : `${name}: ${page}: No such manual page`;
+            if (parts.length > 1) {
+              result = `man: ${arg}: too many arguments`;
+            } else {
+              const page = arg || 'daniil';
+              const file = `${page}.1`;
+              result = Object.hasOwn(files, file) ? files[file] : `${name}: ${page}: No such manual page`;
+            }
           }
           else if (name === 'ls') {
-            // No arg: text files + projects/ dir
-            if (!arg) result = Object.keys(files).join('  ') + '  ~/projects/';
-            else {
+            // No arg / "." / ".." / bare flag ("-la") / home ("~", "~/")
+            // all collapse to the directory listing.
+            const isBareFlag = /^-+[\w-]*$/.test(arg);
+            const isHome = arg === '~' || arg === '~/';
+            if (!arg || arg === '.' || arg === '..' || isBareFlag || isHome) {
+              result = Object.keys(files).join('  ') + '  ~/projects/';
+            } else {
               // arg may be a file or a directory (~/projects, projects, ./foo)
               const stripped = arg.replace(/^~\//, '').replace(/^\.\//, '');
               // 1) try data-shell-cmd="ls STRIPPED"  (covers ls about.txt, ls projects, ls -la about.txt via flag-strip)
@@ -1217,11 +1226,16 @@ SEE ALSO
             } else {
               // tree -L 1 / tree projects / tree ~/projects → projects tree.
               // Any -flag (e.g. -L 1) defaults to projects tree for now —
-              // the only depth we have is -L 1.
-              const stripped = arg.replace(/^~\//, '');
-              if (stripped === 'projects' || stripped === '/projects') {
-                result = lookupShellOutput('tree projects') || `tree: ${arg}: No such directory`;
-              } else if (/^-\w/.test(arg)) {
+              // the only depth we have is -L 1. After stripping flags the
+              // path must be either empty, "projects" or "/projects" —
+              // anything else is "No such directory".
+              // Strip each -flag AND its value if present (e.g. "-L 1" → "").
+              const flagStripped = arg
+                .replace(/(^|\s)-\S+(?:\s+\S+)?/g, '$1')
+                .replace(/\s+/g, ' ')
+                .trim();
+              const stripped = flagStripped.replace(/^~\//, '');
+              if (stripped === '' || stripped === 'projects' || stripped === '/projects') {
                 result = lookupShellOutput('tree projects') || `tree: ${arg}: No such directory`;
               } else {
                 result = `tree: ${arg}: No such directory`;
@@ -1241,7 +1255,8 @@ SEE ALSO
             let file;
             let i = 0;
             if (parts[i] && parts[i].startsWith('-')) {
-              n = Math.max(1, parseInt(parts[i].slice(1), 10) || 5);
+              const parsed = parseInt(parts[i].slice(1), 10);
+              n = Number.isFinite(parsed) && parsed >= 0 ? parsed : 5;
               i++;
             }
             if (parts[i] !== undefined) {
