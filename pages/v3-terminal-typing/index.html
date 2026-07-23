@@ -783,7 +783,7 @@ Rate: from 800 ₽/h · fixed per task · 30+ h/wk</pre>
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
           <span class="term-type" data-text="ls -la about.txt"></span>
         </div>
-        <pre class="term-output"><span class="term-result"><span class="type-target" data-text="-rw-r--r--  1 daniil daniil  1.2K  Jul 22 10:16  ./about.txt"></span></span></pre>
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-shell-cmd="ls about.txt" data-text="-rw-r--r--  1 daniil daniil  1.2K  Jul 22 10:16  ./about.txt"></span></span></pre>
 
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
@@ -849,7 +849,7 @@ Telegram Bot API"></span></span></pre>
 
         <!-- LEFT col: ls output as rows -->
         <div class="term-window">
-<pre class="term-output"><span class="term-result"><span class="type-target" data-text="drwxr-xr-x  elovpark.ru         2026 — интернет-магазин, vanilla JS
+<pre class="term-output"><span class="term-result"><span class="type-target" data-shell-cmd="ls projects" data-text="drwxr-xr-x  elovpark.ru         2026 — интернет-магазин, vanilla JS
 drwxr-xr-x  sibstalker.ru       2026 — магазин вездеходов, full-cycle
 drwxr-xr-x  istu.edu/promo/95   2024 — промо ИРНИТУ, в команде вуза
 -rw-r--r--  README.md"></span></span></pre>
@@ -899,7 +899,7 @@ drwxr-xr-x  istu.edu/promo/95   2024 — промо ИРНИТУ, в коман�
             <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~/projects</span><span class="term-dollar">$</span></span>
             <span class="term-type" data-text="tree -L 1"></span>
           </div>
-<pre class="term-output"><span class="term-result"><span class="type-target" data-text="~/projects/
+<pre class="term-output"><span class="term-result"><span class="type-target" data-shell-cmd="tree projects" data-text="~/projects/
 ├── elovpark/         # вёрстка + весь интерактив, без конструктора
 ├── sibstalker/       # дизайн + вёрстка + JS
 ├── istu95/           # вёрстка + JS, в команде с разработчиками вуза
@@ -923,13 +923,13 @@ drwxr-xr-x  istu.edu/promo/95   2024 — промо ИРНИТУ, в коман�
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
           <span class="term-type" data-text="uptime"></span>
         </div>
-        <pre class="term-output"><span class="term-result"><span class="type-target" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04"></span></span></pre>
+        <pre class="term-output"><span class="term-result"><span class="type-target" data-shell-cmd="uptime" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04"></span></span></pre>
 
         <div class="term-line">
           <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
           <span class="term-type" data-text="w"></span>
         </div>
-<pre class="term-output"><span class="term-result"><span class="type-target" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04
+<pre class="term-output"><span class="term-result"><span class="type-target" data-shell-cmd="w" data-text=" 14:23:18 up  4:07,  1 user,  load average: 0.12, 0.08, 0.04
 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
 daniil   pts/0    192.168.1.42     10:16    0.00s  0.42s  0.02s w"></span></span></pre>
 
@@ -1018,6 +1018,27 @@ fast yes, careful yes.
         <div class="man-section"><span class="man-name">SEE ALSO</span></div>
         <div class="man-body">       telegram(1), porkaq.github.io(7)</div>
 
+        <!-- Hidden source of truth for shell `man daniil` / `head daniil.1` / `cat daniil.1`.
+             Kept off-screen. NB: no `type-target` class — that would let scroll-typing animate it. -->
+        <pre data-shell-file="daniil.1" data-text="DANIIL(1)                          User Commands                          DANIIL(1)
+
+NAME
+       daniil - fullstack developer, Иркутск
+
+SYNOPSIS
+       daniil [OPTIONS] <task>
+
+DESCRIPTION
+       С 2022 на проде ИРНИТУ. Делаю сайты и ботов.
+       remote-ready. Стек: PHP, 1С-Битрикс, JS, Python.
+
+OPTIONS
+       --fast      work in 24 hours
+       --fixed     fixed price per task
+
+SEE ALSO
+       telegram(1), porkaq.github.io(7)" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;"></pre>
+
         <div class="footer-meta">
           <div class="term-line">
             <span class="term-prompt"><span class="term-user">daniil</span><span class="term-at">@</span><span class="term-host">irkutsk</span><span class="term-colon">:</span><span class="term-path">~</span><span class="term-dollar">$</span></span>
@@ -1086,18 +1107,22 @@ fast yes, careful yes.
       if (shellInput && shellOutput) {
         shellInput.focus({ preventScroll: true });
         const fileText = file => {
-          // Each .txt file has exactly one <pre class="type-target"
-          // data-shell-file="X"> in its section — that element's
+          // Each .txt file has exactly one element with
+          // data-shell-file="X" in the document — that element's
           // data-text IS the file contents. Use the attribute, not
           // a section-wide query (which used to grab the ls -la line
           // and the wc -l result, contaminating cat/wc/head).
-          const el = document.querySelector(`.type-target[data-shell-file="${file}"]`);
-          return el ? (el.dataset.text || '') : '';
+          // Try/catch protects against malformed selectors in user input.
+          try {
+            const el = document.querySelector(`[data-shell-file="${file}"]`);
+            return el ? (el.dataset.text || '') : '';
+          } catch (e) { return ''; }
         };
         const files = {
           'about.txt': fileText('about.txt'),
           'skills.txt': fileText('skills.txt'),
-          'contact.txt': fileText('contact.txt')
+          'contact.txt': fileText('contact.txt'),
+          'daniil.1': fileText('daniil.1')
         };
 
         const history = [];
@@ -1119,31 +1144,129 @@ fast yes, careful yes.
           shellOutput.scrollTop = shellOutput.scrollHeight;
         };
 
+        // Look up a typed output block by command string. Matches exact
+        // first, then tries stripping a leading -flag (e.g. "ls -la about.txt"
+        // → "ls about.txt"). Returns data-text or null.
+        // Wrapped in try/catch — a stray `]` or quote in the user's input
+        // would otherwise throw on querySelector and freeze the shell.
+        const lookupShellOutput = cmdStr => {
+          try {
+            const exact = document.querySelector(`[data-shell-cmd="${cmdStr}"]`);
+            if (exact) return exact.dataset.text || '';
+            // strip leading "-flag " for ls/tree-style invocations
+            const stripped = cmdStr.replace(/^(\w+)\s+-\S+\s*/, '$1 ').trim();
+            if (stripped && stripped !== cmdStr) {
+              const m = document.querySelector(`[data-shell-cmd="${stripped}"]`);
+              if (m) return m.dataset.text || '';
+            }
+          } catch (e) { /* invalid selector — fall through */ }
+          return null;
+        };
+
+        const noArgCommands = ['help', 'pwd', 'whoami', 'clear', 'uptime', 'w'];
+
         const run = raw => {
           const command = raw.trim();
           if (!command) return;
           const parts = command.split(/\s+/);
           const name = parts.shift().toLowerCase();
           const arg = parts.join(' ');
-          const noArgCommands = ['help', 'ls', 'tree', 'pwd', 'whoami', 'clear'];
           let result = '';
-          if (noArgCommands.includes(name) && parts.length) result = `${name}: too many arguments`;
-          else if (name === 'help') result = 'help  ls  tree  pwd  whoami  cat FILE  wc -l FILE  head FILE  clear';
-          else if (name === 'ls') result = Object.keys(files).join('  ');
-          else if (name === 'tree') result = '.\n├── about.txt\n├── skills.txt\n├── contact.txt\n└── projects/   # use: ls -la ~/projects';
+          if (name === 'help') {
+            result = 'help  ls [PATH]  tree [-L N]  pwd  whoami  cat FILE  head [-N] [FILE]  wc -l FILE  man PAGE  uptime  w  echo TEXT  clear';
+          }
+          else if (noArgCommands.includes(name) && parts.length && name !== 'echo') {
+            result = `${name}: too many arguments`;
+          }
           else if (name === 'pwd') result = '/home/daniil/portfolio';
           else if (name === 'whoami') result = 'daniil';
+          else if (name === 'uptime') result = lookupShellOutput('uptime') || `${name}: command not found`;
+          else if (name === 'w') result = lookupShellOutput('w') || `${name}: command not found`;
+          else if (name === 'man') {
+            // `man daniil` → daniil.1 ; alias `man` alone → daniil.
+            const page = arg || 'daniil';
+            const file = `${page}.1`;
+            result = Object.hasOwn(files, file) ? files[file] : `${name}: ${page}: No such manual page`;
+          }
+          else if (name === 'ls') {
+            // No arg: text files + projects/ dir
+            if (!arg) result = Object.keys(files).join('  ') + '  ~/projects/';
+            else {
+              // arg may be a file or a directory (~/projects, projects, ./foo)
+              const stripped = arg.replace(/^~\//, '').replace(/^\.\//, '');
+              // 1) try data-shell-cmd="ls STRIPPED"  (covers ls about.txt, ls projects, ls -la about.txt via flag-strip)
+              const fromBlock = lookupShellOutput(`ls ${stripped}`);
+              if (fromBlock !== null) {
+                result = fromBlock;
+              } else if (stripped === 'projects' || stripped === '/projects') {
+                result = lookupShellOutput('ls projects') || `ls: ${arg}: No such file or directory`;
+              } else if (Object.hasOwn(files, stripped)) {
+                // Real ls-style row for any file in `files`. Size is the
+                // actual byte count of data-text (so it stays honest).
+                const bytes = new Blob([files[stripped]]).size;
+                const size = bytes < 1024 ? `${bytes}B` : `${(bytes / 1024).toFixed(1)}K`;
+                result = `-rw-r--r--  1 daniil daniil  ${size}  Jul 22 10:16  ./${stripped}`;
+              } else {
+                result = `ls: ${arg}: No such file or directory`;
+              }
+            }
+          }
+          else if (name === 'tree') {
+            if (!arg) {
+              result = '.\n├── about.txt\n├── skills.txt\n├── contact.txt\n└── projects/   # use: ls -la ~/projects';
+            } else {
+              // tree -L 1 / tree projects / tree ~/projects → projects tree.
+              // Any -flag (e.g. -L 1) defaults to projects tree for now —
+              // the only depth we have is -L 1.
+              const stripped = arg.replace(/^~\//, '');
+              if (stripped === 'projects' || stripped === '/projects') {
+                result = lookupShellOutput('tree projects') || `tree: ${arg}: No such directory`;
+              } else if (/^-\w/.test(arg)) {
+                result = lookupShellOutput('tree projects') || `tree: ${arg}: No such directory`;
+              } else {
+                result = `tree: ${arg}: No such directory`;
+              }
+            }
+          }
           else if (name === 'clear') { shellOutput.replaceChildren(); return; }
           else if (name === 'cat') {
-            result = parts.length === 1 && Object.hasOwn(files, arg) ? files[arg] : `cat: ${arg || 'missing operand'}: ${parts.length > 1 ? 'too many arguments' : 'No such file'}`;
-          } else if (name === 'head') {
-            result = parts.length === 1 && Object.hasOwn(files, arg) ? files[arg].split('\n').slice(0, 5).join('\n') : `head: ${arg || 'missing operand'}: ${parts.length > 1 ? 'too many arguments' : 'No such file'}`;
-          } else if (name === 'wc') {
-            const file = parts[1] || '';
+            if (!arg) result = 'cat: missing operand: No such file';
+            else if (parts.length > 1) result = `cat: ${arg}: too many arguments`;
+            else if (Object.hasOwn(files, arg)) result = files[arg];
+            else result = `cat: ${arg}: No such file`;
+          }
+          else if (name === 'head') {
+            // head [-N] [FILE]  — accepts "head -10 daniil.1", "head daniil.1", "head", "head -10"
+            let n = 5;
+            let file;
+            let i = 0;
+            if (parts[i] && parts[i].startsWith('-')) {
+              n = Math.max(1, parseInt(parts[i].slice(1), 10) || 5);
+              i++;
+            }
+            if (parts[i] !== undefined) {
+              file = parts.slice(i).join(' ');
+              if (parts.length - i > 1) {
+                result = `head: ${file}: too many arguments`;
+                appendEntry(command, result);
+                return;
+              }
+            } else {
+              file = 'daniil.1';   // bare `head` / `head -N` → default to man
+            }
+            if (!Object.hasOwn(files, file)) {
+              result = `head: ${file}: No such file`;
+            } else {
+              result = files[file].split('\n').slice(0, n).join('\n');
+            }
+          }
+          else if (name === 'wc') {
             if (parts.length !== 2 || parts[0] !== '-l') result = 'usage: wc -l FILE';
-            else if (!Object.hasOwn(files, file)) result = `wc: ${file}: No such file`;
-            else result = `${files[file].split('\n').length} ${file}`;
-          } else result = `${name}: command not found`;
+            else if (!Object.hasOwn(files, parts[1])) result = `wc: ${parts[1]}: No such file`;
+            else result = `${files[parts[1]].split('\n').length} ${parts[1]}`;
+          }
+          else if (name === 'echo') result = arg;
+          else result = `${name}: command not found`;
           appendEntry(command, result);
         };
 
