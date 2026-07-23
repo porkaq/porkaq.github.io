@@ -182,7 +182,12 @@
         0 0 0 1px rgba(0,0,0,0.6),
         0 24px 60px -20px rgba(0,0,0,0.6);
       overflow: hidden;
-      min-height: 460px;
+      /* Lock hero to initial natural height so the card doesn't
+         jump when is-shell-active kicks in (716 → 460 on first
+         command) or when long cat output is appended. Content
+         scrolls inside .terminal-body. */
+      height: 716px;
+      max-height: 716px;
     }
 
     .terminal-titlebar {
@@ -212,6 +217,11 @@
       min-height: 380px;
       display: flex;
       flex-direction: column;
+      /* Hero window is locked at 716px, so this body must scroll
+         when shell output overflows instead of growing the card. */
+      overflow-y: auto;
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     .term-line {
@@ -400,6 +410,10 @@
     .term-window.has-cta { display: flex; flex-direction: column; min-height: 320px; }
     .term-window.has-cta > .term-cta { margin-top: auto; }
     .term-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    /* About window: already locked by JS scroll-typing (line ~1169:
+       windowEl.style.minHeight = ceil(currentHeight) before clearing
+       the text for animation). The inline style means a CSS class
+       here would be overridden anyway — so no-op. */
     section.section.alt .term-window {
       background: var(--surface-2);
       border-color: var(--border);
