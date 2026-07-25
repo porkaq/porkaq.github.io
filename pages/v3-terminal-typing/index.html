@@ -76,7 +76,7 @@
 
     /* ── Reset ─────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
+    html, body { margin: 0; padding: 0; overflow-x: hidden; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -604,7 +604,7 @@
       font-size: 12px;
       line-height: 1.6;
     }
-    .footer-meta .echo-line { white-space: pre; }
+    .footer-meta .echo-line { white-space: pre-wrap; overflow-wrap: break-word; }
     .footer-meta .echo-line .accent { color: var(--accent); }
     .footer-meta .credit { margin-top: 8px; white-space: pre-line; }
 

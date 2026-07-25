@@ -77,6 +77,7 @@
       padding: 0;
       background: var(--bg);
       color: var(--fg);
+      overflow-x: hidden;
     }
 
     body {
@@ -305,6 +306,7 @@
       }
       .hero-title { /* базовый clamp в .hero-title уже покрывает mobile */ }
       .hero-manifest { border-left: 0; padding-left: 0; border-top: var(--bw-bold) solid var(--paper); padding-top: 24px; }
+      .hero-manifest-row { grid-template-columns: 1fr; gap: 4px; }
       .hero-nav { margin-top: 24px; gap: 16px; flex-direction: column; }
     }
 
@@ -803,11 +805,17 @@
     }
 
     /* =====================================================
-       Mobile section padding
+       Mobile section padding + grid
        ===================================================== */
     @media (max-width: 768px) {
       .section {
         padding: 48px 24px;
+      }
+      .section-about .section-inner,
+      .section-stack .section-inner,
+      .section-projects .section-inner,
+      .section-contact .section-inner {
+        grid-template-columns: 1fr;
       }
     }
 
