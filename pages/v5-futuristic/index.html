@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>porkaq / AI-услуги — Signal / Substance</title>
+  <meta name="description" content="AI-фото и AI-видео для заказчиков с Kwork, Avito и удалёнки. Из запроса — в рабочий результат.">
+  <meta name="theme-color" content="#160F1C">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --plum-ink: #160F1C;
+      --moss-surface: #1D2A24;
+      --bone-text: #F2E9DE;
+      --terracotta-signal: #D9684E;
+      --brass-signal: #C99A42;
+      --muted-text: #AFA29A;
+      --border-soft: #2A2334;
+
+      --wrap-max: 1280px;
+      --pad-x: 56px;
+      --pad-y: 40px;
+
+      --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    html, body { overflow-x: hidden; }
+    body {
+      font: 400 16px/1.55 var(--font-sans);
+      background: var(--plum-ink);
+      color: var(--bone-text);
+      letter-spacing: -0.005em;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--terracotta-signal); }
+    img { display: block; max-width: 100%; height: auto; }
+
+    .wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 var(--pad-x); }
+    @media (max-width: 768px) {
+      :root { --pad-x: 24px; --pad-y: 24px; }
+    }
+
+    /* === navigation === */
+    nav {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--pad-y) 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    nav .brand {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--bone-text);
+    }
+    nav .brand span { color: var(--brass-signal); margin-right: 8px; }
+    nav .links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    nav .links a {
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      position: relative;
+      padding: 4px 0;
+      transition: color 180ms ease-out;
+    }
+    nav .links a::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 0;
+      height: 1px;
+      background: var(--bone-text);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 220ms ease-out;
+    }
+    nav .links a:hover::after,
+    nav .links a.active::after { transform: scaleX(1); }
+    nav .cta {
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 18px;
+      background: var(--terracotta-signal);
+      color: var(--plum-ink);
+      transition: background 180ms ease-out;
+    }
+    nav .cta:hover { background: #c25e44; color: var(--plum-ink); }
+    @media (max-width: 640px) {
+      nav .links { display: none; }
+    }
+
+    /* === hero === */
+    .hero {
+      display: grid;
+      grid-template-columns: 40% 60%;
+      gap: 32px;
+      align-items: stretch;
+      min-height: 600px;
+      padding: 56px 0 64px;
+    }
+    .hero .left { display: flex; flex-direction: column; justify-content: space-between; gap: 32px; }
+    .hero .right {
+      position: relative;
+      background: linear-gradient(135deg, #1a1226 0%, #1D2A24 100%);
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+      min-height: 480px;
+    }
+    .hero .right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 70% 40%, rgba(217,104,78,0.18), transparent 50%),
+        radial-gradient(ellipse at 30% 80%, rgba(201,154,66,0.12), transparent 50%);
+      pointer-events: none;
+    }
+    .hero .right::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(180deg, transparent 0, transparent 7px, rgba(242,233,222,0.04) 7px, rgba(242,233,222,0.04) 8px);
+      pointer-events: none;
+    }
+    .hero .frame {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 64%;
+      aspect-ratio: 9 / 16;
+      max-height: 80%;
+      border: 1px solid rgba(201,154,66,0.35);
+      background: rgba(22,15,28,0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .hero .frame .placeholder {
+      width: 100%;
+      height: 100%;
+      border: 1px dashed rgba(175,162,154,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 500 11px/1.4 var(--font-mono);
+      color: var(--muted-text);
+      text-align: center;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 16px;
+    }
+    .hero .frame-caption {
+      position: absolute;
+      bottom: 24px; right: 24px;
+      font: 500 11px/1.4 var(--font-mono);
+      color: var(--brass-signal);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; min-height: 0; padding: 32px 0 40px; }
+      .hero .right { min-height: 320px; }
+    }
+
+    /* hero copy */
+    .hero .lede {
+      font: 500 12px/1 var(--font-mono);
+      color: var(--brass-signal);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font: 700 clamp(40px, 6.2vw, 72px)/1.0 var(--font-sans);
+      letter-spacing: -0.055em;
+      margin-bottom: 24px;
+      max-width: 12ch;
+    }
+    .hero .subhead {
+      font: 500 19px/1.35 var(--font-sans);
+      color: var(--bone-text);
+      max-width: 360px;
+      margin-bottom: 32px;
+    }
+    .hero .actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .hero .btn-primary {
+      font: 600 14px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 16px 24px;
+      background: var(--terracotta-signal);
+      color: var(--plum-ink);
+      transition: background 180ms ease-out, transform 180ms ease-out;
+    }
+    .hero .btn-primary:hover {
+      background: #c25e44;
+      color: var(--plum-ink);
+      transform: translateX(3px);
+    }
+    .hero .btn-secondary {
+      font: 500 14px/1.4 var(--font-sans);
+      color: var(--bone-text);
+      border-bottom: 1px solid var(--bone-text);
+      padding-bottom: 2px;
+    }
+
+    /* hero plate */
+    .hero .plate {
+      background: var(--moss-surface);
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+      width: fit-content;
+      min-width: 280px;
+    }
+    .hero .plate .num {
+      font: 500 18px/1 var(--font-mono);
+      color: var(--brass-signal);
+    }
+    .hero .plate .info { display: flex; flex-direction: column; gap: 4px; }
+    .hero .plate .name { font: 700 16px/1.1 var(--font-sans); color: var(--bone-text); }
+    .hero .plate .meta {
+      font: 500 11px/1.3 var(--font-mono);
+      color: var(--muted-text);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* === divider === */
+    .divider {
+      height: 1px;
+      background: var(--border-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .divider::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--brass-signal);
+      transition: width 700ms ease-in-out;
+    }
+    .divider.in::after { width: 100%; }
+
+    /* === services === */
+    .services {
+      padding: 80px 0 96px;
+    }
+    .services .heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 48px;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .services h2 {
+      font: 700 clamp(32px, 4vw, 48px)/1.0 var(--font-sans);
+      letter-spacing: -0.04em;
+      max-width: 16ch;
+    }
+    .services .heading-note {
+      font: 500 12px/1.4 var(--font-mono);
+      color: var(--muted-text);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .service {
+      background: var(--moss-surface);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border: 1px solid transparent;
+      transition: border-color 240ms ease-out, transform 240ms ease-out;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    .service.in { opacity: 1; transform: none; transition: opacity 500ms ease-out, transform 500ms ease-out; }
+    .service:hover { border-color: var(--brass-signal); }
+    .service .num {
+      font: 500 13px/1 var(--font-mono);
+      color: var(--brass-signal);
+      letter-spacing: 0.08em;
+    }
+    .service .preview {
+      aspect-ratio: 16 / 10;
+      background: var(--plum-ink);
+      border: 1px dashed rgba(175,162,154,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 500 11px/1.4 var(--font-mono);
+      color: var(--muted-text);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 16px;
+      overflow: hidden;
+    }
+    .service .preview video { width: 100%; height: 100%; object-fit: cover; }
+    .service h3 {
+      font: 700 clamp(22px, 2.4vw, 28px)/1.15 var(--font-sans);
+      letter-spacing: -0.02em;
+    }
+    .service .for-whom {
+      font: 500 12px/1.4 var(--font-mono);
+      color: var(--muted-text);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .service p {
+      font: 400 15px/1.6 var(--font-sans);
+      color: var(--bone-text);
+    }
+    .service .micro {
+      font: 500 12px/1.4 var(--font-mono);
+      color: var(--brass-signal);
+      letter-spacing: 0.06em;
+    }
+    .service .cta {
+      margin-top: auto;
+      font: 600 13px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--terracotta-signal);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: gap 180ms ease-out;
+    }
+    .service .cta:hover { gap: 12px; color: var(--terracotta-signal); }
+    .service .cta::after { content: '→'; }
+
+    /* === footer === */
+    footer {
+      border-top: 1px solid var(--border-soft);
+      padding: 32px 0 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      font: 500 12px/1.4 var(--font-mono);
+      color: var(--muted-text);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    footer a { color: var(--bone-text); }
+    footer a:hover { color: var(--terracotta-signal); }
+
+    /* === accessibility === */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="/"><span>01—05</span>porkaq / AI SERVICES</a>
+      <div class="links">
+        <a href="#services">Услуги</a>
+        <a href="services/ai-photo.html">AI-фото</a>
+        <a href="services/ai-video.html">AI-видео</a>
+        <a href="mailto:varlamovdaniil-2004@mail.ru">Контакт</a>
+      </div>
+      <a class="cta" href="mailto:varlamovdaniil-2004@mail.ru">Обсудить задачу</a>
+    </nav>
+
+    <section class="hero">
+      <div class="left">
+        <div>
+          <div class="lede">SIGNAL / SUBSTANCE</div>
+          <h1>Из запроса — в рабочий результат.</h1>
+          <p class="subhead">Фото, видео и motion-петли без лишнего цирка. Серия вариантов, согласованный стиль, файлы под web и social.</p>
+          <div class="actions">
+            <a class="btn-primary" href="mailto:varlamovdaniil-2004@mail.ru">Обсудить задачу</a>
+            <a class="btn-secondary" href="#services">Смотреть услуги</a>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="num">01</div>
+          <div class="info">
+            <div class="name">Даниил · Иркутск</div>
+            <div class="meta">PHP · Python · Bitrix · AI-workflows · самозанятый</div>
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="frame">
+          <div class="placeholder">OUTPUT-FRAME<br>AI-видео / кадр<br>16:9 или 9:16</div>
+        </div>
+        <div class="frame-caption">OUTPUT · AI VIDEO · 00:05</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="services" id="services">
+      <div class="heading">
+        <h2>Два направления. Один процесс.</h2>
+        <div class="heading-note">01–02 · AI-генерация контента</div>
+      </div>
+
+      <div class="grid">
+        <article class="service">
+          <div class="num">01 / AI-ФОТО</div>
+          <div class="preview">
+            <span>AI-фото · превью<br>1280×800 · JPEG</span>
+          </div>
+          <h3>Изображения, которых не было</h3>
+          <div class="for-whom">Карточки товара · обложки · соцсети · рекламные концепты</div>
+          <p>Серия вариантов под формат, согласованный стиль, финальные файлы для web и social. Без стокового «как у всех» — под вашу задачу и аудиторию.</p>
+          <div class="micro">brief → styleframes → final pack</div>
+          <a class="cta" href="services/ai-photo.html">Посмотреть AI-фото</a>
+        </article>
+
+        <article class="service">
+          <div class="num">02 / AI-ВИДЕО</div>
+          <div class="preview">
+            <span>AI-видео · кадр<br>16:9 / 9:16 · MP4</span>
+          </div>
+          <h3>Движение из одного кадра</h3>
+          <div class="for-whom">Короткие ролики · reels/shorts · product teaser · hero-loop</div>
+          <p>Storyboard, motion-петля 5–10 секунд или короткий промо-ролик. Версии 16:9 и 9:16 по задаче.</p>
+          <div class="micro">frame → motion → export</div>
+          <a class="cta" href="services/ai-video.html">Посмотреть AI-видео</a>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <span>© 2026 · Даниил · porkaq · v5-futuristic / signal + substance</span>
+      <span><a href="https://t.me/porkaqq">Telegram @porkaqq</a> · <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a> · <a href="https://github.com/porkaq">GitHub</a></span>
+    </footer>
+  </div>
+
+  <script>
+    // IntersectionObserver для scroll-reveal карточек услуг и межсекционного разделителя
+    (function () {
+      var services = document.querySelectorAll('.service');
+      var dividers = document.querySelectorAll('.divider');
+
+      if (!('IntersectionObserver' in window)) {
+        services.forEach(function (el) { el.classList.add('in'); });
+        dividers.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      services.forEach(function (el, i) {
+        el.style.transitionDelay = (i * 90) + 'ms';
+        io.observe(el);
+      });
+      dividers.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
+</body>
+</html>
