@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-фото — porkaq / Material / Motion</title>
+  <meta name="description" content="AI-генерация фото: каталожные серии, обложки, рекламные концепты. Material / Motion — футуризм через физику материала, не через AI-стереотипы.">
+  <meta name="theme-color" content="#160F1C">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/runtime.css">
+  <style>
+    :root {
+      --plum-ink: #160F1C;
+      --plum-deep: #0E0A12;
+      --moss-surface: #1D2A24;
+      --moss-mist: #718276;
+      --bone-text: #F2E9DE;
+      --bone-dim: #B9ADA2;
+      --terracotta-signal: #D9684E;
+      --terracotta-deep: #c25e44;
+      --brass-signal: #C99A42;
+      --muted-text: #AFA29A;
+      --border-soft: #2A2334;
+      --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; }
+    html { scroll-behavior: smooth; }
+    body {
+      font: 400 16px/1.55 var(--font-sans);
+      background: var(--plum-ink);
+      color: var(--bone-text);
+      letter-spacing: -0.005em;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--terracotta-signal); }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 40px 56px; }
+    @media (max-width: 768px) { .wrap { padding: 24px; } }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 32px; border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 64px;
+    }
+    nav .brand {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    nav .brand span { color: var(--terracotta-signal); margin-right: 8px; }
+    nav .links { display: flex; gap: 32px; align-items: center; }
+    nav .links a {
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      position: relative; padding: 4px 0;
+    }
+    nav .links a::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+      height: 1px; background: var(--bone-text);
+      transform: scaleX(0); transform-origin: left center;
+      transition: transform 220ms ease-out;
+    }
+    nav .links a:hover::after, nav .links a.active::after { transform: scaleX(1); }
+    nav .cta {
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 12px 18px; background: var(--terracotta-signal); color: var(--plum-ink);
+      transition: background 180ms ease-out;
+    }
+    nav .cta:hover { background: var(--terracotta-deep); color: var(--plum-ink); }
+    @media (max-width: 640px) { nav .links { display: none; } }
+
+    .crumbs {
+      font: 500 11px/1.4 var(--font-mono);
+      color: var(--muted-text);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .crumbs a:hover { color: var(--terracotta-signal); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 40% 60%;
+      gap: 32px;
+      margin-bottom: 80px;
+      position: relative;
+    }
+    @media (max-width: 768px) { .hero { grid-template-columns: 1fr; } }
+
+    .hero .num {
+      font: 500 13px/1 var(--font-mono);
+      color: var(--brass-signal);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font: 700 clamp(36px, 5vw, 56px)/1.0 var(--font-sans);
+      letter-spacing: -0.04em;
+      max-width: 14ch;
+      margin-bottom: 20px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--terracotta-signal);
+    }
+    .hero .lede {
+      font: 500 17px/1.5 var(--font-sans);
+      color: var(--bone-dim);
+      max-width: 360px;
+    }
+
+    .preview-tile {
+      background: var(--moss-surface);
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--border-soft);
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .preview-tile .grid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--border-soft);
+      padding: 1px;
+    }
+    .preview-tile .grid span {
+      background: var(--plum-deep);
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-tile .grid span::after {
+      content: '';
+      position: absolute;
+      width: 80%; height: 80%;
+      top: 10%; left: 10%;
+      background: radial-gradient(circle at 40% 60%, var(--terracotta-signal), transparent 60%);
+      opacity: 0.18;
+    }
+    .preview-tile .grid span:nth-child(2)::after { background: radial-gradient(circle at 60% 30%, var(--brass-signal), transparent 60%); opacity: 0.16; }
+    .preview-tile .grid span:nth-child(5)::after { background: radial-gradient(circle at 30% 50%, var(--bone-text), transparent 65%); opacity: 0.10; }
+    .preview-tile .label {
+      position: absolute;
+      top: 16px; left: 16px;
+      font: 500 10px/1 var(--font-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--brass-signal);
+      z-index: 2;
+    }
+
+    section.block { margin-bottom: 80px; max-width: 800px; }
+    section.block h2 {
+      font: 700 28px/1.1 var(--font-sans);
+      letter-spacing: -0.025em;
+      margin-bottom: 20px;
+    }
+    section.block p { font-size: 16px; line-height: 1.65; margin-bottom: 16px; }
+    section.block ul {
+      list-style: none; padding: 0;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px;
+      margin-top: 16px;
+    }
+    @media (max-width: 640px) { section.block ul { grid-template-columns: 1fr; } }
+    section.block li {
+      font: 500 14px/1.4 var(--font-sans);
+      padding-left: 18px; position: relative;
+    }
+    section.block li::before {
+      content: '—'; position: absolute; left: 0;
+      color: var(--brass-signal);
+    }
+
+    .deliverable {
+      background: var(--moss-surface);
+      padding: 28px 32px;
+      border-left: 3px solid var(--terracotta-signal);
+    }
+    .deliverable .label {
+      font: 500 11px/1 var(--font-mono);
+      color: var(--brass-signal);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .deliverable .micro {
+      font: 500 18px/1.3 var(--font-mono);
+      color: var(--bone-text);
+    }
+
+    .contact {
+      padding: 48px 0; border-top: 1px solid var(--border-soft);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+    }
+    .contact .text {
+      font: 500 18px/1.4 var(--font-sans);
+      max-width: 480px;
+    }
+    .contact .btn-primary {
+      font: 600 14px/1 var(--font-mono);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 18px 28px;
+      background: var(--terracotta-signal);
+      color: var(--plum-ink);
+      transition: background 180ms ease-out;
+      will-change: transform;
+    }
+    .contact .btn-primary:hover { background: var(--terracotta-deep); color: var(--plum-ink); }
+
+    footer {
+      border-top: 1px solid var(--border-soft);
+      padding: 32px 0 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; flex-wrap: wrap;
+      font: 500 12px/1.4 var(--font-mono);
+      color: var(--muted-text); letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    footer a { color: var(--bone-text); }
+    footer a:hover { color: var(--terracotta-signal); }
+
+    .reveal-fade-up {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 600ms ease-out, transform 600ms cubic-bezier(.22,1,.36,1);
+    }
+    .reveal-fade-up.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      .reveal-fade-up { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="../index.html"><span>●</span>porkaq / ai services</a>
+      <div class="links">
+        <a href="../index.html">Главная</a>
+        <a class="active" href="ai-photo.html">AI-фото</a>
+        <a href="ai-video.html">AI-видео</a>
+        <a href="mailto:varlamovdaniil-2004@mail.ru">Контакт</a>
+      </div>
+      <a class="cta" href="mailto:varlamovdaniil-2004@mail.ru">Обсудить задачу</a>
+    </nav>
+
+    <div class="crumbs">
+      <a href="../index.html">v6-particle-motion</a> · AI-фото
+    </div>
+
+    <section class="hero">
+      <div class="reveal-fade-up" data-reveal>
+        <div class="num">01 / ai-photo</div>
+        <h1>Изображения, которых не&nbsp;было.</h1>
+        <p class="lede">Каталожные серии, обложки, рекламные концепты. Согласованный стиль на всю партию, финальные файлы под формат. Без стокового «как у&nbsp;всех».</p>
+      </div>
+      <div class="preview-tile reveal-fade-up" data-reveal data-reveal-delay="120">
+        <span class="label">STYLEFRAMES · 6 КАДРОВ · 1280×800</span>
+        <div class="grid">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="block reveal-fade-up" data-reveal>
+      <h2>Для кого</h2>
+      <p>Карточки товара на маркетплейсе, обложки для соцсетей и блога, рекламные концепты и mood-визуалы для лендингов. Подходит, когда нужны быстрые итерации и согласованный стиль в серии.</p>
+      <ul>
+        <li>Wildberries / Ozon · карточки товара</li>
+        <li>VK, Telegram, Instagram · обложки</li>
+        <li>Рекламные креативы · концепты и финал</li>
+        <li>Mood-визуал для лендинга</li>
+      </ul>
+    </section>
+
+    <section class="block reveal-fade-up" data-reveal>
+      <h2>Что входит в работу</h2>
+      <p>Короткий бриф → styleframes на согласование → финальный pack. Стиль подбираю под аудиторию и формат, не делаю «универсальный AI-look».</p>
+      <ul>
+        <li>5–10 вариантов в каждом раунде</li>
+        <li>Согласованный стиль серии</li>
+        <li>Финал в JPEG / PNG / WebP</li>
+        <li>Версии под web, social, печать</li>
+        <li>Апскейл при необходимости</li>
+        <li>Корректировки в 2 раунда включены</li>
+      </ul>
+    </section>
+
+    <div class="deliverable reveal-fade-up" data-reveal>
+      <div class="label">MICRO</div>
+      <div class="micro">brief → styleframes → final pack</div>
+    </div>
+
+    <section class="contact">
+      <div class="text reveal-fade-up" data-reveal>Если есть задача — напишите в Telegram или на почту, обсудим формат, стиль и сроки.</div>
+      <a class="btn-primary reveal-fade-up" data-reveal data-magnetic href="mailto:varlamovdaniil-2004@mail.ru">Обсудить задачу</a>
+    </section>
+
+    <footer>
+      <span>© 2026 · Даниил · porkaq · v6-particle-motion / material + motion</span>
+      <span><a href="https://t.me/porkaqq">Telegram @porkaqq</a> · <a href="mailto:varlamovdaniil-2004@mail.ru">Email</a> · <a href="https://github.com/porkaq">GitHub</a></span>
+    </footer>
+  </div>
+
+  <script type="module" src="../assets/init.js"></script>
+</body>
+</html>

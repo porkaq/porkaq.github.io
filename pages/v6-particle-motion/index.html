@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>porkaq / AI-услуги — Material / Motion</title>
+  <meta name="description" content="AI-фото и AI-видео с runtime-эффектами. Из запроса — в кадр. Material / Motion: WebGL-частицы, mouse-tracking, scroll parallax.">
+  <meta name="theme-color" content="#160F1C">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/runtime.css">
+  <style>
+    /* === v6-particle-motion · Material / Motion ===
+       Spec: ~/portfolio/_design-specs/v6-particle-motion-spec.md
+       Palette: plum-ink / moss-surface / bone-text / terracotta-signal / brass-signal
+       Runtime: WebGL particles → Canvas fallback → DOM fallback (via assets/init.js)
+    */
+    :root {
+      --plum-ink: #160F1C;
+      --plum-deep: #0E0A12;
+      --moss-surface: #1D2A24;
+      --moss-mist: #718276;
+      --bone-text: #F2E9DE;
+      --bone-dim: #B9ADA2;
+      --terracotta-signal: #D9684E;
+      --terracotta-deep: #c25e44;
+      --brass-signal: #C99A42;
+      --particle-ash: #D5C8B8;
+      --muted-text: #AFA29A;
+      --border-soft: #2A2334;
+
+      --wrap-max: 1280px;
+      --pad-x: 56px;
+      --pad-y: 40px;
+
+      --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    html, body { overflow-x: hidden; }
+    body {
+      font: 400 16px/1.55 var(--font-sans);
+      background: var(--plum-ink);
+      color: var(--bone-text);
+      letter-spacing: -0.005em;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--terracotta-signal); }
+    img { display: block; max-width: 100%; height: auto; }
+
+    .wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 var(--pad-x); }
+    @media (max-width: 768px) {
+      :root { --pad-x: 24px; --pad-y: 24px; }
+    }
+
+    /* === navigation === */
+    nav {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--pad-y) 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    nav .brand {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    nav .brand span { color: var(--terracotta-signal); margin-right: 8px; }
+    nav .links { display: flex; gap: 32px; align-items: center; }
+    nav .links a {
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      position: relative;
+      padding: 4px 0;
+      transition: color 180ms ease-out;
+    }
+    nav .links a::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 1px;
+      background: var(--bone-text);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 220ms ease-out;
+    }
+    nav .links a:hover::after,
+    nav .links a.active::after { transform: scaleX(1); }
+    nav .cta {
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 18px;
+      background: var(--terracotta-signal);
+      color: var(--plum-ink);
+      transition: background 180ms ease-out;
+    }
+    nav .cta:hover { background: var(--terracotta-deep); color: var(--plum-ink); }
+    @media (max-width: 640px) {
+      nav .links { display: none; }
+    }
+
+    /* === hero === */
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: 40% 60%;
+      gap: 32px;
+      min-height: calc(100vh - 96px);
+      padding: 56px 0 64px;
+      overflow: hidden;
+    }
+
+    /* particle canvas — covers full hero, sits behind text */
+    .hero canvas.particles-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.85;
+    }
+
+    .hero .left {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 32px;
+    }
+    .hero .right {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* left column content */
+    .hero .meta {
+      font: 500 11px/1.4 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brass-signal);
+    }
+    .hero .meta .num {
+      color: var(--terracotta-signal);
+      margin-right: 12px;
+    }
+    .hero h1 {
+      font: 700 clamp(48px, 6.2vw, 78px)/1.02 var(--font-sans);
+      letter-spacing: -0.055em;
+      color: var(--bone-text);
+      margin-top: 24px;
+      max-width: 14ch;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--terracotta-signal);
+    }
+    .hero .lead {
+      margin-top: 24px;
+      font-size: 19px;
+      line-height: 1.35;
+      color: var(--bone-dim);
+      max-width: 390px;
+    }
+    .hero .ctas {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .hero .ctas .primary {
+      font: 600 13px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 22px;
+      background: var(--terracotta-signal);
+      color: var(--plum-ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 180ms ease-out;
+      will-change: transform;
+    }
+    .hero .ctas .primary:hover { background: var(--terracotta-deep); color: var(--plum-ink); }
+    .hero .ctas .primary .arrow { transition: transform 180ms ease-out; }
+    .hero .ctas .primary:hover .arrow { transform: translateX(3px); }
+    .hero .ctas .secondary {
+      font: 500 13px/1 var(--font-sans);
+      color: var(--bone-text);
+      border-bottom: 1px solid var(--bone-text);
+      padding-bottom: 4px;
+      transition: color 180ms ease-out, border-color 180ms ease-out;
+    }
+    .hero .ctas .secondary:hover {
+      color: var(--terracotta-signal);
+      border-color: var(--terracotta-signal);
+    }
+
+    .hero .left .footer-strip {
+      border-top: 1px solid var(--border-soft);
+      padding-top: 18px;
+      font: 500 12px/1.4 var(--font-mono);
+      letter-spacing: 0.04em;
+      color: var(--muted-text);
+    }
+    .hero .left .footer-strip strong {
+      color: var(--bone-text);
+      font-weight: 500;
+    }
+    .hero .left .footer-strip .brass {
+      color: var(--brass-signal);
+    }
+
+    /* pause toggle */
+    .hero .pause-toggle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 4;
+      font: 600 11px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted-text);
+      background: transparent;
+      border: 1px solid var(--border-soft);
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: color 180ms ease-out, border-color 180ms ease-out;
+    }
+    .hero .pause-toggle:hover,
+    .hero .pause-toggle[aria-pressed="true"] {
+      color: var(--terracotta-signal);
+      border-color: var(--terracotta-signal);
+    }
+
+    /* right column — output-frame */
+    .hero .right .frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero .right .output {
+      position: relative;
+      width: 78%;
+      aspect-ratio: 16 / 10;
+      max-width: 540px;
+      background:
+        radial-gradient(ellipse at 50% 45%, rgba(217,104,78,0.32), transparent 60%),
+        radial-gradient(ellipse at 30% 80%, rgba(201,154,66,0.18), transparent 65%),
+        var(--plum-deep);
+      border: 1px solid var(--brass-signal);
+      overflow: hidden;
+    }
+    /* brass crop-markers */
+    .hero .right .output::before,
+    .hero .right .output::after,
+    .hero .right .output > .tl,
+    .hero .right .output > .br {
+      content: '';
+      position: absolute;
+      width: 22px; height: 22px;
+      border-color: var(--brass-signal);
+      border-style: solid;
+      border-width: 0;
+    }
+    .hero .right .output::before {
+      top: 8px; left: 8px;
+      border-top-width: 1px;
+      border-left-width: 1px;
+    }
+    .hero .right .output::after {
+      top: 8px; right: 8px;
+      border-top-width: 1px;
+      border-right-width: 1px;
+    }
+    .hero .right .output > .tl {
+      bottom: 8px; left: 8px;
+      border-bottom-width: 1px;
+      border-left-width: 1px;
+    }
+    .hero .right .output > .br {
+      bottom: 8px; right: 8px;
+      border-bottom-width: 1px;
+      border-right-width: 1px;
+    }
+
+    .hero .right .output .label {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      font: 500 10px/1 var(--font-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--bone-dim);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero .right .output .label .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--terracotta-signal);
+      box-shadow: 0 0 8px rgba(217,104,78,0.5);
+    }
+    .hero .right .output .centerpiece {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .hero .right .output .centerpiece .frame-num {
+      font: 500 11px/1 var(--font-mono);
+      letter-spacing: 0.1em;
+      color: var(--brass-signal);
+      text-transform: uppercase;
+    }
+    .hero .right .output .centerpiece .ring {
+      width: 110px;
+      height: 110px;
+      border: 1px solid var(--brass-signal);
+      border-radius: 50%;
+      position: relative;
+      animation: ring-breathe 6s ease-in-out infinite;
+    }
+    .hero .right .output .centerpiece .ring::before {
+      content: '';
+      position: absolute;
+      inset: 14px;
+      border: 1px solid rgba(201,154,66,0.4);
+      border-radius: 50%;
+    }
+    .hero .right .output .centerpiece .ring::after {
+      content: '';
+      position: absolute;
+      inset: 30px;
+      background: radial-gradient(circle, var(--terracotta-signal) 0%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+    @keyframes ring-breathe {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.04); opacity: 1; }
+    }
+    .hero .right .output .corner {
+      position: absolute;
+      bottom: 16px;
+      font: 500 10px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      color: var(--muted-text);
+    }
+    .hero .right .output .corner.left { left: 16px; }
+    .hero .right .output .corner.right { right: 16px; }
+
+    /* guide lines around output */
+    .hero .right .guide {
+      position: absolute;
+      background: var(--border-soft);
+      pointer-events: none;
+    }
+    .hero .right .guide.g1 {
+      top: 50%;
+      left: -20px;
+      width: 16px;
+      height: 1px;
+    }
+    .hero .right .guide.g2 {
+      bottom: 8%;
+      right: 8%;
+      width: 80px;
+      height: 1px;
+      transform: rotate(-12deg);
+      transform-origin: right center;
+    }
+    .hero .right .guide.g3 {
+      top: 12%;
+      right: -10px;
+      width: 1px;
+      height: 60px;
+    }
+
+    /* === services section === */
+    .services {
+      padding: 96px 0 64px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .services .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 56px;
+    }
+    .services .section-head .eyebrow {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brass-signal);
+    }
+    .services .section-head h2 {
+      font: 700 48px/1 var(--font-sans);
+      letter-spacing: -0.04em;
+      margin-top: 12px;
+      max-width: 18ch;
+    }
+    .services .section-head .num {
+      font: 500 12px/1 var(--font-mono);
+      color: var(--muted-text);
+    }
+    .services .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    @media (max-width: 768px) {
+      .services .grid { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; min-height: auto; padding: 32px 0 48px; }
+      .hero .right { margin-top: 24px; }
+      .hero .right .output { width: 100%; max-width: 100%; }
+    }
+
+    .service-card {
+      position: relative;
+      padding: 36px 32px;
+      background: var(--moss-surface);
+      border: 1px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 320px;
+    }
+    .service-card.wide {
+      grid-column: span 1;
+    }
+    .service-card .num {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      color: var(--brass-signal);
+    }
+    .service-card h3 {
+      font: 700 26px/1.15 var(--font-sans);
+      letter-spacing: -0.02em;
+      color: var(--bone-text);
+      max-width: 18ch;
+    }
+    .service-card p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--bone-dim);
+    }
+    .service-card .micro {
+      font: 500 11px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moss-mist);
+    }
+    .service-card .more {
+      margin-top: auto;
+      font: 600 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--terracotta-signal);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+    }
+    .service-card .more::after {
+      content: '→';
+      transition: transform 180ms ease-out;
+    }
+    .service-card .more:hover::after { transform: translateX(3px); }
+
+    /* === about strip === */
+    .about-strip {
+      padding: 80px 0;
+      border-top: 1px solid var(--border-soft);
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 64px;
+    }
+    @media (max-width: 768px) {
+      .about-strip { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .about-strip .label {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brass-signal);
+    }
+    .about-strip p {
+      font: 500 22px/1.45 var(--font-sans);
+      letter-spacing: -0.015em;
+      color: var(--bone-text);
+      max-width: 56ch;
+    }
+
+    /* === contact strip === */
+    .contact-strip {
+      padding: 64px 0 96px;
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .contact-strip .label {
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brass-signal);
+    }
+    .contact-strip .email {
+      font: 700 28px/1.2 var(--font-sans);
+      letter-spacing: -0.02em;
+      color: var(--bone-text);
+      border-bottom: 2px solid var(--terracotta-signal);
+      padding-bottom: 6px;
+    }
+    .contact-strip .tg {
+      font: 500 14px/1 var(--font-mono);
+      color: var(--bone-dim);
+    }
+
+    /* === reveal defaults === */
+    .reveal-fade-up {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 600ms ease-out, transform 600ms cubic-bezier(.22,1,.36,1);
+    }
+    .reveal-fade-up.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* === no-js fallback (CSS-only poster, no canvas) === */
+    @media (prefers-reduced-motion: reduce) {
+      .hero canvas.particles-canvas { display: none; }
+      .hero .right .output .centerpiece .ring { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="brand"><span>●</span>porkaq / ai services</div>
+      <div class="links">
+        <a href="#services">Услуги</a>
+        <a href="#about">Обо мне</a>
+        <a href="#contact">Контакт</a>
+      </div>
+      <a class="cta" href="#contact">Обсудить задачу</a>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" data-particles data-reveal-fade-up>
+      <!-- Particle field — back plane (WebGL/Canvas/DOM fallback via init.js) -->
+      <canvas class="particles-canvas" data-particle-density="medium" aria-hidden="true"></canvas>
+
+      <button type="button" class="pause-toggle" aria-pressed="false" data-pause-toggle>motion / pause</button>
+
+      <div class="left">
+        <div class="reveal-fade-up" data-reveal>
+          <div class="meta"><span class="num">06 /</span> v6 — particle motion</div>
+          <h1>Из запроса&nbsp;—<br>в&nbsp;<em>кадр.</em></h1>
+          <p class="lead">AI-фото и AI-видео для продукта, обложки и короткого ролика. Из вашего brief&nbsp;— в&nbsp;рабочий результат, без посредников.</p>
+          <div class="ctas">
+            <a class="primary" data-magnetic href="#contact"><span>Обсудить задачу</span><span class="arrow">→</span></a>
+            <a class="secondary" href="#services">Смотреть работы</a>
+          </div>
+        </div>
+
+        <div class="footer-strip">
+          <strong>Даниил · Иркутск</strong> · самозанятый<br>
+          <span class="brass">AI PHOTO · AI VIDEO · MATERIAL / MOTION</span>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="frame" data-reveal-fade-up>
+          <div class="output">
+            <div class="label"><span class="dot"></span>OUTPUT · AI VIDEO · DEMO CONCEPT</div>
+            <div class="centerpiece">
+              <div class="ring"></div>
+              <span class="frame-num">FRAME · 042</span>
+            </div>
+            <div class="tl"></div>
+            <div class="br"></div>
+            <div class="corner left">REC · 24FPS</div>
+            <div class="corner right">4K · 16:9</div>
+          </div>
+          <div class="guide g1"></div>
+          <div class="guide g2"></div>
+          <div class="guide g3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="services" id="services">
+      <div class="section-head reveal-fade-up" data-reveal>
+        <div>
+          <div class="eyebrow">02 / услуги</div>
+          <h2>Что продаётся&nbsp;— и&nbsp;что&nbsp;вы&nbsp;получаете.</h2>
+        </div>
+        <span class="num">02 / 02</span>
+      </div>
+
+      <div class="grid">
+        <article class="service-card reveal-fade-up" data-reveal>
+          <div class="num">01 / ai photo</div>
+          <h3>Изображения, которых не было</h3>
+          <p>Каталожные серии, обложки, рекламные концепты. Согласованный стиль на всю партию, финальные web&nbsp;/ social файлы.</p>
+          <span class="micro">brief → styleframes → final pack</span>
+          <a class="more" href="./services/ai-photo.html">Посмотреть AI-фото</a>
+        </article>
+
+        <article class="service-card reveal-fade-up" data-reveal>
+          <div class="num">02 / ai video</div>
+          <h3>Движение из одного кадра</h3>
+          <p>Короткие ролики, reels&nbsp;/ shorts, product teaser, motion-петля для hero. Версии 16:9 и 9:16 по задаче.</p>
+          <span class="micro">frame → motion → export</span>
+          <a class="more" href="./services/ai-video.html">Посмотреть AI-видео</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about-strip" id="about">
+      <div class="label reveal-fade-up" data-reveal>03 / подход</div>
+      <p class="reveal-fade-up" data-reveal>Не «AI-волшебник», а исполнитель с&nbsp;понятным пайплайном: brief → styleframes → final. Каждый этап согласуется, прежде чем уйти в&nbsp;генерацию. Если кейс нельзя показывать как клиентский, помечаю&nbsp;<em style="color:var(--terracotta-signal);font-style:normal">демо-концепт</em>.</p>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-strip" id="contact">
+      <div class="reveal-fade-up" data-reveal>
+        <div class="label">04 / контакт</div>
+      </div>
+      <a class="email reveal-fade-up" data-reveal href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
+      <div class="tg reveal-fade-up" data-reveal>t.me/porkaqq</div>
+    </section>
+  </div>
+
+  <!-- Runtime init: prefers-reduced-motion → particles → motion-interactions -->
+  <script type="module" src="./assets/init.js"></script>
+</body>
+</html>
