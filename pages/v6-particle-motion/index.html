@@ -133,15 +133,19 @@
       padding: 56px 0 64px;
     }
 
-    /* particle canvas — fixed dynamic viewport, behind content.
-       100dvh accounts for collapsing URL toolbars on Yandex Browser / Android
-       Chrome; 100vh would leave a stale-height canvas when the toolbar hides. */
+    /* particle canvas — fixed-largest viewport, behind content.
+       100lvh = viewport height when browser UI is fully collapsed (largest).
+       Yandex Browser / Android Chrome collapse the URL toolbar on scroll, so
+       canvas height stays at the 'largest' size even when toolbar is visible.
+       Bottom particles are simply clipped by the toolbar; they appear as the
+       toolbar hides. This avoids canvas-height resize events firing on
+       toolbar show/hide, which was the root cause of the 'particle jump'. */
     canvas.particles-canvas {
       position: fixed;
       left: 0;
       top: 0;
       width: 100vw;
-      height: 100dvh;
+      height: 100lvh;
       pointer-events: none;
       z-index: 0;
       opacity: 0.85;
@@ -966,15 +970,15 @@
         isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
         particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
         width = canvas.width = window.innerWidth;
-        const mobileH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-        height = canvas.height = isMobile ? mobileH : document.body.scrollHeight;
-        /* Particle distribution is NEVER changed on resize — particles retain
-           their viewport-space coordinates. If canvas height grew, particles
-           below the new bounds are simply not rendered (clipped); they remain
-           in their y position and ambient drift slowly populates the new
-           visible area. The opposite (shrinking) instantly hides particles
-           below the new bounds, which is the right behaviour for a collapsing
-           toolbar. */
+        if (isMobile) {
+          /* CSS canvas height is 100lvh. Force a layout flush, then read
+             canvas.clientHeight to get the actual rendered size. This avoids
+             the CSS/JS mismatch that would squash particles vertically. */
+          void canvas.offsetHeight;
+          height = canvas.height = canvas.clientHeight;
+        } else {
+          height = canvas.height = document.body.scrollHeight;
+        }
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
         }
@@ -1148,12 +1152,10 @@
       });
 
       window.addEventListener('resize', resize);
-      /* visualViewport resize fires on Yandex Browser / Android Chrome when
-         the URL toolbar collapses during scroll — this is the actual cause of
-         the perceived "particle jump" on mobile. */
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', resize);
-      }
+      /* NO visualViewport listener — canvas height is locked to 100lvh via
+         CSS, so toolbar show/hide (which fires visualViewport.resize) does
+         not change canvas height and does not require JS resize. */
+
 
       /* reveal */
       const revealEls = document.querySelectorAll('[data-reveal]');
