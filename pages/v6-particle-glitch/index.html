@@ -1245,7 +1245,7 @@
     const cTerr  = (root.getPropertyValue('--terracotta-signal') || '#d9684e').trim();
     const cBrass = (root.getPropertyValue('--brass-signal')      || '#c99a42').trim();
 
-    const CYCLE = 8.0; // секунд
+    const CYCLE = 16.0; // секунд — длинный цикл, чтобы текст не казался заевшим
     const GLYPHS = '0123456789ABCDEF<>/|=+*#@$%&?░▒▓█▌▐■□▣◊◈◇◆◀▶▲▼';
     const FONT = '"IBM Plex Mono", ui-monospace, monospace';
 
@@ -1295,18 +1295,27 @@
       ctx.clearRect(0, 0, w, h);
       if (!w || !h) { raf = requestAnimationFrame(frame); return; }
 
-      if (t < 1.8) {
+      if (t < 1.5) {
         // Phase A — glyph storm + initial text reveal
         glyphStorm(t, w, h);
-        const a = Math.min(1, t / 1.4);
+        const a = Math.min(1, t / 1.2);
         rgbText('ИЗ ЗАПРОСА', w, h, 18, a, 0.6 * (1 - a));
-      } else if (t < 4.0) {
-        // Phase B — main headline, subtle jitter
-        const j = 0.4 + 0.6 * Math.abs(Math.sin(t * 9));
-        rgbText('В КАДР · FRAME 042', w, h, 18, 1.0, 0.4 * j);
-      } else if (t < 5.8) {
-        // Phase C — render counter + scanline
-        const e = ((t - 4.0) / 1.8 * 0.42).toFixed(2);
+      } else if (t < 5.0) {
+        // Phase B — main headline "В КАДР", slow drift, no static / scanline
+        const k = (t - 1.5) / 3.5;
+        const j = 0.4 + 0.6 * Math.abs(Math.sin(t * 4));
+        const dx = 0.4 * j * (1 - k); // dx убывает к концу фазы
+        // micro scanlines, 1/8 кадра — не гламурно
+        ctx.fillStyle = cBrass;
+        ctx.globalAlpha = 0.06;
+        for (let y = 0; y < h; y += 3) {
+          ctx.fillRect(0, y, w, 0.5);
+        }
+        ctx.globalAlpha = 1;
+        rgbText('В КАДР · FRAME 042', w, h, 18, 1.0, dx);
+      } else if (t < 7.5) {
+        // Phase C — render counter + slow scanline (один за цикл)
+        const e = ((t - 5.0) / 2.5 * 0.42).toFixed(2);
         const txt = `RENDER · ${e}s`;
         ctx.font = `500 14px ${FONT}`;
         ctx.textAlign = 'center';
@@ -1317,23 +1326,34 @@
         ctx.globalAlpha = 0.45;
         ctx.font = `500 9px ${FONT}`;
         ctx.fillText('— AI VIDEO PIPELINE —', w/2, h/2 + 14);
-        ctx.fillRect(0, ((t - 4.0) / 1.8) * h, w, 1.5);
+        ctx.fillRect(0, ((t - 5.0) / 2.5) * h, w, 1.5);
         ctx.globalAlpha = 1;
-      } else if (t < 7.4) {
-        // Phase D — glitch burst
-        const b = (t - 5.8) / 1.6;
-        const i = Math.exp(-b * 4) * Math.abs(Math.sin(b * 35));
+      } else if (t < 10.0) {
+        // Phase D — glitch burst (короткий, ~2.5с)
+        const b = (t - 7.5) / 2.5;
+        const i = Math.exp(-b * 3) * Math.abs(Math.sin(b * 28));
         rgbText('ИЗ ЗАПРОСА — В КАДР', w, h, 18, 1.0, i);
-        // static blocks
         ctx.fillStyle = cTerr;
         ctx.globalAlpha = i * 0.7;
         for (let k = 0; k < 5; k++) {
           ctx.fillRect(Math.random()*w, Math.random()*h, 20 + Math.random()*60, 3);
         }
         ctx.globalAlpha = 1;
+      } else if (t < 14.0) {
+        // Phase E — long stable hold, slow drift текста
+        const k = (t - 10.0) / 4.0;
+        const drift = Math.sin(t * 1.3) * 0.3;
+        // subtle haze вместо scanlines
+        ctx.fillStyle = cBrass;
+        ctx.globalAlpha = 0.05 + 0.04 * Math.sin(t * 0.7);
+        for (let y = 0; y < h; y += 4) {
+          ctx.fillRect(0, y, w, 0.5);
+        }
+        ctx.globalAlpha = 1;
+        rgbText('ИЗ ЗАПРОСА — В КАДР', w, h, 18, 1.0, drift);
       } else {
-        // Phase E — fade to start
-        const fade = (7.4 + 0.6 - t) / 0.6;
+        // Phase F — fade to start (последние 2с цикла)
+        const fade = (14.0 + 2.0 - t) / 2.0;
         rgbText('ИЗ ЗАПРОСА — В КАДР', w, h, 18, fade, 0.3 * fade);
       }
 
