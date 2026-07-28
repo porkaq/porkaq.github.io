@@ -133,12 +133,13 @@
       padding: 56px 0 64px;
     }
 
-    /* particle canvas — fixed full-screen, above everything */
+    /* particle canvas — fixed viewport, behind content */
     canvas.particles-canvas {
       position: fixed;
       left: 0;
       top: 0;
       width: 100vw;
+      height: 100vh;
       pointer-events: none;
       z-index: 0;
       opacity: 0.85;
@@ -906,7 +907,7 @@
       const BASE_REPULSE = 0.9;
       const ATTRACTION_RADIUS = MOUSE_RADIUS * 3;
       const ATTRACTION_STRENGTH = 0.035;
-      const PARTICLE_COUNT = 2200;
+      const PARTICLE_COUNT = 1100;
       const AMBIENT_DRIFT = 0.025;
       const DAMPING = 0.96;
       const SEPARATION_RADIUS = 28;
@@ -916,14 +917,13 @@
       let particles = [];
       let mouse = { x: -9999, y: -9999, vx: 0, vy: 0, speed: 0 };
       let lastMouseX = -9999, lastMouseY = -9999;
-      let lastScrollY = 0;
       let isPaused = false;
       let animId;
 
-      /* resize — full page height (canvas is fixed but taller than viewport) */
+      /* resize — viewport-sized canvas (fixed, no scroll coupling) */
       function resize() {
         width = canvas.width = window.innerWidth;
-        height = canvas.height = document.body.scrollHeight;
+        height = canvas.height = window.innerHeight;
       }
 
       /* Particle */
@@ -997,8 +997,6 @@
         }
 
         draw() {
-          const screenY = this.y - window.scrollY;
-          if (screenY < -10 || screenY > window.innerHeight + 10) return;
           const dx = this.x - mouse.x;
           const dy = this.y - mouse.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1009,7 +1007,7 @@
           const g = Math.round(145 * (1 - t) + 200 * t);
           const b = Math.round(105 * (1 - t) + 184 * t);
           ctx.beginPath();
-          ctx.arc(this.x, screenY, this.size, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.alpha * this.life})`;
           ctx.fill();
         }
@@ -1031,16 +1029,15 @@
         animId = requestAnimationFrame(loop);
       }
 
-      /* events — page coordinates (canvas is full-page-height fixed) */
+      /* events — viewport coordinates (canvas is fixed viewport, no scroll coupling) */
       function setMouseFromClient(cx, cy) {
-        const pageY = cy + window.scrollY;
         mouse.vx = cx - lastMouseX;
-        mouse.vy = pageY - lastMouseY;
+        mouse.vy = cy - lastMouseY;
         mouse.speed = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
         mouse.x = cx;
-        mouse.y = pageY;
+        mouse.y = cy;
         lastMouseX = cx;
-        lastMouseY = pageY;
+        lastMouseY = cy;
       }
       function clearMouse() {
         mouse.x = -9999;
@@ -1062,10 +1059,6 @@
       }, { passive: true });
       window.addEventListener('touchend', clearMouse);
       window.addEventListener('touchcancel', clearMouse);
-      window.addEventListener('scroll', () => {
-        mouse.y += window.scrollY - lastScrollY;
-        lastScrollY = window.scrollY;
-      }, { passive: true });
 
       pauseBtn.addEventListener('click', () => {
         isPaused = !isPaused;
