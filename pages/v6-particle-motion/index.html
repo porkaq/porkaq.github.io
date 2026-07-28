@@ -907,6 +907,10 @@
       const BASE_REPULSE = 0.9;
       const ATTRACTION_RADIUS = MOUSE_RADIUS * 3;
       const ATTRACTION_STRENGTH = 0.035;
+      const MAX_MOUSE_SPEED = 40; /* clamp scroll-pulse spikes */
+      /* spatial hash: grid[cellKey] = [particles]; rebuilt every frame */
+      const grid = new Map();
+      let CELL_SIZE; /* assigned below, after SEPARATION_RADIUS is declared */
       const MOBILE_BREAKPOINT = 768;
       const PARTICLE_COUNT_MOBILE = 600;
       const PARTICLE_COUNT_DESKTOP = 2000;
@@ -916,6 +920,7 @@
       const DAMPING = 0.96;
       const SEPARATION_RADIUS = 28;
       const SEPARATION_STRENGTH = 0.35;
+      CELL_SIZE = SEPARATION_RADIUS; /* bind to the constant declared above */
 
       let width, height;
       let particles = [];
@@ -924,6 +929,31 @@
       let lastScrollY = 0;
       let isPaused = false;
       let animId;
+
+      /* spatial hash: bucket particles by cell for O(1) neighbor lookup */
+      function rebuildGrid() {
+        grid.clear();
+        for (const p of particles) {
+          const cx = (p.x / CELL_SIZE) | 0;
+          const cy = (p.y / CELL_SIZE) | 0;
+          const key = cx + ',' + cy;
+          let bucket = grid.get(key);
+          if (!bucket) { bucket = []; grid.set(key, bucket); }
+          bucket.push(p);
+        }
+      }
+      function neighbors(p) {
+        const cx = (p.x / CELL_SIZE) | 0;
+        const cy = (p.y / CELL_SIZE) | 0;
+        const out = [];
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const bucket = grid.get((cx + dx) + ',' + (cy + dy));
+            if (bucket) for (const o of bucket) out.push(o);
+          }
+        }
+        return out;
+      }
 
       /* resize — desktop: full page height (page-space), mobile: viewport (viewport-space) */
       function resize() {
@@ -934,6 +964,7 @@
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
         }
+        pendingScrollDy = 0;
       }
 
       /* Particle */
@@ -977,14 +1008,15 @@
             this.vy -= Math.sin(angle) * force;
           }
 
-          /* separation from nearby particles */
-          for (let i = 0, len = particles.length; i < len; i++) {
-            const other = particles[i];
+          /* separation via spatial hash — only check 3x3 cell neighborhood */
+          for (const other of neighbors(this)) {
             if (other === this) continue;
             const sdx = this.x - other.x;
             const sdy = this.y - other.y;
-            const sdist = Math.sqrt(sdx * sdx + sdy * sdy);
-            if (sdist < SEPARATION_RADIUS && sdist > 0) {
+            const sdist2 = sdx * sdx + sdy * sdy;
+            const r2 = SEPARATION_RADIUS * SEPARATION_RADIUS;
+            if (sdist2 < r2 && sdist2 > 0.01) {
+              const sdist = Math.sqrt(sdist2);
               const sforce = (SEPARATION_RADIUS - sdist) / SEPARATION_RADIUS * SEPARATION_STRENGTH;
               this.vx += (sdx / sdist) * sforce;
               this.vy += (sdy / sdist) * sforce;
@@ -1038,6 +1070,12 @@
       /* loop */
       function loop() {
         if (isPaused) { animId = requestAnimationFrame(loop); return; }
+        /* flush queued scroll delta into mouse.y (RAF-throttled) */
+        if (pendingScrollDy !== 0) {
+          mouse.y += pendingScrollDy;
+          pendingScrollDy = 0;
+        }
+        rebuildGrid();
         ctx.clearRect(0, 0, width, height);
         for (const p of particles) { p.update(); p.draw(); }
         animId = requestAnimationFrame(loop);
@@ -1049,7 +1087,10 @@
         const py = isMobile ? cy : cy + window.scrollY;
         mouse.vx = px - lastMouseX;
         mouse.vy = py - lastMouseY;
-        mouse.speed = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
+        /* clamp mouse.speed — scroll-attached events can spike >200, dragging the
+           repulsion force vector and causing visible jitter on rapid scroll. */
+        const raw = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
+        mouse.speed = raw > MAX_MOUSE_SPEED ? MAX_MOUSE_SPEED : raw;
         mouse.x = px;
         mouse.y = py;
         lastMouseX = px;
@@ -1075,9 +1116,12 @@
       }, { passive: true });
       window.addEventListener('touchend', clearMouse);
       window.addEventListener('touchcancel', clearMouse);
+      /* scroll: queue delta, flush in next RAF. Prevents scroll-event spam
+         (which can fire faster than RAF) from causing repulsion-force jumps. */
+      let pendingScrollDy = 0;
       window.addEventListener('scroll', () => {
         if (isMobile) return;
-        mouse.y += window.scrollY - lastScrollY;
+        pendingScrollDy += window.scrollY - lastScrollY;
         lastScrollY = window.scrollY;
       }, { passive: true });
 
