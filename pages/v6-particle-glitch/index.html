@@ -1365,32 +1365,32 @@
       rgbText('ИЗ ЗАПРОСА', w, h, fs, a, Math.min(1.2 * (1 - a), w * 0.012));
     }
 
-    // 2, 7) Headline с RGB-shift, fade in/out. Текст авто-фит по ширине.
+    // 2, 7) Headline с RGB-shift, fade in/out. Текст авто-фит по ширине И высоте.
     function renderHeadline(text, w, h, k, kIn, kOut, dxBase) {
       const ctxLocal = ctx;
-      // probe font-size: start big, shrink until text fits width with margin
       const maxW = w * 0.9;
-      let fs = Math.max(7, Math.min(22, w / 12));
+      // Vertical constraint: text height ≈ fs * 1.1 must fit ~70% of canvas height
+      const maxFsByH = h * 0.7 / 1.1;
+      let fs = Math.max(7, Math.min(22, w / 12, maxFsByH));
       ctxLocal.font = `700 ${fs}px ${FONT}`;
+      // shrink-to-fit по ширине
       while (ctxLocal.measureText(text).width > maxW && fs > 7) { fs -= 1; ctxLocal.font = `700 ${fs}px ${FONT}`; }
-      const dx = dxBase * 0.6 + 0.5 * Math.sin(k * Math.PI) * Math.abs(Math.sin(localT() * 6)) * (fs / 22);
       // RGB-shift scaled to fs
       const r = fs * 0.10;
       ctxLocal.textAlign = 'center';
       ctxLocal.textBaseline = 'middle';
+      // смещаем y вверх чтобы не резало — центр = h * 0.45 если есть второй ряд подписей
+      const yPos = h * 0.5;
       const alpha = kIn * kOut;
-      ctxGlobalAlpha(ctxLocal, alpha);
+      ctxLocal.globalAlpha = alpha;
       ctxLocal.fillStyle = '#28c8d8';
-      ctxLocal.fillText(text, w/2 - r, h/2);
+      ctxLocal.fillText(text, w/2 - r, yPos);
       ctxLocal.fillStyle = cBrass;
-      ctxLocal.fillText(text, w/2 + r, h/2);
+      ctxLocal.fillText(text, w/2 + r, yPos);
       ctxLocal.fillStyle = cTerr;
-      ctxLocal.fillText(text, w/2, h/2);
-      ctxGlobalAlpha(ctxLocal, 1);
+      ctxLocal.fillText(text, w/2, yPos);
+      ctxLocal.globalAlpha = 1;
     }
-
-    // helper for body fill with rgba — set globalAlpha
-    function ctxGlobalAlpha(c, a) { c.globalAlpha = a; }
 
     // 3, 9) RENDER counter со scanline
     function renderCounter(k, kIn, kOut, targetSec, w, h) {
@@ -1428,16 +1428,16 @@
       ctx.globalAlpha = 1;
     }
 
-    // 5) Большой FRAME 042 — adaptive fs
+    // 5) Большой FRAME 042 — adaptive fs, fit by width AND height
     function renderFrameNumber(k, kIn, kOut, w, h) {
       const num = 'FRAME 042';
-      // shrink fs to fit width
       const maxW = w * 0.9;
-      let fs = Math.max(10, Math.min(30, w / 8));
+      const maxFsByH = h * 0.55 / 1.1; // крупные цифры занимают до 55% от h
+      let fs = Math.max(10, Math.min(30, w / 8, maxFsByH));
       ctx.font = `700 ${fs}px ${FONT}`;
       while (ctx.measureText(num).width > maxW && fs > 10) { fs -= 1; ctx.font = `700 ${fs}px ${FONT}`; }
-      // RGB-split scaled to fs
-      const r = fs * 0.10;
+      // RGB-split scaled to fs (сжат до 60%, чтобы не срезало)
+      const r = fs * 0.06;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.globalAlpha = kIn * kOut;
@@ -1447,14 +1447,15 @@
       ctx.fillText(num, w/2 + r * (1 - Math.abs(k - 0.5) * 2), h/2);
       ctx.fillStyle = cTerr;
       ctx.fillText(num, w/2, h/2);
-      // мелкие индексы вокруг — adaptive font
+      // мелкие индексы вокруг — adaptive font, только если влезает по высоте
       const fsSub = Math.max(8, Math.min(10, fs * 0.33));
-      ctx.font = `500 ${fsSub}px ${FONT}`;
-      ctx.fillStyle = cBrass;
-      // measure if subtitle fits, otherwise skip
-      const sub = '// 042A · 042B · 042C';
-      if (ctx.measureText(sub).width < w * 0.95) {
-        ctx.fillText(sub, w/2, h/2 + fs * 0.95);
+      if (h/2 + fs * 0.7 + fsSub < h * 0.95) {
+        ctx.font = `500 ${fsSub}px ${FONT}`;
+        ctx.fillStyle = cBrass;
+        const sub = '// 042A · 042B · 042C';
+        if (ctx.measureText(sub).width < w * 0.95) {
+          ctx.fillText(sub, w/2, h/2 + fs * 0.95);
+        }
       }
       ctx.globalAlpha = 1;
     }
@@ -1552,7 +1553,8 @@
     // 11) Headline с динамическим jitter (каждое слово дрожит по-своему), adaptive fit
     function renderHeadlineJitter(text, w, h, k, kIn, kOut) {
       const maxW = w * 0.9;
-      let fs = Math.max(7, Math.min(20, w / 11));
+      const maxFsByH = h * 0.7 / 1.1;
+      let fs = Math.max(7, Math.min(20, w / 11, maxFsByH));
       ctx.font = `700 ${fs}px ${FONT}`;
       while (ctx.measureText(text).width > maxW && fs > 7) { fs -= 1; ctx.font = `700 ${fs}px ${FONT}`; }
       ctx.textAlign = 'center';
