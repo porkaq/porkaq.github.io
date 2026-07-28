@@ -1335,16 +1335,16 @@
 
       switch (sceneName) {
         case 'introGlyph':   renderIntroGlyph(k, dur, w, h); break;
-        case 'headlineA':    renderHeadline('В КАДР · FRAME 042', k, kIn, kOut, 0.6, w, h); break;
+        case 'headlineA':    renderHeadline('В КАДР · FRAME 042', w, h, k, kIn, kOut, 0.6); break;
         case 'counterA':     renderCounter(k, kIn, kOut, 0.42, w, h); break;
         case 'glitchBurst':  renderGlitchBurst('ИЗ ЗАПРОСА', k, kIn, w, h); break;
         case 'frameNumber':  renderFrameNumber(k, kIn, kOut, w, h); break;
         case 'matrixRain':   renderMatrixRain(k, kIn, w, h); break;
-        case 'headlineB':    renderHeadline('ИЗ ЗАПРОСА — В КАДР', k, kIn, kOut, -0.4, w, h); break;
+        case 'headlineB':    renderHeadline('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut, -0.4); break;
         case 'wireBlocks':   renderWireBlocks(k, kIn, kOut, w, h); break;
         case 'counterB':     renderCounter(k, kIn, kOut, 0.13, w, h); break;
         case 'asciiLogo':    renderAsciiLogo(k, kIn, kOut, w, h); break;
-        case 'headlineC':    renderHeadlineJitter('ИЗ ЗАПРОСА — В КАДР', k, kIn, kOut, w, h); break;
+        case 'headlineC':    renderHeadlineJitter('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut); break;
         case 'meshFade':     renderMeshFade(k, w, h); break;
       }
 
@@ -1360,19 +1360,43 @@
     function renderIntroGlyph(k, dur, w, h) {
       glyphStorm(k * dur, w, h);
       const a = Math.min(1, k * 1.6);
-      rgbText('ИЗ ЗАПРОСА', w, h, 18, a, 1.2 * (1 - a));
+      // adaptive font-size: smaller на узких экранах
+      const fs = Math.max(8, Math.min(18, w / 14));
+      rgbText('ИЗ ЗАПРОСА', w, h, fs, a, Math.min(1.2 * (1 - a), w * 0.012));
     }
 
-    // 2, 7) Headline с RGB-shift, fade in/out
-    function renderHeadline(text, k, kIn, kOut, dxBase, w, h) {
-      const dx = dxBase + 0.4 * Math.sin(k * Math.PI) * Math.abs(Math.sin(localT() * 6));
-      rgbText(text, w, h, 22, kIn * kOut, dx);
+    // 2, 7) Headline с RGB-shift, fade in/out. Текст авто-фит по ширине.
+    function renderHeadline(text, w, h, k, kIn, kOut, dxBase) {
+      const ctxLocal = ctx;
+      // probe font-size: start big, shrink until text fits width with margin
+      const maxW = w * 0.9;
+      let fs = Math.max(7, Math.min(22, w / 12));
+      ctxLocal.font = `700 ${fs}px ${FONT}`;
+      while (ctxLocal.measureText(text).width > maxW && fs > 7) { fs -= 1; ctxLocal.font = `700 ${fs}px ${FONT}`; }
+      const dx = dxBase * 0.6 + 0.5 * Math.sin(k * Math.PI) * Math.abs(Math.sin(localT() * 6)) * (fs / 22);
+      // RGB-shift scaled to fs
+      const r = fs * 0.10;
+      ctxLocal.textAlign = 'center';
+      ctxLocal.textBaseline = 'middle';
+      const alpha = kIn * kOut;
+      ctxGlobalAlpha(ctxLocal, alpha);
+      ctxLocal.fillStyle = '#28c8d8';
+      ctxLocal.fillText(text, w/2 - r, h/2);
+      ctxLocal.fillStyle = cBrass;
+      ctxLocal.fillText(text, w/2 + r, h/2);
+      ctxLocal.fillStyle = cTerr;
+      ctxLocal.fillText(text, w/2, h/2);
+      ctxGlobalAlpha(ctxLocal, 1);
     }
+
+    // helper for body fill with rgba — set globalAlpha
+    function ctxGlobalAlpha(c, a) { c.globalAlpha = a; }
 
     // 3, 9) RENDER counter со scanline
     function renderCounter(k, kIn, kOut, targetSec, w, h) {
       const e = (k * targetSec).toFixed(2);
-      ctx.font = `600 16px ${FONT}`;
+      const fsN = Math.max(9, Math.min(16, w / 22));
+      ctx.font = `600 ${fsN}px ${FONT}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = cTerr;
@@ -1380,7 +1404,7 @@
       ctx.fillText(`RENDER · ${e}s`, w/2, h/2 - 10);
       ctx.fillStyle = '#e8e0d0';
       ctx.globalAlpha = 0.4 * kIn * kOut;
-      ctx.font = `500 9px ${FONT}`;
+      ctx.font = `500 ${Math.max(7, fsN-5)}px ${FONT}`;
       ctx.fillText('— AI VIDEO PIPELINE —', w/2, h/2 + 12);
       // scanline проходит в этой сцене
       ctx.fillStyle = cTerr;
@@ -1391,45 +1415,58 @@
 
     // 4) Короткий glitch-burst (RGB-split на тексте + статик-блоки)
     function renderGlitchBurst(text, k, kIn, w, h) {
+      const fs = Math.max(7, Math.min(18, w / 14));
       const i = Math.exp(-k * 6) * Math.abs(Math.sin(k * 24));
-      rgbText(text, w, h, 18, kIn * (0.4 + 0.6 * Math.sin(k * Math.PI)), i * 1.4);
+      rgbText(text, w, h, fs, kIn * (0.4 + 0.6 * Math.sin(k * Math.PI)), Math.min(i * 1.4, w * 0.015));
       ctx.fillStyle = cTerr;
       ctx.globalAlpha = i * kIn * 0.8;
       const n = 3 + Math.floor(Math.random() * 4);
       for (let q = 0; q < n; q++) {
-        const bw = 25 + Math.random() * 70;
+        const bw = Math.min(70, 25 + Math.random() * (w * 0.18));
         ctx.fillRect(Math.random()*w, Math.random()*h, bw, 2 + Math.random()*3);
       }
       ctx.globalAlpha = 1;
     }
 
-    // 5) Большой FRAME 042 (буквы-как-пиксели)
+    // 5) Большой FRAME 042 — adaptive fs
     function renderFrameNumber(k, kIn, kOut, w, h) {
       const num = 'FRAME 042';
-      const fs = 30;
+      // shrink fs to fit width
+      const maxW = w * 0.9;
+      let fs = Math.max(10, Math.min(30, w / 8));
       ctx.font = `700 ${fs}px ${FONT}`;
+      while (ctx.measureText(num).width > maxW && fs > 10) { fs -= 1; ctx.font = `700 ${fs}px ${FONT}`; }
+      // RGB-split scaled to fs
+      const r = fs * 0.10;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // RGB-split крупный
       ctx.globalAlpha = kIn * kOut;
       ctx.fillStyle = '#28c8d8';
-      ctx.fillText(num, w/2 - 3 * (1 - Math.abs(k - 0.5) * 2), h/2);
+      ctx.fillText(num, w/2 - r * (1 - Math.abs(k - 0.5) * 2), h/2);
       ctx.fillStyle = cBrass;
-      ctx.fillText(num, w/2 + 3 * (1 - Math.abs(k - 0.5) * 2), h/2);
+      ctx.fillText(num, w/2 + r * (1 - Math.abs(k - 0.5) * 2), h/2);
       ctx.fillStyle = cTerr;
       ctx.fillText(num, w/2, h/2);
-      // мелкие индексы вокруг: 042A · 042B
-      ctx.font = `500 10px ${FONT}`;
+      // мелкие индексы вокруг — adaptive font
+      const fsSub = Math.max(8, Math.min(10, fs * 0.33));
+      ctx.font = `500 ${fsSub}px ${FONT}`;
       ctx.fillStyle = cBrass;
-      ctx.fillText('// 042A · 042B · 042C', w/2, h/2 + 28);
+      // measure if subtitle fits, otherwise skip
+      const sub = '// 042A · 042B · 042C';
+      if (ctx.measureText(sub).width < w * 0.95) {
+        ctx.fillText(sub, w/2, h/2 + fs * 0.95);
+      }
       ctx.globalAlpha = 1;
     }
 
     // 6) Matrix-style rain: падающие символы сверху вниз
     function renderMatrixRain(k, kIn, w, h) {
-      const cols = Math.floor(w / 9);
+      // adaptive column width based on canvas width
+      const colW = w < 200 ? 7 : 9;
+      const cols = Math.floor(w / colW);
       const dropSeed = (k * 60) | 0;
-      ctx.font = `700 9px ${FONT}`;
+      const fs = Math.max(7, Math.min(9, colW - 1));
+      ctx.font = `700 ${fs}px ${FONT}`;
       ctx.fillStyle = cBrass;
       for (let c = 0; c < cols; c++) {
         const colSeed = (c * 73 + dropSeed) | 0;
@@ -1437,19 +1474,22 @@
         const y = ((colSeed * 11) % (h + 30)) - 10;
         const a = Math.max(0, 1 - Math.abs(y - h/2) / (h/2));
         ctx.globalAlpha = a * kIn * 0.85;
-        ctx.fillText(ch, c * 9 + 1, y);
+        ctx.fillText(ch, c * colW + 1, y);
       }
-      // в центре — короткая вертикальная черта (rec-pulse)
+      // в центре — короткая вертикальная черта (rec-pulse), scaled
+      const barH = Math.min(28, h * 0.2);
       ctx.fillStyle = cTerr;
       ctx.globalAlpha = kIn * 0.9;
-      ctx.fillRect(w/2 - 0.5, h/2 - 14 + 4 * Math.sin(localT() * 6), 1, 28);
+      ctx.fillRect(w/2 - 0.5, h/2 - barH/2 + 4 * Math.sin(localT() * 6), 1, barH);
       ctx.globalAlpha = 1;
     }
 
-    // 8) Wireblocks: сетка блоков, RGB-shift по горизонтали
+    // 8) Wireblocks: сетка блоков с RGB-shift, масштабируется под ширину
     function renderWireBlocks(k, kIn, kOut, w, h) {
-      const gridX = 8, gridY = 3;
-      const dx = 4 * Math.sin(k * Math.PI * 2);
+      // adaptive grid: 4 cells wide on narrow screens, 8 on wide
+      const gridX = w < 200 ? 4 : (w < 300 ? 6 : 8);
+      const gridY = 3;
+      const dx = Math.min(4, w * 0.03) * Math.sin(k * Math.PI * 2);
       for (let gx = 0; gx < gridX; gx++) {
         for (let gy = 0; gy < gridY; gy++) {
           const px = (gx + 0.5) * (w / gridX);
@@ -1458,77 +1498,100 @@
           const phase = (seed + k * 5) % 1;
           const visible = phase < 0.7;
           if (!visible) continue;
-          // горизонтальный RGB-сдвиг на одном из трёх каналов
           const channelPick = seed % 3;
           const chan = channelPick === 0 ? '#28c8d8' : channelPick === 1 ? cBrass : cTerr;
           const alpha = 0.5 + 0.4 * Math.sin(phase * Math.PI) * kIn * kOut;
           ctx.fillStyle = chan;
           ctx.globalAlpha = alpha;
+          const blockW = Math.min(12, w * 0.05);
           const bx = px + (channelPick - 1) * dx - 1;
-          ctx.fillRect(bx, py - 1, 12, 2);
+          ctx.fillRect(bx, py - 1, blockW, 2);
         }
       }
       ctx.globalAlpha = 1;
     }
 
-    // 10) ASCII-art: 'AI VIDEO PIPELINE' крупными пиксельными цифрами + линиями
+    // 10) ASCII-art: 'AIVIDEO PIPELINE' БЕЗ box-символов — простой текст + рамочные точки
     function renderAsciiLogo(k, kIn, kOut, w, h) {
-      ctx.font = `500 10px ${FONT}`;
+      // adaptive fs — избегаем Unicode box-символов, рисуем точечные рамочки руками
+      const fs = Math.max(8, Math.min(11, w / 22));
+      ctx.font = `500 ${fs}px ${FONT}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.globalAlpha = kIn * kOut;
-      // строка 1
+      // углы рамочки — точки (ASCII-safe, всегда работают на iOS)
+      const corners = [
+        [w*0.08, h*0.28], [w*0.92, h*0.28],
+        [w*0.08, h*0.72], [w*0.92, h*0.72]
+      ];
       ctx.fillStyle = cBrass;
-      ctx.fillText('╔══════════════╗', w/2, h/2 - 16);
+      corners.forEach(([cx, cy]) => {
+        ctx.fillRect(cx - 3, cy - 1, 6, 2);
+        ctx.fillRect(cx - 1, cy - 3, 2, 6);
+      });
+      // горизонтальные линии-углы
+      ctx.fillRect(w*0.10, h*0.28 - 1, w*0.10, 1);
+      ctx.fillRect(w*0.80, h*0.28 - 1, w*0.10, 1);
+      ctx.fillRect(w*0.10, h*0.72 - 1, w*0.10, 1);
+      ctx.fillRect(w*0.80, h*0.72 - 1, w*0.10, 1);
+      // две строки текста
       ctx.fillStyle = cTerr;
-      ctx.fillText('║  A · I  ·  V ║', w/2, h/2);
-      ctx.fillStyle = cTerr;
-      ctx.fillText('║  I · D · E · O ║', w/2, h/2 + 14);
-      ctx.fillStyle = cBrass;
-      ctx.fillText('╚══════════════╝', w/2, h/2 + 28);
-      // мерцающая точка
-      ctx.fillStyle = '#e8e0d0';
-      ctx.fillText('— PIPELINE v0.42 —', w/2, h/2 + 42);
-      ctx.globalAlpha = 1;
-    }
-
-    // 11) Headline с динамическим jitter (каждое слово дрожит по-своему)
-    function renderHeadlineJitter(text, k, kIn, kOut, w, h) {
-      ctx.font = `700 20px ${FONT}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.globalAlpha = kIn * kOut;
-      // рисуем по словам
-      const parts = text.split(' — ');
-      const widths = parts.map(p => ctx.measureText(p).width);
-      const total = widths.reduce((a,b)=>a+b, 0) + 18 * (parts.length - 1);
-      let x = w/2 - total/2;
-      for (let i = 0; i < parts.length; i++) {
-        const jx = 2 * Math.sin(localT() * 12 + i * 2);
-        const jy = 1.5 * Math.cos(localT() * 9 + i * 3);
-        // RGB-split посимвольно
-        ctx.fillStyle = '#28c8d8';
-        ctx.fillText(parts[i], x + widths[i]/2 - jx, h/2 - jy);
-        ctx.fillStyle = cTerr;
-        ctx.fillText(parts[i], x + widths[i]/2 + jx, h/2 + jy);
+      ctx.fillText('A · I · V', w/2, h*0.40);
+      ctx.fillText('I · D · E · O', w/2, h*0.58);
+      // нижняя подпись — adaptive: пропускаем если не влезает
+      const fsSub = Math.max(7, fs - 2);
+      ctx.font = `500 ${fsSub}px ${FONT}`;
+      const sub = '— PIPELINE v0.42 —';
+      if (ctx.measureText(sub).width < w * 0.95) {
         ctx.fillStyle = '#e8e0d0';
-        ctx.fillText(parts[i], x + widths[i]/2, h/2);
-        x += widths[i] + 18;
+        ctx.fillText(sub, w/2, h*0.84);
       }
       ctx.globalAlpha = 1;
     }
 
-    // 12) Mesh fade — wireframe-полигон, fade-out
+    // 11) Headline с динамическим jitter (каждое слово дрожит по-своему), adaptive fit
+    function renderHeadlineJitter(text, w, h, k, kIn, kOut) {
+      const maxW = w * 0.9;
+      let fs = Math.max(7, Math.min(20, w / 11));
+      ctx.font = `700 ${fs}px ${FONT}`;
+      while (ctx.measureText(text).width > maxW && fs > 7) { fs -= 1; ctx.font = `700 ${fs}px ${FONT}`; }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = kIn * kOut;
+      const parts = text.split(' — ');
+      const widths = parts.map(p => ctx.measureText(p).width);
+      const sep = Math.max(8, fs * 0.9);
+      const total = widths.reduce((a,b)=>a+b, 0) + sep * (parts.length - 1);
+      let x = w/2 - total/2;
+      const jAmp = Math.min(2, fs * 0.1);
+      for (let i = 0; i < parts.length; i++) {
+        const jx = jAmp * Math.sin(localT() * 12 + i * 2);
+        const jy = jAmp * 0.7 * Math.cos(localT() * 9 + i * 3);
+        const splitR = Math.min(2, fs * 0.1);
+        ctx.fillStyle = '#28c8d8';
+        ctx.fillText(parts[i], x + widths[i]/2 - splitR - jx, h/2 - jy);
+        ctx.fillStyle = cTerr;
+        ctx.fillText(parts[i], x + widths[i]/2 + splitR + jx, h/2 + jy);
+        ctx.fillStyle = '#e8e0d0';
+        ctx.fillText(parts[i], x + widths[i]/2, h/2);
+        x += widths[i] + sep;
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // 12) Mesh fade — wireframe-полигон, fade-out, scaled
     function renderMeshFade(k, w, h) {
-      const lines = 8;
+      // line count scales with canvas height
+      const lines = h < 100 ? 5 : 8;
+      const step = w < 200 ? 3 : 4;
       for (let i = 0; i < lines; i++) {
         const y0 = ((i + 0.5) / lines) * h;
-        const amp = (1 - k) * 12;
+        const amp = (1 - k) * Math.min(12, w * 0.06);
         ctx.strokeStyle = cTerr;
         ctx.globalAlpha = (1 - k) * 0.6;
         ctx.lineWidth = 0.5 + (1 - k) * 0.5;
         ctx.beginPath();
-        for (let x = 0; x <= w; x += 4) {
+        for (let x = 0; x <= w; x += step) {
           const y = y0 + amp * Math.sin(x * 0.04 + i + k * 6);
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
