@@ -133,13 +133,15 @@
       padding: 56px 0 64px;
     }
 
-    /* particle canvas — fixed viewport, behind content */
+    /* particle canvas — fixed dynamic viewport, behind content.
+       100dvh accounts for collapsing URL toolbars on Yandex Browser / Android
+       Chrome; 100vh would leave a stale-height canvas when the toolbar hides. */
     canvas.particles-canvas {
       position: fixed;
       left: 0;
       top: 0;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       pointer-events: none;
       z-index: 0;
       opacity: 0.85;
@@ -955,12 +957,17 @@
         return out;
       }
 
-      /* resize — desktop: full page height (page-space), mobile: viewport (viewport-space) */
+      /* resize — desktop: full page height (page-space), mobile: visual viewport
+         (which on Android Yandex Browser collapses the toolbar and grows the visible
+         area during scroll). Using window.innerHeight here caused a single-frame
+         jump when the toolbar hid: canvas-height stayed the same, but visible
+         content did not, so particles appeared to "shift" relative to text. */
       function resize() {
         isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
         particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
         width = canvas.width = window.innerWidth;
-        height = canvas.height = isMobile ? window.innerHeight : document.body.scrollHeight;
+        const mobileH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        height = canvas.height = isMobile ? mobileH : document.body.scrollHeight;
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
         }
@@ -1134,6 +1141,12 @@
       });
 
       window.addEventListener('resize', resize);
+      /* visualViewport resize fires on Yandex Browser / Android Chrome when
+         the URL toolbar collapses during scroll — this is the actual cause of
+         the perceived "particle jump" on mobile. */
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', resize);
+      }
 
       /* reveal */
       const revealEls = document.querySelectorAll('[data-reveal]');
