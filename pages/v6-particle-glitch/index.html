@@ -1245,9 +1245,34 @@
     const cTerr  = (root.getPropertyValue('--terracotta-signal') || '#d9684e').trim();
     const cBrass = (root.getPropertyValue('--brass-signal')      || '#c99a42').trim();
 
-    const CYCLE = 16.0; // секунд — длинный цикл, чтобы текст не казался заевшим
+    const CYCLE = 18.0; // секунд — 12 уникальных сцен по ~1.5с каждая
     const GLYPHS = '0123456789ABCDEF<>/|=+*#@$%&?░▒▓█▌▐■□▣◊◈◇◆◀▶▲▼';
     const FONT = '"IBM Plex Mono", ui-monospace, monospace';
+
+    // Кадры цикла (start, end, renderer-name). Каждый ≤ 1.5с.
+    // Возврат по модулю CYCLE даёт чтение t = время в цикле.
+    // Границы — начало каждой сцены.
+    const SCENES = [
+      [0.0,  1.5,  'introGlyph'],     // glyph-шторм + рефлекс первой буквы
+      [1.5,  3.0,  'headlineA'],      // В КАДР · FRAME 042 (один раз за цикл)
+      [3.0,  4.5,  'counterA'],       // RENDER · 0.42s + scanline (быстрый)
+      [4.5,  5.7,  'glitchBurst'],    // короткий RGB-burst
+      [5.7,  7.2,  'frameNumber'],    // большой FRAME 042 ASCII
+      [7.2,  8.5,  'matrixRain'],     // matrix-style падающие символы
+      [8.5,  9.7,  'headlineB'],      // ИЗ ЗАПРОСА — В КАДР под углом
+      [9.7, 11.0,  'wireBlocks'],     // блоки RGB-shift по сетке
+      [11.0,12.5,  'counterB'],       // другой counter (значение 0.13s)
+      [12.5,14.0,  'asciiLogo'],      // AI VIDEO PIPELINE ASCII-арт
+      [14.0,16.0,  'headlineC'],      // ИЗ ЗАПРОСА — В КАДР с динамическим jitter
+      [16.0,18.0,  'meshFade'],       // polygonal mesh fade out → начало
+    ];
+
+    function pickScene(t) {
+      for (let i = 0; i < SCENES.length; i++) {
+        if (t < SCENES[i][1]) return { name: SCENES[i][2], localT: t - SCENES[i][0], dur: SCENES[i][1] - SCENES[i][0] };
+      }
+      return { name: 'introGlyph', localT: 0, dur: 1.5 };
+    }
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1295,69 +1320,229 @@
       ctx.clearRect(0, 0, w, h);
       if (!w || !h) { raf = requestAnimationFrame(frame); return; }
 
-      if (t < 1.5) {
-        // Phase A — glyph storm + initial text reveal
-        glyphStorm(t, w, h);
-        const a = Math.min(1, t / 1.2);
-        rgbText('ИЗ ЗАПРОСА', w, h, 18, a, 0.6 * (1 - a));
-      } else if (t < 5.0) {
-        // Phase B — main headline "В КАДР", slow drift, no static / scanline
-        const k = (t - 1.5) / 3.5;
-        const j = 0.4 + 0.6 * Math.abs(Math.sin(t * 4));
-        const dx = 0.4 * j * (1 - k); // dx убывает к концу фазы
-        // micro scanlines, 1/8 кадра — не гламурно
+      const { name: sceneName, localT, dur } = pickScene(t);
+      const k = Math.min(1, Math.max(0, localT / dur)); // 0..1 внутри сцены
+      const kIn = easeOutCubic(k);                          // fade-in
+      const kOut = easeOutCubic(1 - k);                     // fade-out (к концу сцены нарастает)
+
+      // ambient scanlines — тонкий слой поверх всего, очень subtle
+      if (w > 80 && h > 80) {
         ctx.fillStyle = cBrass;
-        ctx.globalAlpha = 0.06;
-        for (let y = 0; y < h; y += 3) {
-          ctx.fillRect(0, y, w, 0.5);
-        }
+        ctx.globalAlpha = 0.04;
+        for (let y = 0; y < h; y += 4) ctx.fillRect(0, y, w, 0.5);
         ctx.globalAlpha = 1;
-        rgbText('В КАДР · FRAME 042', w, h, 18, 1.0, dx);
-      } else if (t < 7.5) {
-        // Phase C — render counter + slow scanline (один за цикл)
-        const e = ((t - 5.0) / 2.5 * 0.42).toFixed(2);
-        const txt = `RENDER · ${e}s`;
-        ctx.font = `500 14px ${FONT}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = cTerr;
-        ctx.fillText(txt, w/2, h/2 - 6);
-        ctx.fillStyle = '#e8e0d0';
-        ctx.globalAlpha = 0.45;
-        ctx.font = `500 9px ${FONT}`;
-        ctx.fillText('— AI VIDEO PIPELINE —', w/2, h/2 + 14);
-        ctx.fillRect(0, ((t - 5.0) / 2.5) * h, w, 1.5);
-        ctx.globalAlpha = 1;
-      } else if (t < 10.0) {
-        // Phase D — glitch burst (короткий, ~2.5с)
-        const b = (t - 7.5) / 2.5;
-        const i = Math.exp(-b * 3) * Math.abs(Math.sin(b * 28));
-        rgbText('ИЗ ЗАПРОСА — В КАДР', w, h, 18, 1.0, i);
-        ctx.fillStyle = cTerr;
-        ctx.globalAlpha = i * 0.7;
-        for (let k = 0; k < 5; k++) {
-          ctx.fillRect(Math.random()*w, Math.random()*h, 20 + Math.random()*60, 3);
-        }
-        ctx.globalAlpha = 1;
-      } else if (t < 14.0) {
-        // Phase E — long stable hold, slow drift текста
-        const k = (t - 10.0) / 4.0;
-        const drift = Math.sin(t * 1.3) * 0.3;
-        // subtle haze вместо scanlines
-        ctx.fillStyle = cBrass;
-        ctx.globalAlpha = 0.05 + 0.04 * Math.sin(t * 0.7);
-        for (let y = 0; y < h; y += 4) {
-          ctx.fillRect(0, y, w, 0.5);
-        }
-        ctx.globalAlpha = 1;
-        rgbText('ИЗ ЗАПРОСА — В КАДР', w, h, 18, 1.0, drift);
-      } else {
-        // Phase F — fade to start (последние 2с цикла)
-        const fade = (14.0 + 2.0 - t) / 2.0;
-        rgbText('ИЗ ЗАПРОСА — В КАДР', w, h, 18, fade, 0.3 * fade);
+      }
+
+      switch (sceneName) {
+        case 'introGlyph':   renderIntroGlyph(k, dur, w, h); break;
+        case 'headlineA':    renderHeadline('В КАДР · FRAME 042', k, kIn, kOut, 0.6, w, h); break;
+        case 'counterA':     renderCounter(k, kIn, kOut, 0.42, w, h); break;
+        case 'glitchBurst':  renderGlitchBurst('ИЗ ЗАПРОСА', k, kIn, w, h); break;
+        case 'frameNumber':  renderFrameNumber(k, kIn, kOut, w, h); break;
+        case 'matrixRain':   renderMatrixRain(k, kIn, w, h); break;
+        case 'headlineB':    renderHeadline('ИЗ ЗАПРОСА — В КАДР', k, kIn, kOut, -0.4, w, h); break;
+        case 'wireBlocks':   renderWireBlocks(k, kIn, kOut, w, h); break;
+        case 'counterB':     renderCounter(k, kIn, kOut, 0.13, w, h); break;
+        case 'asciiLogo':    renderAsciiLogo(k, kIn, kOut, w, h); break;
+        case 'headlineC':    renderHeadlineJitter('ИЗ ЗАПРОСА — В КАДР', k, kIn, kOut, w, h); break;
+        case 'meshFade':     renderMeshFade(k, w, h); break;
       }
 
       raf = requestAnimationFrame(frame);
+    }
+
+    // ====== Scene renderers — каждый 1.5с уникальный визуал ======
+
+    function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+    function easeInOutSine(x) { return -(Math.cos(Math.PI * x) - 1) / 2; }
+
+    // 1) Intro glyph storm + рефлекс первой строки текста
+    function renderIntroGlyph(k, dur, w, h) {
+      glyphStorm(k * dur, w, h);
+      const a = Math.min(1, k * 1.6);
+      rgbText('ИЗ ЗАПРОСА', w, h, 18, a, 1.2 * (1 - a));
+    }
+
+    // 2, 7) Headline с RGB-shift, fade in/out
+    function renderHeadline(text, k, kIn, kOut, dxBase, w, h) {
+      const dx = dxBase + 0.4 * Math.sin(k * Math.PI) * Math.abs(Math.sin(localT() * 6));
+      rgbText(text, w, h, 22, kIn * kOut, dx);
+    }
+
+    // 3, 9) RENDER counter со scanline
+    function renderCounter(k, kIn, kOut, targetSec, w, h) {
+      const e = (k * targetSec).toFixed(2);
+      ctx.font = `600 16px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = kIn * kOut;
+      ctx.fillText(`RENDER · ${e}s`, w/2, h/2 - 10);
+      ctx.fillStyle = '#e8e0d0';
+      ctx.globalAlpha = 0.4 * kIn * kOut;
+      ctx.font = `500 9px ${FONT}`;
+      ctx.fillText('— AI VIDEO PIPELINE —', w/2, h/2 + 12);
+      // scanline проходит в этой сцене
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = 0.6 * kIn * kOut;
+      ctx.fillRect(0, k * h, w, 1.5);
+      ctx.globalAlpha = 1;
+    }
+
+    // 4) Короткий glitch-burst (RGB-split на тексте + статик-блоки)
+    function renderGlitchBurst(text, k, kIn, w, h) {
+      const i = Math.exp(-k * 6) * Math.abs(Math.sin(k * 24));
+      rgbText(text, w, h, 18, kIn * (0.4 + 0.6 * Math.sin(k * Math.PI)), i * 1.4);
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = i * kIn * 0.8;
+      const n = 3 + Math.floor(Math.random() * 4);
+      for (let q = 0; q < n; q++) {
+        const bw = 25 + Math.random() * 70;
+        ctx.fillRect(Math.random()*w, Math.random()*h, bw, 2 + Math.random()*3);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // 5) Большой FRAME 042 (буквы-как-пиксели)
+    function renderFrameNumber(k, kIn, kOut, w, h) {
+      const num = 'FRAME 042';
+      const fs = 30;
+      ctx.font = `700 ${fs}px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // RGB-split крупный
+      ctx.globalAlpha = kIn * kOut;
+      ctx.fillStyle = '#28c8d8';
+      ctx.fillText(num, w/2 - 3 * (1 - Math.abs(k - 0.5) * 2), h/2);
+      ctx.fillStyle = cBrass;
+      ctx.fillText(num, w/2 + 3 * (1 - Math.abs(k - 0.5) * 2), h/2);
+      ctx.fillStyle = cTerr;
+      ctx.fillText(num, w/2, h/2);
+      // мелкие индексы вокруг: 042A · 042B
+      ctx.font = `500 10px ${FONT}`;
+      ctx.fillStyle = cBrass;
+      ctx.fillText('// 042A · 042B · 042C', w/2, h/2 + 28);
+      ctx.globalAlpha = 1;
+    }
+
+    // 6) Matrix-style rain: падающие символы сверху вниз
+    function renderMatrixRain(k, kIn, w, h) {
+      const cols = Math.floor(w / 9);
+      const dropSeed = (k * 60) | 0;
+      ctx.font = `700 9px ${FONT}`;
+      ctx.fillStyle = cBrass;
+      for (let c = 0; c < cols; c++) {
+        const colSeed = (c * 73 + dropSeed) | 0;
+        const ch = GLYPHS[(colSeed * 5) % GLYPHS.length];
+        const y = ((colSeed * 11) % (h + 30)) - 10;
+        const a = Math.max(0, 1 - Math.abs(y - h/2) / (h/2));
+        ctx.globalAlpha = a * kIn * 0.85;
+        ctx.fillText(ch, c * 9 + 1, y);
+      }
+      // в центре — короткая вертикальная черта (rec-pulse)
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = kIn * 0.9;
+      ctx.fillRect(w/2 - 0.5, h/2 - 14 + 4 * Math.sin(localT() * 6), 1, 28);
+      ctx.globalAlpha = 1;
+    }
+
+    // 8) Wireblocks: сетка блоков, RGB-shift по горизонтали
+    function renderWireBlocks(k, kIn, kOut, w, h) {
+      const gridX = 8, gridY = 3;
+      const dx = 4 * Math.sin(k * Math.PI * 2);
+      for (let gx = 0; gx < gridX; gx++) {
+        for (let gy = 0; gy < gridY; gy++) {
+          const px = (gx + 0.5) * (w / gridX);
+          const py = (gy + 0.5) * (h / gridY);
+          const seed = gx * 7 + gy * 13;
+          const phase = (seed + k * 5) % 1;
+          const visible = phase < 0.7;
+          if (!visible) continue;
+          // горизонтальный RGB-сдвиг на одном из трёх каналов
+          const channelPick = seed % 3;
+          const chan = channelPick === 0 ? '#28c8d8' : channelPick === 1 ? cBrass : cTerr;
+          const alpha = 0.5 + 0.4 * Math.sin(phase * Math.PI) * kIn * kOut;
+          ctx.fillStyle = chan;
+          ctx.globalAlpha = alpha;
+          const bx = px + (channelPick - 1) * dx - 1;
+          ctx.fillRect(bx, py - 1, 12, 2);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // 10) ASCII-art: 'AI VIDEO PIPELINE' крупными пиксельными цифрами + линиями
+    function renderAsciiLogo(k, kIn, kOut, w, h) {
+      ctx.font = `500 10px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = kIn * kOut;
+      // строка 1
+      ctx.fillStyle = cBrass;
+      ctx.fillText('╔══════════════╗', w/2, h/2 - 16);
+      ctx.fillStyle = cTerr;
+      ctx.fillText('║  A · I  ·  V ║', w/2, h/2);
+      ctx.fillStyle = cTerr;
+      ctx.fillText('║  I · D · E · O ║', w/2, h/2 + 14);
+      ctx.fillStyle = cBrass;
+      ctx.fillText('╚══════════════╝', w/2, h/2 + 28);
+      // мерцающая точка
+      ctx.fillStyle = '#e8e0d0';
+      ctx.fillText('— PIPELINE v0.42 —', w/2, h/2 + 42);
+      ctx.globalAlpha = 1;
+    }
+
+    // 11) Headline с динамическим jitter (каждое слово дрожит по-своему)
+    function renderHeadlineJitter(text, k, kIn, kOut, w, h) {
+      ctx.font = `700 20px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = kIn * kOut;
+      // рисуем по словам
+      const parts = text.split(' — ');
+      const widths = parts.map(p => ctx.measureText(p).width);
+      const total = widths.reduce((a,b)=>a+b, 0) + 18 * (parts.length - 1);
+      let x = w/2 - total/2;
+      for (let i = 0; i < parts.length; i++) {
+        const jx = 2 * Math.sin(localT() * 12 + i * 2);
+        const jy = 1.5 * Math.cos(localT() * 9 + i * 3);
+        // RGB-split посимвольно
+        ctx.fillStyle = '#28c8d8';
+        ctx.fillText(parts[i], x + widths[i]/2 - jx, h/2 - jy);
+        ctx.fillStyle = cTerr;
+        ctx.fillText(parts[i], x + widths[i]/2 + jx, h/2 + jy);
+        ctx.fillStyle = '#e8e0d0';
+        ctx.fillText(parts[i], x + widths[i]/2, h/2);
+        x += widths[i] + 18;
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // 12) Mesh fade — wireframe-полигон, fade-out
+    function renderMeshFade(k, w, h) {
+      const lines = 8;
+      for (let i = 0; i < lines; i++) {
+        const y0 = ((i + 0.5) / lines) * h;
+        const amp = (1 - k) * 12;
+        ctx.strokeStyle = cTerr;
+        ctx.globalAlpha = (1 - k) * 0.6;
+        ctx.lineWidth = 0.5 + (1 - k) * 0.5;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 4) {
+          const y = y0 + amp * Math.sin(x * 0.04 + i + k * 6);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // безопасный localT внутри сцены (для renderHeadlineJitter и др.)
+    function localT() {
+      const t = ((performance.now() - t0) / 1000) % CYCLE;
+      const s = pickScene(t);
+      return s.localT;
     }
 
     resize();
