@@ -529,7 +529,10 @@
     }
     .service-card .carousel-track {
       display: flex;
-      transition: transform 400ms cubic-bezier(.22,1,.36,1);
+      will-change: transform;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .service-card .carousel-track { transition: transform 400ms cubic-bezier(.22,1,.36,1); }
     }
     .service-card .carousel-slide {
       flex: 0 0 100%;
@@ -689,6 +692,11 @@
     .reveal-fade-up.is-visible {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .demo-tag {
+      color: var(--terracotta-signal);
+      font-style: normal;
     }
 
 
@@ -872,7 +880,7 @@
     <!-- ABOUT -->
     <section class="about-strip" id="about">
       <div class="label reveal-fade-up" data-reveal>03 / подход</div>
-      <p class="reveal-fade-up" data-reveal>Не «AI-волшебник», а исполнитель с понятным пайплайном: brief → styleframes → final. Каждый этап согласуется, прежде чем уйти в генерацию. Если кейс нельзя показывать как клиентский, помечаю <em style="color:var(--terracotta-signal);font-style:normal">демо-концепт</em>.</p>
+      <p class="reveal-fade-up" data-reveal>Не «AI-волшебник», а исполнитель с понятным пайплайном: brief → styleframes → final. Каждый этап согласуется, прежде чем уйти в генерацию. Если кейс нельзя показывать как клиентский, помечаю <em class="demo-tag">демо-концепт</em>.</p>
     </section>
 
     <!-- CONTACT -->
@@ -898,7 +906,7 @@
       const BASE_REPULSE = 0.9;
       const ATTRACTION_RADIUS = MOUSE_RADIUS * 3;
       const ATTRACTION_STRENGTH = 0.035;
-      const PARTICLE_COUNT = 1100;
+      const PARTICLE_COUNT = 2200;
       const AMBIENT_DRIFT = 0.025;
       const DAMPING = 0.96;
       const SEPARATION_RADIUS = 28;
@@ -1024,24 +1032,40 @@
       }
 
       /* events — page coordinates (canvas is full-page-height fixed) */
-      window.addEventListener('mousemove', e => {
-        const pageY = e.clientY + window.scrollY;
-        mouse.vx = e.clientX - lastMouseX;
+      function setMouseFromClient(cx, cy) {
+        const pageY = cy + window.scrollY;
+        mouse.vx = cx - lastMouseX;
         mouse.vy = pageY - lastMouseY;
         mouse.speed = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
-        mouse.x = e.clientX;
+        mouse.x = cx;
         mouse.y = pageY;
-        lastMouseX = e.clientX;
+        lastMouseX = cx;
         lastMouseY = pageY;
-      });
-      window.addEventListener('mouseleave', () => {
+      }
+      function clearMouse() {
         mouse.x = -9999;
         mouse.y = -9999;
-      });
+        mouse.speed = 0;
+      }
+      /* pointer events — unified mouse + touch + pen (touch handled separately for scroll) */
+      window.addEventListener('pointermove', e => {
+        if (e.pointerType === 'touch') return;
+        setMouseFromClient(e.clientX, e.clientY);
+      }, { passive: true });
+      window.addEventListener('pointerleave', clearMouse);
+      /* touch explicitly — repulsion works on mobile even mid-scroll */
+      window.addEventListener('touchstart', e => {
+        if (e.touches.length) setMouseFromClient(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener('touchmove', e => {
+        if (e.touches.length) setMouseFromClient(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener('touchend', clearMouse);
+      window.addEventListener('touchcancel', clearMouse);
       window.addEventListener('scroll', () => {
         mouse.y += window.scrollY - lastScrollY;
         lastScrollY = window.scrollY;
-      });
+      }, { passive: true });
 
       pauseBtn.addEventListener('click', () => {
         isPaused = !isPaused;
@@ -1071,6 +1095,7 @@
         const prevBtn = carousel.querySelector('[data-carousel-prev]');
         const nextBtn = carousel.querySelector('[data-carousel-next]');
         const slides = carousel.querySelectorAll('.carousel-slide');
+        if (!track || !slides.length) return;
         let current = 0;
         const total = slides.length;
 
@@ -1080,8 +1105,8 @@
           dots.forEach((d, i) => d.classList.toggle('active', i === current));
         }
 
-        prevBtn.addEventListener('click', () => goTo(current - 1));
-        nextBtn.addEventListener('click', () => goTo(current + 1));
+        if (prevBtn) prevBtn.addEventListener('click', () => goTo(current - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => goTo(current + 1));
         dots.forEach(dot => {
           dot.addEventListener('click', () => goTo(parseInt(dot.dataset.carouselDot)));
         });
