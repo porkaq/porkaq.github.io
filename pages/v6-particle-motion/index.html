@@ -968,6 +968,13 @@
         width = canvas.width = window.innerWidth;
         const mobileH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
         height = canvas.height = isMobile ? mobileH : document.body.scrollHeight;
+        /* Particle distribution is NEVER changed on resize — particles retain
+           their viewport-space coordinates. If canvas height grew, particles
+           below the new bounds are simply not rendered (clipped); they remain
+           in their y position and ambient drift slowly populates the new
+           visible area. The opposite (shrinking) instantly hides particles
+           below the new bounds, which is the right behaviour for a collapsing
+           toolbar. */
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
         }
