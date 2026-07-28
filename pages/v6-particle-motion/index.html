@@ -9,13 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/runtime.css">
   <style>
-    /* === v6-particle-motion · Material / Motion ===
-       Spec: ~/portfolio/_design-specs/v6-particle-motion-spec.md
-       Palette: plum-ink / moss-surface / bone-text / terracotta-signal / brass-signal
-       Runtime: WebGL particles → Canvas fallback → DOM fallback (via assets/init.js)
-    */
     :root {
       --plum-ink: #160F1C;
       --plum-deep: #0E0A12;
@@ -45,7 +39,7 @@
       font: 400 16px/1.55 var(--font-sans);
       background: var(--plum-ink);
       color: var(--bone-text);
-      letter-spacing: -0.005em;
+      letter-spacing: 0;
       min-height: 100vh;
     }
     a { color: inherit; text-decoration: none; }
@@ -101,9 +95,30 @@
       padding: 12px 18px;
       background: var(--terracotta-signal);
       color: var(--plum-ink);
-      transition: background 180ms ease-out;
+      transition: background 180ms ease-out, transform 180ms ease-out;
+      position: relative;
+      overflow: visible;
     }
-    nav .cta:hover { background: var(--terracotta-deep); color: var(--plum-ink); }
+    nav .cta::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1.5px solid var(--terracotta-signal);
+      border-radius: inherit;
+      opacity: 0;
+      pointer-events: none;
+    }
+    nav .cta:hover::after {
+      animation: ring-expand 0.65s ease-out forwards;
+    }
+    nav .cta:hover {
+      background: var(--terracotta-deep);
+      transform: scale(1.03) translateY(-1px);
+    }
+    @keyframes ring-expand {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
     @media (max-width: 640px) {
       nav .links { display: none; }
     }
@@ -116,15 +131,14 @@
       gap: 32px;
       min-height: calc(100vh - 96px);
       padding: 56px 0 64px;
-      overflow: hidden;
     }
 
-    /* particle canvas — covers full hero, sits behind text */
-    .hero canvas.particles-canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+    /* particle canvas — fixed full-screen, above everything */
+    canvas.particles-canvas {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
       pointer-events: none;
       z-index: 0;
       opacity: 0.85;
@@ -188,12 +202,30 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      transition: background 180ms ease-out;
+      transition: background 180ms ease-out, transform 180ms ease-out;
       will-change: transform;
+      position: relative;
+      overflow: visible;
     }
-    .hero .ctas .primary:hover { background: var(--terracotta-deep); color: var(--plum-ink); }
+    .hero .ctas .primary::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 1.5px solid var(--terracotta-signal);
+      border-radius: inherit;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .hero .ctas .primary:hover::after {
+      animation: ring-expand 0.65s ease-out forwards;
+    }
+    .hero .ctas .primary:hover {
+      background: var(--terracotta-deep);
+      transform: scale(1.03) translateY(-1px);
+      filter: brightness(1.08);
+    }
     .hero .ctas .primary .arrow { transition: transform 180ms ease-out; }
-    .hero .ctas .primary:hover .arrow { transform: translateX(3px); }
+    .hero .ctas .primary:hover .arrow { transform: translateX(4px); }
     .hero .ctas .secondary {
       font: 500 13px/1 var(--font-sans);
       color: var(--bone-text);
@@ -204,6 +236,7 @@
     .hero .ctas .secondary:hover {
       color: var(--terracotta-signal);
       border-color: var(--terracotta-signal);
+      text-shadow: 0 0 20px rgba(217, 104, 78, 0.3);
     }
 
     .hero .left .footer-strip {
@@ -486,6 +519,112 @@
     }
     .service-card .more:hover::after { transform: translateX(3px); }
 
+    /* === service carousel === */
+    .service-card .carousel {
+      position: relative;
+      margin-top: 20px;
+      border-radius: 2px;
+      overflow: hidden;
+      background: var(--plum-deep);
+    }
+    .service-card .carousel-track {
+      display: flex;
+      transition: transform 400ms cubic-bezier(.22,1,.36,1);
+    }
+    .service-card .carousel-slide {
+      flex: 0 0 100%;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .service-card .carousel-slide img,
+    .service-card .carousel-slide video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .service-card .carousel-slide .placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: var(--plum-deep);
+      border: 1px solid var(--border-soft);
+    }
+    .service-card .carousel-slide .placeholder svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.4;
+    }
+    .service-card .carousel-slide .placeholder span {
+      font: 500 11px/1 var(--font-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-text);
+    }
+    .service-card .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: rgba(22, 15, 28, 0.7);
+      border: 1px solid var(--border-soft);
+      color: var(--bone-text);
+      font: 500 16px/1 var(--font-mono);
+      cursor: pointer;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 180ms, border-color 180ms;
+      backdrop-filter: blur(4px);
+    }
+    .service-card .carousel-arrow:hover {
+      background: var(--terracotta-signal);
+      color: var(--plum-ink);
+      border-color: var(--terracotta-signal);
+    }
+    .service-card .carousel-arrow.prev { left: 10px; }
+    .service-card .carousel-arrow.next { right: 10px; }
+    .service-card .carousel-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+    .service-card .carousel-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--bone-dim);
+      opacity: 0.4;
+      cursor: pointer;
+      transition: opacity 180ms, background 180ms;
+    }
+    .service-card .carousel-dot.active {
+      background: var(--terracotta-signal);
+      opacity: 1;
+    }
+    .service-card .carousel-slide-num {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font: 500 10px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      color: var(--muted-text);
+      z-index: 2;
+    }
+
     /* === about strip === */
     .about-strip {
       padding: 80px 0;
@@ -526,17 +665,20 @@
       text-transform: uppercase;
       color: var(--brass-signal);
     }
-    .contact-strip .email {
-      font: 700 28px/1.2 var(--font-sans);
-      letter-spacing: -0.02em;
-      color: var(--bone-text);
-      border-bottom: 2px solid var(--terracotta-signal);
-      padding-bottom: 6px;
+    .contact-strip .contacts {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
     }
+    .contact-strip .email,
     .contact-strip .tg {
-      font: 500 14px/1 var(--font-mono);
+      font: 500 16px/1.2 var(--font-mono);
+      letter-spacing: 0.02em;
       color: var(--bone-dim);
+      transition: color 180ms ease-out;
     }
+    .contact-strip .email:hover,
+    .contact-strip .tg:hover { color: var(--terracotta-signal); }
 
     /* === reveal defaults === */
     .reveal-fade-up {
@@ -549,7 +691,9 @@
       transform: translateY(0);
     }
 
-    /* === no-js fallback (CSS-only poster, no canvas) === */
+
+
+    /* === no-js fallback === */
     @media (prefers-reduced-motion: reduce) {
       .hero canvas.particles-canvas { display: none; }
       .hero .right .output .centerpiece .ring { animation: none; }
@@ -569,9 +713,8 @@
     </nav>
 
     <!-- HERO -->
-    <section class="hero" data-particles data-reveal-fade-up>
-      <!-- Particle field — back plane (WebGL/Canvas/DOM fallback via init.js) -->
-      <canvas class="particles-canvas" data-particle-density="medium" aria-hidden="true"></canvas>
+    <section class="hero" data-particles>
+      <canvas class="particles-canvas" aria-hidden="true"></canvas>
 
       <button type="button" class="pause-toggle" aria-pressed="false" data-pause-toggle>motion / pause</button>
 
@@ -581,7 +724,7 @@
           <h1>Из запроса&nbsp;—<br>в&nbsp;<em>кадр.</em></h1>
           <p class="lead">AI-фото и AI-видео для продукта, обложки и короткого ролика. Из вашего brief&nbsp;— в&nbsp;рабочий результат, без посредников.</p>
           <div class="ctas">
-            <a class="primary" data-magnetic href="#contact"><span>Обсудить задачу</span><span class="arrow">→</span></a>
+            <a class="primary" href="#contact"><span>Обсудить задачу</span><span class="arrow">→</span></a>
             <a class="secondary" href="#services">Смотреть работы</a>
           </div>
         </div>
@@ -626,17 +769,102 @@
         <article class="service-card reveal-fade-up" data-reveal>
           <div class="num">01 / ai photo</div>
           <h3>Изображения, которых не было</h3>
-          <p>Каталожные серии, обложки, рекламные концепты. Согласованный стиль на всю партию, финальные web&nbsp;/ social файлы.</p>
+          <p>Каталожные серии, обложки, рекламные концепты. Согласованный стиль на всю партию, финальные web / social файлы.</p>
           <span class="micro">brief → styleframes → final pack</span>
-          <a class="more" href="./services/ai-photo.html">Посмотреть AI-фото</a>
+
+          <div class="carousel" data-carousel="photo">
+            <div class="carousel-track">
+              <div class="carousel-slide">
+                <div class="placeholder">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="6" y="10" width="36" height="28" rx="2"/>
+                    <circle cx="16" cy="20" r="4"/>
+                    <path d="M6 32l10-8 8 6 12-10 6 5"/>
+                  </svg>
+                  <span>AI Photo · Sample 01</span>
+                </div>
+                <span class="carousel-slide-num">01 / 03</span>
+              </div>
+              <div class="carousel-slide">
+                <div class="placeholder">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="6" y="10" width="36" height="28" rx="2"/>
+                    <circle cx="16" cy="20" r="4"/>
+                    <path d="M6 32l10-8 8 6 12-10 6 5"/>
+                  </svg>
+                  <span>AI Photo · Sample 02</span>
+                </div>
+                <span class="carousel-slide-num">02 / 03</span>
+              </div>
+              <div class="carousel-slide">
+                <div class="placeholder">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="6" y="10" width="36" height="28" rx="2"/>
+                    <circle cx="16" cy="20" r="4"/>
+                    <path d="M6 32l10-8 8 6 12-10 6 5"/>
+                  </svg>
+                  <span>AI Photo · Sample 03</span>
+                </div>
+                <span class="carousel-slide-num">03 / 03</span>
+              </div>
+            </div>
+            <button class="carousel-arrow prev" data-carousel-prev>←</button>
+            <button class="carousel-arrow next" data-carousel-next>→</button>
+            <div class="carousel-dots">
+              <button class="carousel-dot active" data-carousel-dot="0"></button>
+              <button class="carousel-dot" data-carousel-dot="1"></button>
+              <button class="carousel-dot" data-carousel-dot="2"></button>
+            </div>
+          </div>
         </article>
 
         <article class="service-card reveal-fade-up" data-reveal>
           <div class="num">02 / ai video</div>
           <h3>Движение из одного кадра</h3>
-          <p>Короткие ролики, reels&nbsp;/ shorts, product teaser, motion-петля для hero. Версии 16:9 и 9:16 по задаче.</p>
+          <p>Короткие ролики, reels / shorts, product teaser, motion-петля для hero. Версии 16:9 и 9:16 по задаче.</p>
           <span class="micro">frame → motion → export</span>
-          <a class="more" href="./services/ai-video.html">Посмотреть AI-видео</a>
+
+          <div class="carousel" data-carousel="video">
+            <div class="carousel-track">
+              <div class="carousel-slide">
+                <div class="placeholder">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="6" y="10" width="36" height="28" rx="2"/>
+                    <path d="M19 18v12l10-6z"/>
+                  </svg>
+                  <span>AI Video · Sample 01</span>
+                </div>
+                <span class="carousel-slide-num">01 / 03</span>
+              </div>
+              <div class="carousel-slide">
+                <div class="placeholder">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="6" y="10" width="36" height="28" rx="2"/>
+                    <path d="M19 18v12l10-6z"/>
+                  </svg>
+                  <span>AI Video · Sample 02</span>
+                </div>
+                <span class="carousel-slide-num">02 / 03</span>
+              </div>
+              <div class="carousel-slide">
+                <div class="placeholder">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="6" y="10" width="36" height="28" rx="2"/>
+                    <path d="M19 18v12l10-6z"/>
+                  </svg>
+                  <span>AI Video · Sample 03</span>
+                </div>
+                <span class="carousel-slide-num">03 / 03</span>
+              </div>
+            </div>
+            <button class="carousel-arrow prev" data-carousel-prev>←</button>
+            <button class="carousel-arrow next" data-carousel-next>→</button>
+            <div class="carousel-dots">
+              <button class="carousel-dot active" data-carousel-dot="0"></button>
+              <button class="carousel-dot" data-carousel-dot="1"></button>
+              <button class="carousel-dot" data-carousel-dot="2"></button>
+            </div>
+          </div>
         </article>
       </div>
     </section>
@@ -644,7 +872,7 @@
     <!-- ABOUT -->
     <section class="about-strip" id="about">
       <div class="label reveal-fade-up" data-reveal>03 / подход</div>
-      <p class="reveal-fade-up" data-reveal>Не «AI-волшебник», а исполнитель с&nbsp;понятным пайплайном: brief → styleframes → final. Каждый этап согласуется, прежде чем уйти в&nbsp;генерацию. Если кейс нельзя показывать как клиентский, помечаю&nbsp;<em style="color:var(--terracotta-signal);font-style:normal">демо-концепт</em>.</p>
+      <p class="reveal-fade-up" data-reveal>Не «AI-волшебник», а исполнитель с понятным пайплайном: brief → styleframes → final. Каждый этап согласуется, прежде чем уйти в генерацию. Если кейс нельзя показывать как клиентский, помечаю <em style="color:var(--terracotta-signal);font-style:normal">демо-концепт</em>.</p>
     </section>
 
     <!-- CONTACT -->
@@ -652,12 +880,213 @@
       <div class="reveal-fade-up" data-reveal>
         <div class="label">04 / контакт</div>
       </div>
-      <a class="email reveal-fade-up" data-reveal href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
-      <div class="tg reveal-fade-up" data-reveal>t.me/porkaqq</div>
+      <div class="contacts reveal-fade-up" data-reveal>
+        <a class="email" href="mailto:varlamovdaniil-2004@mail.ru">varlamovdaniil-2004@mail.ru</a>
+        <a class="tg" href="https://t.me/porkaqq" target="_blank" rel="noopener">t.me/porkaqq</a>
+      </div>
     </section>
   </div>
 
-  <!-- Runtime init: prefers-reduced-motion → particles → motion-interactions -->
-  <script type="module" src="./assets/init.js"></script>
+  <script>
+    (() => {
+      /* ── Particle system with mouse repulsion ── */
+      const canvas = document.querySelector('.particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const pauseBtn = document.querySelector('[data-pause-toggle]');
+
+      const MOUSE_RADIUS = 70;
+      const BASE_REPULSE = 0.9;
+      const ATTRACTION_RADIUS = MOUSE_RADIUS * 3;
+      const ATTRACTION_STRENGTH = 0.035;
+      const PARTICLE_COUNT = 1100;
+      const AMBIENT_DRIFT = 0.025;
+      const DAMPING = 0.96;
+      const SEPARATION_RADIUS = 28;
+      const SEPARATION_STRENGTH = 0.35;
+
+      let width, height;
+      let particles = [];
+      let mouse = { x: -9999, y: -9999, vx: 0, vy: 0, speed: 0 };
+      let lastMouseX = -9999, lastMouseY = -9999;
+      let lastScrollY = 0;
+      let isPaused = false;
+      let animId;
+
+      /* resize — full page height (canvas is fixed but taller than viewport) */
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = document.body.scrollHeight;
+      }
+
+      /* Particle */
+      class Particle {
+        constructor() { this.reset(true); }
+
+        reset(initial) {
+          const margin = 20;
+          this.x = margin + Math.random() * (width - margin * 2);
+          this.y = margin + Math.random() * (height - margin * 2);
+          this.vx = (Math.random() - 0.5) * AMBIENT_DRIFT;
+          this.vy = (Math.random() - 0.5) * AMBIENT_DRIFT;
+          this.size = Math.random() * 1.6 + 0.4;
+          this.alpha = Math.random() * 0.5 + 0.15;
+          this.life = Math.random() * 0.4 + 0.6;
+        }
+
+        update() {
+          /* ambient drift — weak wander */
+          this.vx += (Math.random() - 0.5) * 0.015;
+          this.vy += (Math.random() - 0.5) * 0.015;
+
+          /* mouse repulsion — scales with cursor speed */
+          const dx = this.x - mouse.x;
+          const dy = this.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx);
+          const speedFactor = 1 + mouse.speed * 0.04;
+          if (dist < MOUSE_RADIUS && dist > 0) {
+            const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS * BASE_REPULSE * speedFactor;
+            this.vx += Math.cos(angle) * force;
+            this.vy += Math.sin(angle) * force;
+            /* very weak tangential swirl */
+            this.vx += Math.cos(angle + Math.PI / 2) * force * 0.1;
+            this.vy += Math.sin(angle + Math.PI / 2) * force * 0.1;
+          } else if (dist < ATTRACTION_RADIUS && dist > MOUSE_RADIUS && mouse.speed > 0.5) {
+            const t = (dist - MOUSE_RADIUS) / (ATTRACTION_RADIUS - MOUSE_RADIUS);
+            const speedRatio = Math.min(mouse.speed / 15, 1);
+            const force = t * ATTRACTION_STRENGTH * speedRatio;
+            this.vx -= Math.cos(angle) * force;
+            this.vy -= Math.sin(angle) * force;
+          }
+
+          /* separation from nearby particles */
+          for (let i = 0, len = particles.length; i < len; i++) {
+            const other = particles[i];
+            if (other === this) continue;
+            const sdx = this.x - other.x;
+            const sdy = this.y - other.y;
+            const sdist = Math.sqrt(sdx * sdx + sdy * sdy);
+            if (sdist < SEPARATION_RADIUS && sdist > 0) {
+              const sforce = (SEPARATION_RADIUS - sdist) / SEPARATION_RADIUS * SEPARATION_STRENGTH;
+              this.vx += (sdx / sdist) * sforce;
+              this.vy += (sdy / sdist) * sforce;
+            }
+          }
+
+          /* gentle damping on total velocity */
+          this.vx *= DAMPING;
+          this.vy *= DAMPING;
+
+          this.x += this.vx;
+          this.y += this.vy;
+
+          /* soft boundary */
+          const margin = 12;
+          if (this.x < margin) { this.x = margin; this.vx = Math.abs(this.vx) * 0.4; }
+          if (this.x > width - margin) { this.x = width - margin; this.vx = -Math.abs(this.vx) * 0.4; }
+          if (this.y < margin) { this.y = margin; this.vy = Math.abs(this.vy) * 0.4; }
+          if (this.y > height - margin) { this.y = height - margin; this.vy = -Math.abs(this.vy) * 0.4; }
+        }
+
+        draw() {
+          const screenY = this.y - window.scrollY;
+          if (screenY < -10 || screenY > window.innerHeight + 10) return;
+          const dx = this.x - mouse.x;
+          const dy = this.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const COLOR_KEEP = 15;
+          const COLOR_START = 50;
+          const t = Math.max(0, Math.min(1, (dist - COLOR_START) / (COLOR_START * 0.75)));
+          const r = Math.round(255 * (1 - t) + 213 * t);
+          const g = Math.round(145 * (1 - t) + 200 * t);
+          const b = Math.round(105 * (1 - t) + 184 * t);
+          ctx.beginPath();
+          ctx.arc(this.x, screenY, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.alpha * this.life})`;
+          ctx.fill();
+        }
+      }
+
+      /* init */
+      function init() {
+        resize();
+        lastMouseX = window.innerWidth / 2;
+        lastMouseY = window.innerHeight / 2;
+        particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
+      }
+
+      /* loop */
+      function loop() {
+        if (isPaused) { animId = requestAnimationFrame(loop); return; }
+        ctx.clearRect(0, 0, width, height);
+        for (const p of particles) { p.update(); p.draw(); }
+        animId = requestAnimationFrame(loop);
+      }
+
+      /* events — page coordinates (canvas is full-page-height fixed) */
+      window.addEventListener('mousemove', e => {
+        const pageY = e.clientY + window.scrollY;
+        mouse.vx = e.clientX - lastMouseX;
+        mouse.vy = pageY - lastMouseY;
+        mouse.speed = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
+        mouse.x = e.clientX;
+        mouse.y = pageY;
+        lastMouseX = e.clientX;
+        lastMouseY = pageY;
+      });
+      window.addEventListener('mouseleave', () => {
+        mouse.x = -9999;
+        mouse.y = -9999;
+      });
+      window.addEventListener('scroll', () => {
+        mouse.y += window.scrollY - lastScrollY;
+        lastScrollY = window.scrollY;
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        isPaused = !isPaused;
+        pauseBtn.setAttribute('aria-pressed', isPaused);
+        pauseBtn.textContent = isPaused ? 'motion / play' : 'motion / pause';
+      });
+
+      window.addEventListener('resize', resize);
+
+      /* reveal */
+      const revealEls = document.querySelectorAll('[data-reveal]');
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('is-visible'); });
+      }, { threshold: 0.15 });
+      revealEls.forEach(el => io.observe(el));
+
+      /* prefers-reduced-motion */
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        init();
+        loop();
+      }
+
+      /* ── Carousel ── */
+      document.querySelectorAll('[data-carousel]').forEach(carousel => {
+        const track = carousel.querySelector('.carousel-track');
+        const dots = carousel.querySelectorAll('[data-carousel-dot]');
+        const prevBtn = carousel.querySelector('[data-carousel-prev]');
+        const nextBtn = carousel.querySelector('[data-carousel-next]');
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        let current = 0;
+        const total = slides.length;
+
+        function goTo(index) {
+          current = ((index % total) + total) % total;
+          track.style.transform = `translateX(-${current * 100}%)`;
+          dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        }
+
+        prevBtn.addEventListener('click', () => goTo(current - 1));
+        nextBtn.addEventListener('click', () => goTo(current + 1));
+        dots.forEach(dot => {
+          dot.addEventListener('click', () => goTo(parseInt(dot.dataset.carouselDot)));
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
