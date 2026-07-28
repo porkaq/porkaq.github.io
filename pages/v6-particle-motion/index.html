@@ -33,7 +33,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    html { -webkit-font-smoothing: antialiased; }
     html, body { overflow-x: hidden; }
     body {
       font: 400 16px/1.55 var(--font-sans);
@@ -1107,6 +1107,8 @@
         setMouseFromClient(e.clientX, e.clientY);
       }, { passive: true });
       window.addEventListener('pointerleave', clearMouse);
+      window.addEventListener('pointercancel', clearMouse); /* iOS Safari fires this on scroll-start */
+      window.addEventListener('pointerout', clearMouse);
       /* touch explicitly — repulsion works on mobile even mid-scroll */
       window.addEventListener('touchstart', e => {
         if (e.touches.length) setMouseFromClient(e.touches[0].clientX, e.touches[0].clientY);
