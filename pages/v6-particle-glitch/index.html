@@ -1011,25 +1011,20 @@
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
-      const DAMPING = 0.978;          /* low loss so curl-flow doesn't decay to zero */
-      /* separation: only kicks in when particles are very close (tight core),
-         not across the full radius — prevents the hex-grid lock that forms when
-         every neighbor pushes back at the same strength forever. */
-      const SEPARATION_RADIUS = 28;
-      const SEPARATION_CORE = 14;          /* where force actually applies */
-      const SEPARATION_STRENGTH = 0.22;
+      const DAMPING = 0.985;          /* low loss so curl-flow + targets stay alive */
       /* curl-flow: divergence-free field — sum of slow rotations around a few
          fixed centers (no DC offset, so the field has zero net divergence and
          particles cannot accumulate in one quadrant over time). Magnitude
          independent of distance from vortex center so swirl is even. */
       const VORTEX_COUNT = 7;
-      const VORTEX_STRENGTH = 0.008;
+      const VORTEX_STRENGTH = 0.014;
       const VORTEX_TIME_SCALE = 0.00008;
-      /* anti-wall-pull: extra force away from canvas edges so particles
-         don't pile up against the soft boundary. */
-      const EDGE_MARGIN = 80;       /* force kicks in within this margin */
-      const EDGE_PUSH = 0.006;      /* per-frame push per pixel of overflow */
-      CELL_SIZE = SEPARATION_RADIUS; /* bind to the constant declared above */
+      /* home positions: each particle has a fixed target position assigned at
+         startup on a roughly uniform grid covering the canvas. A weak spring
+         force pulls the particle back to its home so density stays uniform
+         across the canvas even with vortex flow + boundaries. */
+      const HOME_SPRING = 0.0018;    /* weak pull toward home position */
+      CELL_SIZE = 32;                /* spatial-hash cell size — independent of HOME */
 
       let width, height;
       let particles = [];
@@ -1095,6 +1090,10 @@
           height = canvas.height = document.body.scrollHeight;
         }
         if (particles.length !== particleCount) {
+          /* reset home-grid counter so each particle gets a fresh target on
+             the uniform grid (declared on the class as static _nextIdx = 0
+             but re-zeroed here for safety across resize cycles). */
+          if ('_nextIdx' in Particle) Particle._nextIdx = 0;
           particles = Array.from({ length: particleCount }, () => new Particle());
         }
         pendingScrollDy = 0;
@@ -1103,11 +1102,25 @@
       /* Particle */
       class Particle {
         constructor() { this.reset(true); }
+        static _nextIdx = 0;  /* shared counter for assigning home grid cells */
 
         reset(initial) {
           const margin = 20;
           this.x = margin + Math.random() * (width - margin * 2);
           this.y = margin + Math.random() * (height - margin * 2);
+          /* home position on a uniform grid: pick row/col from particle index,
+             add a small jitter so the grid isn't visually obvious. */
+          if (initial) {
+            const cols = Math.max(1, Math.round(Math.sqrt(particleCount * width / height)));
+            const rows = Math.ceil(particleCount / cols);
+            const col = Particle._nextIdx % cols;
+            const row = Math.floor(Particle._nextIdx / cols) % rows;
+            Particle._nextIdx++;
+            const cellW = (width - margin * 2) / cols;
+            const cellH = (height - margin * 2) / rows;
+            this.tx = margin + (col + 0.5) * cellW + (Math.random() - 0.5) * cellW * 0.6;
+            this.ty = margin + (row + 0.5) * cellH + (Math.random() - 0.5) * cellH * 0.6;
+          }
           this.vx = (Math.random() - 0.5) * AMBIENT_DRIFT;
           this.vy = (Math.random() - 0.5) * AMBIENT_DRIFT;
           this.size = Math.random() * 1.6 + 0.4;
@@ -1158,29 +1171,11 @@
             this.vy -= Math.sin(angle) * force;
           }
 
-          /* separation via spatial hash — only the tight core (≤ SEPARATION_CORE)
-             pushes back, so the field stays chaotic instead of locking into a
-             hex grid. Beyond that, neighbors do nothing. */
-          const core2 = SEPARATION_CORE * SEPARATION_CORE;
-          for (const other of neighbors(this)) {
-            if (other === this) continue;
-            const sdx = this.x - other.x;
-            const sdy = this.y - other.y;
-            const sdist2 = sdx * sdx + sdy * sdy;
-            if (sdist2 < core2 && sdist2 > 0.01) {
-              const sdist = Math.sqrt(sdist2);
-              const sforce = (SEPARATION_CORE - sdist) / SEPARATION_CORE * SEPARATION_STRENGTH;
-              this.vx += (sdx / sdist) * sforce;
-              this.vy += (sdy / sdist) * sforce;
-            }
-          }
-
-          /* anti-wall: push back from any edge within EDGE_MARGIN so the soft
-             boundary doesn't trap particles against the canvas walls. */
-          if (this.x < EDGE_MARGIN) this.vx += (EDGE_MARGIN - this.x) * EDGE_PUSH;
-          else if (this.x > width - EDGE_MARGIN) this.vx -= (this.x - (width - EDGE_MARGIN)) * EDGE_PUSH;
-          if (this.y < EDGE_MARGIN) this.vy += (EDGE_MARGIN - this.y) * EDGE_PUSH;
-          else if (this.y > height - EDGE_MARGIN) this.vy -= (this.y - (height - EDGE_MARGIN)) * EDGE_PUSH;
+          /* home spring — weak pull toward the particle's assigned target position on
+             the uniform grid. Maintains uniform density across the canvas
+             without the abrupt grid artifacts that separation would cause. */
+          this.vx += (this.tx - this.x) * HOME_SPRING;
+          this.vy += (this.ty - this.y) * HOME_SPRING;
 
           /* gentle damping on total velocity */
           this.vx *= DAMPING;
