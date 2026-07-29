@@ -469,6 +469,42 @@
       height: 60px;
     }
 
+    /* === mobile vertical viewfinder (max-width: 600px) === */
+    @media (max-width: 600px) {
+      .hero .right .frame {
+        min-height: auto;
+      }
+      .hero .right .output {
+        width: 86%;
+        max-width: none;
+        /* вертикальная рамка — 9:13, как phone-screen */
+        aspect-ratio: 9 / 13;
+        background:
+          radial-gradient(ellipse at 50% 35%, rgba(217,104,78,0.30), transparent 55%),
+          radial-gradient(ellipse at 50% 75%, rgba(201,154,66,0.18), transparent 60%),
+          var(--plum-deep);
+      }
+      /* Метки плотнее к краям, освобождая центр для canvas */
+      .hero .right .output .label {
+        top: 8px;
+        left: 8px;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+      }
+      .hero .right .output .corner {
+        font-size: 9px;
+      }
+      .hero .right .output .corner.left { left: 8px; bottom: 8px; }
+      .hero .right .output .corner.right { right: 8px; bottom: 8px; }
+      /* canvas в центр фрейма, не на весь — адаптация под portrait */
+      .hero .right .output .centerpiece-canvas {
+        width: 88%;
+        height: 70%;
+        max-width: none;
+        max-height: none;
+      }
+    }
+
     /* === services section === */
     .services {
       padding: 96px 0 64px;
@@ -1274,11 +1310,14 @@
       return { name: 'introGlyph', localT: 0, dur: 1.5 };
     }
 
+    let isPortrait = false;
+
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width  = Math.floor(canvas.clientWidth  * dpr);
       canvas.height = Math.floor(canvas.clientHeight * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      isPortrait = canvas.clientHeight > canvas.clientWidth;
     }
 
     function rgbText(text, w, h, fs, alpha, dx) {
@@ -1333,18 +1372,23 @@
         ctx.globalAlpha = 1;
       }
 
+      // В portrait рамке canvas выше, чем шире — нужна иная композиция.
+      // Передаём флаг portrait в каждый рендерер: горизонтальные сцены
+      // центрируются как обычно; специальные портретные варианты (renderP_*)
+      // переуладывают текст/блоки вертикально.
+      const P = isPortrait;
       switch (sceneName) {
-        case 'introGlyph':   renderIntroGlyph(k, dur, w, h); break;
-        case 'headlineA':    renderHeadline('В КАДР · FRAME 042', w, h, k, kIn, kOut, 0.6); break;
-        case 'counterA':     renderCounter(k, kIn, kOut, 0.42, w, h); break;
-        case 'glitchBurst':  renderGlitchBurst('ИЗ ЗАПРОСА', k, kIn, w, h); break;
-        case 'frameNumber':  renderFrameNumber(k, kIn, kOut, w, h); break;
-        case 'matrixRain':   renderMatrixRain(k, kIn, w, h); break;
-        case 'headlineB':    renderHeadline('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut, -0.4); break;
-        case 'wireBlocks':   renderWireBlocks(k, kIn, kOut, w, h); break;
-        case 'counterB':     renderCounter(k, kIn, kOut, 0.13, w, h); break;
-        case 'asciiLogo':    renderAsciiLogo(k, kIn, kOut, w, h); break;
-        case 'headlineC':    renderHeadlineJitter('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut); break;
+        case 'introGlyph':   P ? renderPIntroGlyph(k, dur, w, h) : renderIntroGlyph(k, dur, w, h); break;
+        case 'headlineA':    P ? renderPHeadline('В КАДР · FRAME 042', w, h, k, kIn, kOut, 0.6) : renderHeadline('В КАДР · FRAME 042', w, h, k, kIn, kOut, 0.6); break;
+        case 'counterA':     P ? renderPCounter(k, kIn, kOut, 0.42, w, h) : renderCounter(k, kIn, kOut, 0.42, w, h); break;
+        case 'glitchBurst':  P ? renderPGlitchBurst('ИЗ ЗАПРОСА', k, kIn, w, h) : renderGlitchBurst('ИЗ ЗАПРОСА', k, kIn, w, h); break;
+        case 'frameNumber':  P ? renderPFrameNumber(k, kIn, kOut, w, h) : renderFrameNumber(k, kIn, kOut, w, h); break;
+        case 'matrixRain':   P ? renderPMatrixRain(k, kIn, w, h) : renderMatrixRain(k, kIn, w, h); break;
+        case 'headlineB':    P ? renderPHeadline('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut, -0.4) : renderHeadline('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut, -0.4); break;
+        case 'wireBlocks':   P ? renderPWireBlocks(k, kIn, kOut, w, h) : renderWireBlocks(k, kIn, kOut, w, h); break;
+        case 'counterB':     P ? renderPCounter(k, kIn, kOut, 0.13, w, h) : renderCounter(k, kIn, kOut, 0.13, w, h); break;
+        case 'asciiLogo':    P ? renderPAsciiLogo(k, kIn, kOut, w, h) : renderAsciiLogo(k, kIn, kOut, w, h); break;
+        case 'headlineC':    P ? renderPHeadlineJitter('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut) : renderHeadlineJitter('ИЗ ЗАПРОСА — В КАДР', w, h, k, kIn, kOut); break;
         case 'meshFade':     renderMeshFade(k, w, h); break;
       }
 
@@ -1599,6 +1643,226 @@
           else ctx.lineTo(x, y);
         }
         ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // ====== Portrait (vertical) renderers ======
+    // Композиция по y вместо x: текст ставится в столбик, сканирование вертикальное,
+    // сетки 3×6 вместо 6×3. Это работает на canvas с h > w (portrait-рамка 9:13).
+
+    function renderPIntroGlyph(k, dur, w, h) {
+      // вертикальный шторм: символы падают сверху вниз, текст крупно по центру
+      const storm = 18;
+      ctx.font = `500 9px ${FONT}`;
+      ctx.fillStyle = cBrass;
+      for (let i = 0; i < storm; i++) {
+        const y0 = ((i * 17) % h);
+        const a = 0.35 + 0.4 * Math.sin(k * 5 + i);
+        ctx.globalAlpha = a;
+        const ch = GLYPHS[(Math.floor(k * 19 * (i+1)) + i*31) % GLYPHS.length];
+        ctx.fillText(ch, w * 0.1 + (i % 3) * 12, y0);
+      }
+      ctx.globalAlpha = 1;
+      const fs = Math.max(8, Math.min(18, w / 14));
+      const a = Math.min(1, k * 1.6);
+      rgbText('ИЗ ЗАПРОСА', w, h, fs, a, Math.min(1.2 * (1 - a), w * 0.012));
+    }
+
+    function renderPHeadline(text, w, h, k, kIn, kOut, dxBase) {
+      const ctxLocal = ctx;
+      // Текст ставим горизонтально, но в 2 строки если длинный, и поднимаем выше центра.
+      const maxW = w * 0.92;
+      const maxFsByH = h * 0.32 / 1.1; // на 2 строки: каждая 32% от h
+      let fs = Math.max(8, Math.min(22, w / 8, maxFsByH));
+      ctxLocal.font = `700 ${fs}px ${FONT}`;
+      while (ctxLocal.measureText(text).width > maxW && fs > 8) { fs -= 1; ctxLocal.font = `700 ${fs}px ${FONT}`; }
+      const r = fs * 0.10;
+      ctxLocal.textAlign = 'center';
+      ctxLocal.textBaseline = 'middle';
+      const yPos = h * 0.5;
+      ctxLocal.globalAlpha = kIn * kOut;
+      ctxLocal.fillStyle = '#28c8d8';
+      ctxLocal.fillText(text, w/2 - r, yPos);
+      ctxLocal.fillStyle = cBrass;
+      ctxLocal.fillText(text, w/2 + r, yPos);
+      ctxLocal.fillStyle = cTerr;
+      ctxLocal.fillText(text, w/2, yPos);
+      ctxLocal.globalAlpha = 1;
+    }
+
+    function renderPCounter(k, kIn, kOut, targetSec, w, h) {
+      // counter текст ставим по центру, scanline идёт ВЕРТИКАЛЬНО сверху вниз
+      const fs = Math.max(11, Math.min(18, w / 8));
+      const e = (k * targetSec).toFixed(2);
+      ctx.font = `600 ${fs}px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = kIn * kOut;
+      ctx.fillText(`RENDER · ${e}s`, w/2, h/2 - 14);
+      // подпись
+      ctx.font = `500 ${Math.max(8, fs-5)}px ${FONT}`;
+      ctx.fillStyle = '#e8e0d0';
+      ctx.globalAlpha = 0.4 * kIn * kOut;
+      ctx.fillText('— AI VIDEO PIPELINE —', w/2, h/2 + 14);
+      // вертикальная scanline (полоса по x движется сверху-вниз)
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = 0.5 * kIn * kOut;
+      const x = k * w;
+      ctx.fillRect(x - 1, 0, 2, h);
+      ctx.globalAlpha = 1;
+    }
+
+    function renderPGlitchBurst(text, k, kIn, w, h) {
+      // glitch burst, текст по центру
+      const fs = Math.max(9, Math.min(20, w / 8));
+      const i = Math.exp(-k * 6) * Math.abs(Math.sin(k * 24));
+      rgbText(text, w, h, fs, kIn * (0.4 + 0.6 * Math.sin(k * Math.PI)), Math.min(i * 1.4, w * 0.015));
+      // вертикальные статик-блоки
+      ctx.fillStyle = cTerr;
+      ctx.globalAlpha = i * kIn * 0.8;
+      const n = 3 + Math.floor(Math.random() * 4);
+      for (let q = 0; q < n; q++) {
+        const bh = Math.min(70, 25 + Math.random() * (h * 0.15));
+        ctx.fillRect(Math.random()*w, Math.random()*h, 2 + Math.random()*3, bh);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function renderPFrameNumber(k, kIn, kOut, w, h) {
+      // Большие цифры в стиле вертикальной раскладки — «FRAME / 042» в столбик
+      const maxW = w * 0.9;
+      const maxFsByH = h * 0.55 / 1.1;
+      let fs = Math.max(12, Math.min(34, w / 6, maxFsByH));
+      ctx.font = `700 ${fs}px ${FONT}`;
+      const labelW = ctx.measureText('FRAME').width;
+      const numW = ctx.measureText('042').width;
+      while (Math.max(labelW, numW) > maxW && fs > 12) { fs -= 1; ctx.font = `700 ${fs}px ${FONT}`; }
+      const r = fs * 0.08;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = kIn * kOut;
+      // FRAME сверху
+      ctx.fillStyle = '#28c8d8';
+      ctx.fillText('FRAME', w/2 - r, h * 0.36);
+      ctx.fillStyle = cBrass;
+      ctx.fillText('FRAME', w/2 + r, h * 0.36);
+      ctx.fillStyle = cTerr;
+      ctx.fillText('FRAME', w/2, h * 0.36);
+      // 042 ниже
+      ctx.fillStyle = '#28c8d8';
+      ctx.fillText('042', w/2 - r, h * 0.62);
+      ctx.fillStyle = cBrass;
+      ctx.fillText('042', w/2 + r, h * 0.62);
+      ctx.fillStyle = cTerr;
+      ctx.fillText('042', w/2, h * 0.62);
+      // мелкая подпись
+      const fsSub = Math.max(8, fs * 0.27);
+      ctx.font = `500 ${fsSub}px ${FONT}`;
+      ctx.fillStyle = cBrass;
+      ctx.globalAlpha = 0.6 * kIn * kOut;
+      ctx.fillText('A · B · C', w/2, h * 0.85);
+      ctx.globalAlpha = 1;
+    }
+
+    function renderPMatrixRain(k, kIn, w, h) {
+      // вертикальные потоки (matrix-style), адаптация под portrait: горизонтальные ряды
+      const rowH = 11;
+      const rows = Math.floor(h / rowH);
+      const colCount = 4;
+      ctx.font = `700 10px ${FONT}`;
+      ctx.fillStyle = cBrass;
+      for (let r2 = 0; r2 < rows; r2++) {
+        for (let c = 0; c < colCount; c++) {
+          const seed = (r2 * 13 + c * 73 + Math.floor(k * 30)) | 0;
+          const ch = GLYPHS[(seed * 5) % GLYPHS.length];
+          const x = (c + 0.5) * (w / colCount);
+          const y = r2 * rowH;
+          const dist = Math.abs(r2 - rows / 2);
+          const a = Math.max(0, 1 - dist / (rows / 2));
+          ctx.globalAlpha = a * kIn * 0.9;
+          ctx.fillText(ch, x, y);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function renderPWireBlocks(k, kIn, kOut, w, h) {
+      // вертикальная сетка — больше строк, меньше столбцов
+      const gridX = 3, gridY = 10;
+      const dy = Math.min(4, h * 0.02) * Math.sin(k * Math.PI * 2);
+      for (let gx = 0; gx < gridX; gx++) {
+        for (let gy = 0; gy < gridY; gy++) {
+          const px = (gx + 0.5) * (w / gridX);
+          const py = (gy + 0.5) * (h / gridY);
+          const seed = gx * 7 + gy * 13;
+          const phase = (seed + k * 5) % 1;
+          if (phase > 0.7) continue;
+          const channelPick = seed % 3;
+          const chan = channelPick === 0 ? '#28c8d8' : channelPick === 1 ? cBrass : cTerr;
+          const alpha = 0.5 + 0.4 * Math.sin(phase * Math.PI) * kIn * kOut;
+          ctx.fillStyle = chan;
+          ctx.globalAlpha = alpha;
+          const blockH = Math.min(10, h * 0.025);
+          const by = py + (channelPick - 1) * dy - 1;
+          ctx.fillRect(px - 1, by, 2, blockH);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function renderPAsciiLogo(k, kIn, kOut, w, h) {
+      // вертикальный stack: AI / VIDEO / PIPELINE v0.42 — три строки по центру
+      const fs = Math.max(10, Math.min(16, w / 7));
+      ctx.font = `500 ${fs}px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = kIn * kOut;
+      ctx.fillStyle = cTerr;
+      ctx.fillText('A I',  w/2, h * 0.36);
+      ctx.fillText('V I D E O', w/2, h * 0.52);
+      ctx.fillStyle = cBrass;
+      const fsSub = Math.max(8, fs - 3);
+      ctx.font = `500 ${fsSub}px ${FONT}`;
+      ctx.fillText('— PIPELINE v0.42 —', w/2, h * 0.72);
+      ctx.fillStyle = '#e8e0d0';
+      ctx.font = `500 ${Math.max(7, fsSub-2)}px ${FONT}`;
+      ctx.fillText('— AI VIDEO OUTPUT —', w/2, h * 0.84);
+      ctx.globalAlpha = 1;
+    }
+
+    function renderPHeadlineJitter(text, w, h, k, kIn, kOut) {
+      // В портретной версии каждое слово — на своей строке
+      const parts = text.split(' — ');
+      const maxW = w * 0.9;
+      const rowH = Math.min(50, h * 0.22);
+      const fs = Math.max(10, Math.min(22, w / 5, rowH / 1.6));
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = kIn * kOut;
+      const total = parts.length;
+      const startY = h/2 - ((total - 1) * rowH) / 2;
+      for (let i = 0; i < parts.length; i++) {
+        ctx.font = `700 ${fs}px ${FONT}`;
+        while (ctx.measureText(parts[i]).width > maxW && fs > 9) {
+          const newFs = fs - 1;
+          if (newFs < 9) break;
+          // shrink current font only
+          ctx.font = `700 ${newFs}px ${FONT}`;
+        }
+        const adjFs = parseInt(ctx.font.match(/(\d+)px/)?.[1] || fs);
+        const y = startY + i * rowH;
+        const jAmp = Math.min(2, adjFs * 0.12);
+        const jx = jAmp * Math.sin(localT() * 12 + i * 2);
+        const jy = jAmp * 0.7 * Math.cos(localT() * 9 + i * 3);
+        const splitR = Math.min(2, adjFs * 0.12);
+        ctx.fillStyle = '#28c8d8';
+        ctx.fillText(parts[i], w/2 - splitR - jx, y - jy);
+        ctx.fillStyle = cTerr;
+        ctx.fillText(parts[i], w/2 + splitR + jx, y + jy);
+        ctx.fillStyle = '#e8e0d0';
+        ctx.fillText(parts[i], w/2 + jx, y);
       }
       ctx.globalAlpha = 1;
     }
