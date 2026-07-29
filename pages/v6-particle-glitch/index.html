@@ -1011,9 +1011,21 @@
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
-      const DAMPING = 0.96;
+      const DAMPING = 0.985;          /* low loss so curl-flow doesn't decay to zero */
+      /* separation: only kicks in when particles are very close (tight core),
+         not across the full radius — prevents the hex-grid lock that forms when
+         every neighbor pushes back at the same strength forever. */
       const SEPARATION_RADIUS = 28;
-      const SEPARATION_STRENGTH = 0.35;
+      const SEPARATION_CORE = 14;          /* where force actually applies */
+      const SEPARATION_STRENGTH = 0.22;
+      /* curl-flow: divergence-free field — sum of slow rotations around a few
+         fixed centers (no DC offset, so the field has zero net divergence and
+         particles cannot accumulate in one quadrant over time). Constant
+         magnitude so vortices reach the full canvas, not just a tiny radius
+         around each center. Strength tuned so terminal velocity is ~90 px/s. */
+      const VORTEX_COUNT = 7;
+      const VORTEX_STRENGTH = 0.022;
+      const VORTEX_TIME_SCALE = 0.00008;
       CELL_SIZE = SEPARATION_RADIUS; /* bind to the constant declared above */
 
       let width, height;
@@ -1023,6 +1035,18 @@
       let lastScrollY = 0;
       let isPaused = false;
       let animId;
+      let flowTime = 0;
+      /* vortex centers in normalized [0..1] canvas coords; actual positions
+         are recomputed from these in resize() so vortices stay spread across
+         the canvas regardless of size. */
+      const vortices = [];
+      for (let i = 0; i < VORTEX_COUNT; i++) {
+        vortices.push({
+          nx: 0.1 + (i + 0.5) / VORTEX_COUNT * 0.8,  /* spread horizontally */
+          ny: 0.15 + ((i * 7919) % 100) / 100 * 0.7,    /* pseudo-random y */
+          dir: i % 2 === 0 ? 1 : -1,                    /* alternate spin */
+        });
+      }
 
       /* spatial hash: bucket particles by cell for O(1) neighbor lookup */
       function rebuildGrid() {
@@ -1089,9 +1113,26 @@
         }
 
         update() {
-          /* ambient drift — weak wander */
-          this.vx += (Math.random() - 0.5) * 0.015;
-          this.vy += (Math.random() - 0.5) * 0.015;
+          /* curl-flow: sum of normalized tangential vectors from a few vortex
+             centers. No DC offset → divergence-free field → no permanent drift
+             toward one quadrant. Magnitude is independent of distance from the
+             vortex center, so all particles get the same swirl speed regardless
+             of where they sit on the canvas. The time term (pre-baked in
+             loop()) modulates strength so vortices breathe. */
+          let flowX = 0, flowY = 0;
+          for (let i = 0; i < vortices.length; i++) {
+            const vx = vortices[i];
+            const cx = vx.nx * width;
+            const cy = vx.ny * height;
+            const rx = this.x - cx;
+            const ry = this.y - cy;
+            const r = Math.sqrt(rx * rx + ry * ry) + 1;  /* +1 avoids 0/0 */
+            const k = vx.dir * (vx.k || VORTEX_STRENGTH);
+            flowX += -ry / r * k;
+            flowY +=  rx / r * k;
+          }
+          this.vx += flowX;
+          this.vy += flowY;
 
           /* mouse repulsion — scales with cursor speed */
           const dx = this.x - mouse.x;
@@ -1114,16 +1155,18 @@
             this.vy -= Math.sin(angle) * force;
           }
 
-          /* separation via spatial hash — only check 3x3 cell neighborhood */
+          /* separation via spatial hash — only the tight core (≤ SEPARATION_CORE)
+             pushes back, so the field stays chaotic instead of locking into a
+             hex grid. Beyond that, neighbors do nothing. */
+          const core2 = SEPARATION_CORE * SEPARATION_CORE;
           for (const other of neighbors(this)) {
             if (other === this) continue;
             const sdx = this.x - other.x;
             const sdy = this.y - other.y;
             const sdist2 = sdx * sdx + sdy * sdy;
-            const r2 = SEPARATION_RADIUS * SEPARATION_RADIUS;
-            if (sdist2 < r2 && sdist2 > 0.01) {
+            if (sdist2 < core2 && sdist2 > 0.01) {
               const sdist = Math.sqrt(sdist2);
-              const sforce = (SEPARATION_RADIUS - sdist) / SEPARATION_RADIUS * SEPARATION_STRENGTH;
+              const sforce = (SEPARATION_CORE - sdist) / SEPARATION_CORE * SEPARATION_STRENGTH;
               this.vx += (sdx / sdist) * sforce;
               this.vy += (sdy / sdist) * sforce;
             }
@@ -1136,12 +1179,12 @@
           this.x += this.vx;
           this.y += this.vy;
 
-          /* soft boundary */
+          /* soft boundary — modest reflection so curl-flow keeps kinetic energy */
           const margin = 12;
-          if (this.x < margin) { this.x = margin; this.vx = Math.abs(this.vx) * 0.4; }
-          if (this.x > width - margin) { this.x = width - margin; this.vx = -Math.abs(this.vx) * 0.4; }
-          if (this.y < margin) { this.y = margin; this.vy = Math.abs(this.vy) * 0.4; }
-          if (this.y > height - margin) { this.y = height - margin; this.vy = -Math.abs(this.vy) * 0.4; }
+          if (this.x < margin) { this.x = margin; this.vx = Math.abs(this.vx) * 0.7; }
+          if (this.x > width - margin) { this.x = width - margin; this.vx = -Math.abs(this.vx) * 0.7; }
+          if (this.y < margin) { this.y = margin; this.vy = Math.abs(this.vy) * 0.7; }
+          if (this.y > height - margin) { this.y = height - margin; this.vy = -Math.abs(this.vy) * 0.7; }
         }
 
         draw() {
@@ -1176,6 +1219,13 @@
       /* loop */
       function loop() {
         if (isPaused) { animId = requestAnimationFrame(loop); return; }
+        /* advance curl-flow field clock (subtle, slow) */
+        flowTime += VORTEX_TIME_SCALE * 1000;
+        /* pre-bake per-vortex strength for this frame (saves 7×N sin calls) */
+        const ft = flowTime * 0.5;
+        for (let i = 0; i < vortices.length; i++) {
+          vortices[i].k = VORTEX_STRENGTH * (Math.sin(ft + i) * 0.3 + 0.85);
+        }
         /* flush queued scroll delta into mouse.y (RAF-throttled) */
         if (pendingScrollDy !== 0) {
           mouse.y += pendingScrollDy;
