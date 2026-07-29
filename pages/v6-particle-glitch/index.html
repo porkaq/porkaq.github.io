@@ -1012,21 +1012,30 @@
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
       const DAMPING = 0.985;
+      /* global density balancer — every REBALANCE_MS, count particles per cell
+         on a coarse grid; if a cell has more than 1.6× the average, relocate
+         one of its particles to a randomly chosen under-filled cell. This is
+         a hard global guarantee against clumping, regardless of what the local
+         vortex + density forces do. */
+      const REBALANCE_MS = 4000;
+      const REBALANCE_GRID_COLS = 12;
+      let lastRebalance = 0;
+      let rebalanceGrid = [];   /* flat array, length = COLS*ROWS */
+      let rebalanceCols = 0;
+      let rebalanceRows = 0;
       /* home zones: each particle has a fixed target position on a uniform
          grid covering the canvas. There's no spring force inside DEAD_ZONE —
          particles drift freely there under vortex flow + density force.
-         Outside the zone, a linear pull returns them home. This gives global
-         density balance without the standing-wave oscillation a full spring
-         creates. */
-      const HOME_DEAD_ZONE = 50;     /* no spring force within this radius */
-      const HOME_PULL = 0.0008;       /* weak pull outside the dead zone */
+         Outside the zone, a linear pull returns them home. */
+      const HOME_DEAD_ZONE = 50;
+      const HOME_PULL = 0.0008;
       /* density repulsion (light, smooth) — keeps neighbors from clumping
          into visible knots, with smooth (1-r/R) falloff at the edge. */
       const DENSITY_RADIUS = 30;
       const DENSITY_STRENGTH = 0.018;
       /* curl-flow: divergence-free field — sum of slow rotations around a
-         few drifting centers. Centers trace independent Lissajous paths so
-         vortices visibly travel across the canvas. */
+         few fixed centers. Centers stay put (drifting caused drift-to-edge
+         behavior); strength breathes via sin() so swirls aren't static. */
       const VORTEX_COUNT = 8;
       const VORTEX_STRENGTH = 0.013;
       const VORTEX_TIME_SCALE = 0.00012;
@@ -1085,6 +1094,47 @@
         return out;
       }
 
+      /* global density balancer — coarse-grid count, move excess particles to
+         sparse cells. Cheap (one pass per REBALANCE_MS) and a hard guarantee
+         against local clumping escaping to a macroscopic imbalance. */
+      function rebalance() {
+        if (!particles.length || !rebalanceCols || !rebalanceRows) return;
+        const g = rebalanceGrid;
+        for (let i = 0; i < g.length; i++) g[i] = [];
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const col = Math.min(rebalanceCols - 1, Math.max(0, (p.x / width * rebalanceCols) | 0));
+          const row = Math.min(rebalanceRows - 1, Math.max(0, (p.y / height * rebalanceRows) | 0));
+          g[row * rebalanceCols + col].push(p);
+        }
+        const avg = particles.length / g.length;
+        const over = [];   /* cells with > 1.6× avg */
+        const under = [];  /* cells with < 0.4× avg */
+        for (let i = 0; i < g.length; i++) {
+          const n = g[i].length;
+          if (n > avg * 1.6) over.push(i);
+          else if (n < avg * 0.4) under.push(i);
+        }
+        /* for each over-full cell, move one random particle to a random
+           under-full cell. This is gradual — over many rebalance cycles the
+           distribution equalizes without any single large jump. */
+        for (let i = 0; i < over.length && under.length; i++) {
+          const oi = over[i];
+          const src = g[oi];
+          if (!src.length) continue;
+          const pick = src[(Math.random() * src.length) | 0];
+          const ui = under[(Math.random() * under.length) | 0];
+          const col = ui % rebalanceCols;
+          const row = (ui - col) / rebalanceCols;
+          const margin = 12;
+          const cx = margin + (col + Math.random()) / rebalanceCols * (width - margin * 2);
+          const cy = margin + (row + Math.random()) / rebalanceRows * (height - margin * 2);
+          /* teleport: zero velocity so the particle doesn't fly out of the
+             new cell from inherited momentum. */
+          pick.x = cx; pick.y = cy; pick.vx = 0; pick.vy = 0;
+        }
+      }
+
       /* resize — desktop: full page height (page-space), mobile: visual viewport
          (which on Android Yandex Browser collapses the toolbar and grows the visible
          area during scroll). Using window.innerHeight here caused a single-frame
@@ -1105,6 +1155,14 @@
         }
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
+        }
+        /* rebalance grid: 12 cols, rows chosen to keep cells roughly square */
+        rebalanceCols = REBALANCE_GRID_COLS;
+        rebalanceRows = Math.max(1, Math.round(rebalanceCols * height / width));
+        const total = rebalanceCols * rebalanceRows;
+        if (rebalanceGrid.length !== total) {
+          rebalanceGrid = new Array(total);
+          for (let i = 0; i < total; i++) rebalanceGrid[i] = [];
         }
         pendingScrollDy = 0;
       }
@@ -1265,19 +1323,25 @@
         if (isPaused) { animId = requestAnimationFrame(loop); return; }
         /* advance curl-flow field clock (subtle, slow) */
         flowTime += VORTEX_TIME_SCALE * 1000;
-        /* update each vortex center — it drifts along a Lissajous path so the
-           visible swirls travel across the canvas instead of sitting still. */
+        /* fixed vortex centers + breathing strength — drifting centers were
+           dragging entire populations toward one edge of the canvas. */
         for (let i = 0; i < vortices.length; i++) {
           const v = vortices[i];
-          const t = flowTime;
-          v.nx = v.baseX + Math.sin(t * v.driftFreqX + v.driftPhaseX) * 0.25;
-          v.ny = v.baseY + Math.sin(t * v.driftFreqY + v.driftPhaseY) * 0.20;
-          v.k = VORTEX_STRENGTH * (Math.sin(t * 0.4 + i) * 0.3 + 0.85);
+          v.nx = v.baseX;
+          v.ny = v.baseY;
+          v.k = VORTEX_STRENGTH * (Math.sin(flowTime * 0.4 + i) * 0.3 + 0.85);
         }
         /* flush queued scroll delta into mouse.y (RAF-throttled) */
         if (pendingScrollDy !== 0) {
           mouse.y += pendingScrollDy;
           pendingScrollDy = 0;
+        }
+        /* global rebalance — hard guarantee against clumping escaping to
+           macroscopic imbalance. Cheap (one coarse-grid pass per 4s). */
+        const now = performance.now();
+        if (now - lastRebalance > REBALANCE_MS) {
+          lastRebalance = now;
+          rebalance();
         }
         rebuildGrid();
         ctx.clearRect(0, 0, width, height);
