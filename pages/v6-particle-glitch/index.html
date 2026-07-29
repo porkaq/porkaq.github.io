@@ -1011,21 +1011,24 @@
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
-      const DAMPING = 0.978;
+      const DAMPING = 0.972;
+      /* density repulsion — mild, smooth. Breaks the orbital trap that
+         forms around each fixed vortex center (particles orbit forever if
+         nothing perturbs them). With this small force, particles get
+         nudged out of stable orbits and drift across the field. Force is
+         small enough that it doesn't create a visible band at any edge. */
+      const DENSITY_RADIUS = 50;
+      const DENSITY_STRENGTH = 0.012;
       /* curl-flow: divergence-free field — sum of rotations around fixed
-         centers in a balanced 3x3 grid. With no DC offset, no density force,
-         and no edge repulsion, the only force is the curl field + soft
-         boundary. Soft boundary alone tends to leave a rim because density
-         force is what would have dispersed it; instead, we let the div-free
-         field + boundary do the work, and add a tiny thermal jitter so any
-         residual rim dissolves. */
+         centers in a balanced 3x3 grid. With no DC offset and no edge
+         repulsion, the only force is the curl field + soft boundary. */
       const VORTEX_COUNT = 9;
-      const VORTEX_STRENGTH = 0.018;
+      const VORTEX_STRENGTH = 0.014;
       const VORTEX_TIME_SCALE = 0.00012;
-      /* tiny thermal jitter — keeps the field from crystallizing and helps
-         the soft-boundary reflection dissipate over time. */
-      const THERMAL = 0.008;
-      CELL_SIZE = 40;
+      /* tiny thermal jitter — breaks orbits even further so particles don't
+         cohere into visible rings around each vortex center. */
+      const THERMAL = 0.006;
+      CELL_SIZE = DENSITY_RADIUS;
 
       let width, height;
       let particles = [];
@@ -1097,7 +1100,14 @@
           void canvas.offsetHeight;
           height = canvas.height = canvas.clientHeight;
         } else {
-          height = canvas.height = document.body.scrollHeight;
+          /* Use viewport height (not full document scrollHeight) so all
+             particles distribute across what's actually visible. With the
+             old scrollHeight = 2311 setting, particles spread across 2.5x
+             viewport area, leaving the visible portion sparse with clumping
+             in the upper third. Vortex centers were normalized to [0,1]
+             across the full canvas — only ~40% of them lived in the visible
+             region. */
+          height = canvas.height = window.innerHeight;
         }
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
@@ -1166,6 +1176,23 @@
             const force = t * ATTRACTION_STRENGTH * speedRatio;
             this.vx -= Math.cos(angle) * force;
             this.vy -= Math.sin(angle) * force;
+          }
+
+          /* density repulsion — gentle smooth push from neighbors, breaks
+             the orbital traps that form around fixed vortex centers. */
+          const densR2 = DENSITY_RADIUS * DENSITY_RADIUS;
+          for (const other of neighbors(this)) {
+            if (other === this) continue;
+            const sdx = this.x - other.x;
+            const sdy = this.y - other.y;
+            const sdist2 = sdx * sdx + sdy * sdy;
+            if (sdist2 < densR2 && sdist2 > 0.01) {
+              const sdist = Math.sqrt(sdist2);
+              const fall = 1 - sdist / DENSITY_RADIUS;
+              const sforce = fall * DENSITY_STRENGTH;
+              this.vx += (sdx / sdist) * sforce;
+              this.vy += (sdy / sdist) * sforce;
+            }
           }
 
           /* gentle damping on total velocity */
