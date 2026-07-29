@@ -1011,21 +1011,14 @@
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
-      const DAMPING = 0.985;
-      /* global density balancer — every REBALANCE_MS, count particles per cell
-         on a coarse grid; relocate excess particles to under-filled cells.
-         This is the ONLY force responsible for global density balance. Local
-         vortex flow + density repulsion handle motion; rebalance keeps the
-         distribution from drifting toward one side. */
-      const REBALANCE_MS = 1200;
-      const REBALANCE_GRID_COLS = 16;
-      let lastRebalance = 0;
-      let rebalanceGrid = [];
-      let rebalanceCols = 0;
-      let rebalanceRows = 0;
-      /* density repulsion (light, smooth) — keeps neighbors from clumping. */
-      const DENSITY_RADIUS = 30;
-      const DENSITY_STRENGTH = 0.018;
+      const DAMPING = 0.978;
+      /* density repulsion — strong, smooth. Acts as a smooth density equalizer:
+         where the local particle count is higher than average, the cumulative
+         push from neighbors exceeds the local vortex pull, so the particle
+         drifts away. No teleport, no discrete jumps. With falloff (1-r/R) the
+         gradient is smooth, so the motion reads as "swirling" not "jumping". */
+      const DENSITY_RADIUS = 80;
+      const DENSITY_STRENGTH = 0.06;
       /* curl-flow: divergence-free field — sum of rotations around fixed
          centers. Strength breathes via sin() so swirls aren't static. */
       const VORTEX_COUNT = 9;
@@ -1087,54 +1080,6 @@
         return out;
       }
 
-      /* global density balancer — coarse-grid count, move excess particles to
-         sparse cells. After teleport the particle gets a small thermal kick
-         so vortex flow doesn't immediately drag it back to its old cell. */
-      function rebalance() {
-        if (!particles.length || !rebalanceCols || !rebalanceRows) return;
-        const g = rebalanceGrid;
-        for (let i = 0; i < g.length; i++) g[i] = [];
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          const col = Math.min(rebalanceCols - 1, Math.max(0, (p.x / width * rebalanceCols) | 0));
-          const row = Math.min(rebalanceRows - 1, Math.max(0, (p.y / height * rebalanceRows) | 0));
-          g[row * rebalanceCols + col].push(p);
-        }
-        const avg = particles.length / g.length;
-        const over = [];
-        const under = [];
-        for (let i = 0; i < g.length; i++) {
-          const n = g[i].length;
-          if (n > avg * 1.4) over.push(i);
-          else if (n < avg * 0.6) under.push(i);
-        }
-        /* for every over-full cell, move its excess particles to random
-           under-full cells. Excess count = ceil(n - avg). */
-        for (let i = 0; i < over.length; i++) {
-          if (!under.length) break;
-          const oi = over[i];
-          const src = g[oi];
-          const excess = Math.max(1, Math.ceil(src.length - avg));
-          for (let e = 0; e < excess && src.length > 0; e++) {
-            /* pick a random particle from the over-full cell */
-            const idx = (Math.random() * src.length) | 0;
-            const pick = src.splice(idx, 1)[0];
-            /* pick a random under-full cell */
-            const ui = under[(Math.random() * under.length) | 0];
-            const col = ui % rebalanceCols;
-            const row = (ui - col) / rebalanceCols;
-            const margin = 12;
-            const cx = margin + (col + Math.random()) / rebalanceCols * (width - margin * 2);
-            const cy = margin + (row + Math.random()) / rebalanceRows * (height - margin * 2);
-            /* teleport + small thermal kick so vortex flow doesn't pull
-               the particle straight back into the over-full cell. */
-            pick.x = cx; pick.y = cy;
-            pick.vx = (Math.random() - 0.5) * 1.5;
-            pick.vy = (Math.random() - 0.5) * 1.5;
-          }
-        }
-      }
-
       /* resize — desktop: full page height (page-space), mobile: visual viewport
          (which on Android Yandex Browser collapses the toolbar and grows the visible
          area during scroll). Using window.innerHeight here caused a single-frame
@@ -1155,14 +1100,6 @@
         }
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
-        }
-        /* rebalance grid: 12 cols, rows chosen to keep cells roughly square */
-        rebalanceCols = REBALANCE_GRID_COLS;
-        rebalanceRows = Math.max(1, Math.round(rebalanceCols * height / width));
-        const total = rebalanceCols * rebalanceRows;
-        if (rebalanceGrid.length !== total) {
-          rebalanceGrid = new Array(total);
-          for (let i = 0; i < total; i++) rebalanceGrid[i] = [];
         }
         pendingScrollDy = 0;
       }
@@ -1301,12 +1238,6 @@
         if (pendingScrollDy !== 0) {
           mouse.y += pendingScrollDy;
           pendingScrollDy = 0;
-        }
-        /* global rebalance — coarse-grid count, relocate excess particles. */
-        const now = performance.now();
-        if (now - lastRebalance > REBALANCE_MS) {
-          lastRebalance = now;
-          rebalance();
         }
         rebuildGrid();
         ctx.clearRect(0, 0, width, height);
