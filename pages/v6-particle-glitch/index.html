@@ -1011,20 +1011,26 @@
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
-      const DAMPING = 0.985;          /* low loss so curl-flow + targets stay alive */
-      /* curl-flow: divergence-free field — sum of slow rotations around a few
-         fixed centers (no DC offset, so the field has zero net divergence and
-         particles cannot accumulate in one quadrant over time). Magnitude
-         independent of distance from vortex center so swirl is even. */
-      const VORTEX_COUNT = 7;
-      const VORTEX_STRENGTH = 0.014;
-      const VORTEX_TIME_SCALE = 0.00008;
-      /* home positions: each particle has a fixed target position assigned at
-         startup on a roughly uniform grid covering the canvas. A weak spring
-         force pulls the particle back to its home so density stays uniform
-         across the canvas even with vortex flow + boundaries. */
-      const HOME_SPRING = 0.0018;    /* weak pull toward home position */
-      CELL_SIZE = 32;                /* spatial-hash cell size — independent of HOME */
+      const DAMPING = 0.985;
+      /* home zones: each particle has a fixed target position on a uniform
+         grid covering the canvas. There's no spring force inside DEAD_ZONE —
+         particles drift freely there under vortex flow + density force.
+         Outside the zone, a linear pull returns them home. This gives global
+         density balance without the standing-wave oscillation a full spring
+         creates. */
+      const HOME_DEAD_ZONE = 50;     /* no spring force within this radius */
+      const HOME_PULL = 0.0008;       /* weak pull outside the dead zone */
+      /* density repulsion (light, smooth) — keeps neighbors from clumping
+         into visible knots, with smooth (1-r/R) falloff at the edge. */
+      const DENSITY_RADIUS = 30;
+      const DENSITY_STRENGTH = 0.018;
+      /* curl-flow: divergence-free field — sum of slow rotations around a
+         few drifting centers. Centers trace independent Lissajous paths so
+         vortices visibly travel across the canvas. */
+      const VORTEX_COUNT = 8;
+      const VORTEX_STRENGTH = 0.013;
+      const VORTEX_TIME_SCALE = 0.00012;
+      CELL_SIZE = DENSITY_RADIUS;   /* spatial-hash cell size = density radius */
 
       let width, height;
       let particles = [];
@@ -1034,15 +1040,23 @@
       let isPaused = false;
       let animId;
       let flowTime = 0;
-      /* vortex centers in normalized [0..1] canvas coords; actual positions
-         are recomputed from these in resize() so vortices stay spread across
-         the canvas regardless of size. */
+      /* vortex centers in normalized [0..1] canvas coords. Each vortex carries
+         its own drift phase/freq so the centers trace independent Lissajous
+         paths across the canvas — vortices visibly travel instead of sitting
+         still, which is what reads as "swirling" rather than "oscillating". */
       const vortices = [];
       for (let i = 0; i < VORTEX_COUNT; i++) {
         vortices.push({
-          nx: 0.1 + (i + 0.5) / VORTEX_COUNT * 0.8,  /* spread horizontally */
-          ny: 0.15 + ((i * 7919) % 100) / 100 * 0.7,    /* pseudo-random y */
-          dir: i % 2 === 0 ? 1 : -1,                    /* alternate spin */
+          baseX: 0.1 + (i + 0.5) / VORTEX_COUNT * 0.8,
+          baseY: 0.15 + ((i * 7919) % 100) / 100 * 0.7,
+          nx: 0,  /* computed each frame from baseX/Y + drift */
+          ny: 0,
+          driftFreqX: 0.7 + (i * 0.31) % 1.0,  /* unique per-vortex freq */
+          driftFreqY: 0.5 + (i * 0.47) % 1.0,
+          driftPhaseX: i * 1.7,
+          driftPhaseY: i * 2.3,
+          dir: i % 2 === 0 ? 1 : -1,
+          k: VORTEX_STRENGTH,  /* updated each frame in loop() */
         });
       }
 
@@ -1090,10 +1104,6 @@
           height = canvas.height = document.body.scrollHeight;
         }
         if (particles.length !== particleCount) {
-          /* reset home-grid counter so each particle gets a fresh target on
-             the uniform grid (declared on the class as static _nextIdx = 0
-             but re-zeroed here for safety across resize cycles). */
-          if ('_nextIdx' in Particle) Particle._nextIdx = 0;
           particles = Array.from({ length: particleCount }, () => new Particle());
         }
         pendingScrollDy = 0;
@@ -1108,9 +1118,10 @@
           const margin = 20;
           this.x = margin + Math.random() * (width - margin * 2);
           this.y = margin + Math.random() * (height - margin * 2);
-          /* home position on a uniform grid: pick row/col from particle index,
-             add a small jitter so the grid isn't visually obvious. */
-          if (initial) {
+          /* home position on a uniform grid covering the canvas. The dead-zone
+             around each home is where particles drift freely; outside it a
+             weak pull drags them back. */
+          if (initial || this.tx === undefined) {
             const cols = Math.max(1, Math.round(Math.sqrt(particleCount * width / height)));
             const rows = Math.ceil(particleCount / cols);
             const col = Particle._nextIdx % cols;
@@ -1118,8 +1129,8 @@
             Particle._nextIdx++;
             const cellW = (width - margin * 2) / cols;
             const cellH = (height - margin * 2) / rows;
-            this.tx = margin + (col + 0.5) * cellW + (Math.random() - 0.5) * cellW * 0.6;
-            this.ty = margin + (row + 0.5) * cellH + (Math.random() - 0.5) * cellH * 0.6;
+            this.tx = margin + (col + 0.5) * cellW + (Math.random() - 0.5) * cellW * 0.5;
+            this.ty = margin + (row + 0.5) * cellH + (Math.random() - 0.5) * cellH * 0.5;
           }
           this.vx = (Math.random() - 0.5) * AMBIENT_DRIFT;
           this.vy = (Math.random() - 0.5) * AMBIENT_DRIFT;
@@ -1171,11 +1182,39 @@
             this.vy -= Math.sin(angle) * force;
           }
 
-          /* home spring — weak pull toward the particle's assigned target position on
-             the uniform grid. Maintains uniform density across the canvas
-             without the abrupt grid artifacts that separation would cause. */
-          this.vx += (this.tx - this.x) * HOME_SPRING;
-          this.vy += (this.ty - this.y) * HOME_SPRING;
+          /* density repulsion via spatial hash — smoothly decreasing force within
+             DENSITY_RADIUS. Each neighbor contributes a small push so density
+             stays locally uniform without creating standing waves. The (1 - r/R)
+             falloff goes to zero at the edge (no abrupt ring artifacts). */
+          const densR2 = DENSITY_RADIUS * DENSITY_RADIUS;
+          for (const other of neighbors(this)) {
+            if (other === this) continue;
+            const sdx = this.x - other.x;
+            const sdy = this.y - other.y;
+            const sdist2 = sdx * sdx + sdy * sdy;
+            if (sdist2 < densR2 && sdist2 > 0.01) {
+              const sdist = Math.sqrt(sdist2);
+              const fall = 1 - sdist / DENSITY_RADIUS;
+              const sforce = fall * DENSITY_STRENGTH;
+              this.vx += (sdx / sdist) * sforce;
+              this.vy += (sdy / sdist) * sforce;
+            }
+          }
+
+          /* home-zone pull: dead zone inside HOME_DEAD_ZONE, linear pull outside.
+             This keeps particles distributed across the canvas globally while
+             allowing free vortex drift within their home cell — no spring
+             oscillation, no clumping, no standing waves. */
+          const hdx = this.x - this.tx;
+          const hdy = this.y - this.ty;
+          const hd2 = hdx * hdx + hdy * hdy;
+          const dz2 = HOME_DEAD_ZONE * HOME_DEAD_ZONE;
+          if (hd2 > dz2) {
+            const hd = Math.sqrt(hd2);
+            const pullStrength = (hd - HOME_DEAD_ZONE) * HOME_PULL;
+            this.vx -= (hdx / hd) * pullStrength;
+            this.vy -= (hdy / hd) * pullStrength;
+          }
 
           /* gentle damping on total velocity */
           this.vx *= DAMPING;
@@ -1226,10 +1265,14 @@
         if (isPaused) { animId = requestAnimationFrame(loop); return; }
         /* advance curl-flow field clock (subtle, slow) */
         flowTime += VORTEX_TIME_SCALE * 1000;
-        /* pre-bake per-vortex strength for this frame (saves 7×N sin calls) */
-        const ft = flowTime * 0.5;
+        /* update each vortex center — it drifts along a Lissajous path so the
+           visible swirls travel across the canvas instead of sitting still. */
         for (let i = 0; i < vortices.length; i++) {
-          vortices[i].k = VORTEX_STRENGTH * (Math.sin(ft + i) * 0.3 + 0.85);
+          const v = vortices[i];
+          const t = flowTime;
+          v.nx = v.baseX + Math.sin(t * v.driftFreqX + v.driftPhaseX) * 0.25;
+          v.ny = v.baseY + Math.sin(t * v.driftFreqY + v.driftPhaseY) * 0.20;
+          v.k = VORTEX_STRENGTH * (Math.sin(t * 0.4 + i) * 0.3 + 0.85);
         }
         /* flush queued scroll delta into mouse.y (RAF-throttled) */
         if (pendingScrollDy !== 0) {
