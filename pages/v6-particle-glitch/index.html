@@ -133,19 +133,17 @@
       padding: 56px 0 64px;
     }
 
-    /* particle canvas — fixed-largest viewport, behind content.
-       100lvh = viewport height when browser UI is fully collapsed (largest).
-       Yandex Browser / Android Chrome collapse the URL toolbar on scroll, so
-       canvas height stays at the 'largest' size even when toolbar is visible.
-       Bottom particles are simply clipped by the toolbar; they appear as the
-       toolbar hides. This avoids canvas-height resize events firing on
-       toolbar show/hide, which was the root cause of the 'particle jump'. */
+    /* particle canvas — positioned so the soft-boundary rim falls outside the
+       painted hero background. Canvas pixel buffer is 1.4× viewport tall;
+       CSS positions it half-above and half-below the visible area, so the
+       top/bottom 20% (where density is lowest due to soft boundary) are
+       clipped. The middle 80% is what's actually seen. */
     canvas.particles-canvas {
       position: fixed;
       left: 0;
-      top: 0;
+      top: -20lvh;            /* shift up so top 20% of canvas is clipped */
       width: 100vw;
-      height: 100lvh;
+      height: 140lvh;         /* buffer is 1.4× viewport, viewport shows middle 80% */
       pointer-events: none;
       z-index: 0;
       opacity: 0.85;
@@ -1100,14 +1098,11 @@
           void canvas.offsetHeight;
           height = canvas.height = canvas.clientHeight;
         } else {
-          /* Use viewport height (not full document scrollHeight) so all
-             particles distribute across what's actually visible. With the
-             old scrollHeight = 2311 setting, particles spread across 2.5x
-             viewport area, leaving the visible portion sparse with clumping
-             in the upper third. Vortex centers were normalized to [0,1]
-             across the full canvas — only ~40% of them lived in the visible
-             region. */
-          height = canvas.height = window.innerHeight;
+          /* Canvas buffer is 1.4× viewport tall so the soft-boundary rim
+             sits in the clipped top/bottom 20% (CSS positions canvas with
+             top: -20lvh, so only the middle 80% is visible). Particles draw
+             in canvas coords 0..140% viewport; visible y is 20%..120%. */
+          height = canvas.height = Math.floor(window.innerHeight * 1.4);
         }
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
@@ -1211,9 +1206,12 @@
         }
 
         draw() {
-          const screenY = this.y - window.scrollY;
-          if (!isMobile && (screenY < -10 || screenY > window.innerHeight + 10)) return;
-          const drawY = isMobile ? this.y : screenY;
+          /* Canvas is positioned via CSS (top: -20lvh, height: 140lvh) so the
+             browser handles viewport clipping automatically — we just draw at
+             canvas-pixel coordinates and let CSS decide what shows. */
+          const drawY = isMobile
+            ? this.y - window.scrollY
+            : this.y;
           /* mouse.y is in page-space (desktop) or viewport-space (mobile);
              this.y is in the same space, so direct subtraction works. */
           const dy = this.y - mouse.y;
