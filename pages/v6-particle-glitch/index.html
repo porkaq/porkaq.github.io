@@ -1019,6 +1019,13 @@
          gradient is smooth, so the motion reads as "swirling" not "jumping". */
       const DENSITY_RADIUS = 80;
       const DENSITY_STRENGTH = 0.06;
+      /* edge repulsion — keeps particles inside an inset region so they don't
+         pile up against the canvas walls. Without this, density repulsion
+         pushes them outward but there are no neighbors outside the canvas, so
+         they accumulate as a sharp rim near the boundary. Force grows linearly
+         as the particle enters the edge band. */
+      const EDGE_INSET = 60;
+      const EDGE_STRENGTH = 0.025;
       /* curl-flow: divergence-free field — sum of rotations around fixed
          centers. Strength breathes via sin() so swirls aren't static. */
       const VORTEX_COUNT = 9;
@@ -1109,7 +1116,9 @@
         constructor() { this.reset(true); }
 
         reset(initial) {
-          const margin = 20;
+          /* start particles inside the edge inset zone so the boundary repulsion
+             doesn't have to push them inward on every frame from t=0. */
+          const margin = EDGE_INSET + 4;
           this.x = margin + Math.random() * (width - margin * 2);
           this.y = margin + Math.random() * (height - margin * 2);
           this.vx = (Math.random() - 0.5) * AMBIENT_DRIFT;
@@ -1180,6 +1189,14 @@
               this.vy += (sdy / sdist) * sforce;
             }
           }
+
+          /* edge repulsion — push inward from any canvas wall within the
+             EDGE_INSET band. Prevents the density field from piling particles
+             into a sharp rim at the boundary. */
+          if (this.x < EDGE_INSET) this.vx += (EDGE_INSET - this.x) * EDGE_STRENGTH;
+          else if (this.x > width - EDGE_INSET) this.vx -= (this.x - (width - EDGE_INSET)) * EDGE_STRENGTH;
+          if (this.y < EDGE_INSET) this.vy += (EDGE_INSET - this.y) * EDGE_STRENGTH;
+          else if (this.y > height - EDGE_INSET) this.vy -= (this.y - (height - EDGE_INSET)) * EDGE_STRENGTH;
 
           /* gentle damping on total velocity */
           this.vx *= DAMPING;
