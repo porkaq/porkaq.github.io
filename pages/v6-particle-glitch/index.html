@@ -1114,12 +1114,17 @@
         constructor() { this.reset(true); }
 
         reset(initial) {
-          /* Edge force is gaussian — continuous everywhere, no hard inset line.
-             Initial margin 20 is fine because the gaussian is gentle at x=20
-             (≈ 2% of peak) and the particle just smoothly drifts inward. */
+          /* Each particle gets its own per-instance edge inset, drawn from a
+             range so there's no shared "rim distance" all particles share.
+             This breaks the visible band that forms when every particle is
+             pushed back at the same inset value. */
           const margin = 20;
           this.x = margin + Math.random() * (width - margin * 2);
           this.y = margin + Math.random() * (height - margin * 2);
+          /* edge inset jittered per particle so the repulsion distance varies */
+          this.edgeR = 40 + Math.random() * 60;   /* range [40, 100] */
+          /* edge strength also slightly varied so force isn't uniform either */
+          this.edgeS = EDGE_STRENGTH * (0.7 + Math.random() * 0.6);  /* 0.7..1.3× */
           this.vx = (Math.random() - 0.5) * AMBIENT_DRIFT;
           this.vy = (Math.random() - 0.5) * AMBIENT_DRIFT;
           this.size = Math.random() * 1.6 + 0.4;
@@ -1189,18 +1194,16 @@
             }
           }
 
-          /* edge repulsion — gaussian falloff from each wall. Force is continuous
-             everywhere and peaks at the boundary, so there's no sharp inset
-             line for particles to accumulate on. */
-          /* left wall: exp(-(x/width)^2) shaped inward push */
-          const expX = EDGE_STRENGTH * Math.exp(-(this.x / EDGE_WIDTH) * (this.x / EDGE_WIDTH));
-          this.vx += expX;
-          const expXr = EDGE_STRENGTH * Math.exp(-((width - this.x) / EDGE_WIDTH) * ((width - this.x) / EDGE_WIDTH));
-          this.vx -= expXr;
-          const expY = EDGE_STRENGTH * Math.exp(-(this.y / EDGE_WIDTH) * (this.y / EDGE_WIDTH));
-          this.vy += expY;
-          const expYr = EDGE_STRENGTH * Math.exp(-((height - this.y) / EDGE_WIDTH) * ((height - this.y) / EDGE_WIDTH));
-          this.vy -= expYr;
+          /* edge repulsion — linear push back from each wall, active inside a
+             per-particle inset (this.edgeR). Each particle has a different
+             edgeR, so the active region is jagged, not a clean line — no
+             visible band at any single inset value. */
+          const er = this.edgeR;
+          const es = this.edgeS;
+          if (this.x < er) this.vx += (er - this.x) / er * es;
+          else if (this.x > width - er) this.vx -= (this.x - (width - er)) / er * es;
+          if (this.y < er) this.vy += (er - this.y) / er * es;
+          else if (this.y > height - er) this.vy -= (this.y - (height - er)) / er * es;
 
           /* gentle damping on total velocity */
           this.vx *= DAMPING;
@@ -1210,7 +1213,7 @@
           this.y += this.vy;
 
           /* soft boundary — modest reflection so curl-flow keeps kinetic energy */
-          const margin = 12;
+          const margin = 20;
           if (this.x < margin) { this.x = margin; this.vx = Math.abs(this.vx) * 0.7; }
           if (this.x > width - margin) { this.x = width - margin; this.vx = -Math.abs(this.vx) * 0.7; }
           if (this.y < margin) { this.y = margin; this.vy = Math.abs(this.vy) * 0.7; }
