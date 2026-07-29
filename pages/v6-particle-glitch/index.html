@@ -526,7 +526,8 @@
       color: var(--brass-signal);
     }
     .services .section-head h2 {
-      font: 700 48px/1 var(--font-sans);
+      /* clamp: shrinks with viewport width. 48px на ≥720, 36px на 480px, 28px на 360px */
+      font: 700 clamp(28px, 7vw, 48px)/1.05 var(--font-sans);
       letter-spacing: -0.04em;
       margin-top: 12px;
       max-width: 18ch;
