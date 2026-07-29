@@ -506,6 +506,22 @@
       /* На mobile полностью скрываем viewfinder — рамка отвлекает
          и занимает место, текст в hero достаточно как самостоятельный блок. */
       .hero .right { display: none; }
+      /* CTA в hero: столбик на узком экране — primary полной ширины,
+         secondary (текстовая ссылка) под ним по центру */
+      .hero .ctas {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .hero .ctas .primary {
+        justify-content: center;
+        padding: 16px 22px;
+        font-size: 14px;
+      }
+      .hero .ctas .secondary {
+        text-align: center;
+        padding: 4px 0 8px;
+      }
     }
 
     /* === services section === */
@@ -798,7 +814,6 @@
         <a href="#about">Обо мне</a>
         <a href="#contact">Контакт</a>
       </div>
-      <a class="cta" href="#contact">Обсудить задачу</a>
     </nav>
 
     <!-- HERO -->
