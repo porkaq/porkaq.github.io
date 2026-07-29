@@ -1011,7 +1011,7 @@
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
-      const DAMPING = 0.985;          /* low loss so curl-flow doesn't decay to zero */
+      const DAMPING = 0.978;          /* low loss so curl-flow doesn't decay to zero */
       /* separation: only kicks in when particles are very close (tight core),
          not across the full radius — prevents the hex-grid lock that forms when
          every neighbor pushes back at the same strength forever. */
@@ -1020,12 +1020,15 @@
       const SEPARATION_STRENGTH = 0.22;
       /* curl-flow: divergence-free field — sum of slow rotations around a few
          fixed centers (no DC offset, so the field has zero net divergence and
-         particles cannot accumulate in one quadrant over time). Constant
-         magnitude so vortices reach the full canvas, not just a tiny radius
-         around each center. Strength tuned so terminal velocity is ~90 px/s. */
+         particles cannot accumulate in one quadrant over time). Magnitude
+         independent of distance from vortex center so swirl is even. */
       const VORTEX_COUNT = 7;
-      const VORTEX_STRENGTH = 0.022;
+      const VORTEX_STRENGTH = 0.008;
       const VORTEX_TIME_SCALE = 0.00008;
+      /* anti-wall-pull: extra force away from canvas edges so particles
+         don't pile up against the soft boundary. */
+      const EDGE_MARGIN = 80;       /* force kicks in within this margin */
+      const EDGE_PUSH = 0.006;      /* per-frame push per pixel of overflow */
       CELL_SIZE = SEPARATION_RADIUS; /* bind to the constant declared above */
 
       let width, height;
@@ -1171,6 +1174,13 @@
               this.vy += (sdy / sdist) * sforce;
             }
           }
+
+          /* anti-wall: push back from any edge within EDGE_MARGIN so the soft
+             boundary doesn't trap particles against the canvas walls. */
+          if (this.x < EDGE_MARGIN) this.vx += (EDGE_MARGIN - this.x) * EDGE_PUSH;
+          else if (this.x > width - EDGE_MARGIN) this.vx -= (this.x - (width - EDGE_MARGIN)) * EDGE_PUSH;
+          if (this.y < EDGE_MARGIN) this.vy += (EDGE_MARGIN - this.y) * EDGE_PUSH;
+          else if (this.y > height - EDGE_MARGIN) this.vy -= (this.y - (height - EDGE_MARGIN)) * EDGE_PUSH;
 
           /* gentle damping on total velocity */
           this.vx *= DAMPING;
