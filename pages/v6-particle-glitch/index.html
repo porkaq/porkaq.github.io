@@ -1028,6 +1028,15 @@
       /* tiny thermal jitter — breaks orbits even further so particles don't
          cohere into visible rings around each vortex center. */
       const THERMAL = 0.006;
+      /* edge alpha fade — particles within EDGE_FADE of any canvas wall fade
+         their alpha smoothly to 0. This hides the div-free field's natural
+         boundary artifact (where tangential vectors point along walls and
+         particles slow down and accumulate) by making those particles
+         invisible. Particles still move and affect density; they just don't
+         render. Combined with small EDGE_THERMAL boost in the fade zone, no
+         visible rim or empty band forms. */
+      const EDGE_FADE = 70;
+      const EDGE_THERMAL = 0.025;
       CELL_SIZE = DENSITY_RADIUS;
 
       let width, height;
@@ -1152,10 +1161,17 @@
           this.vx += flowX;
           this.vy += flowY;
 
-          /* tiny thermal jitter — keeps the field from crystallizing and helps
-             any boundary pile-up dissolve via random walk toward the interior. */
-          this.vx += (Math.random() - 0.5) * THERMAL;
-          this.vy += (Math.random() - 0.5) * THERMAL;
+          /* tiny thermal jitter — breaks orbits even further so particles don't
+             cohere into visible rings around each vortex center. Boosted
+             inside the edge fade zone so particles don't linger invisibly
+             at the boundary. */
+          let thermal = THERMAL;
+          if (this.x < EDGE_FADE || this.x > width - EDGE_FADE ||
+              this.y < EDGE_FADE || this.y > height - EDGE_FADE) {
+            thermal = EDGE_THERMAL;
+          }
+          this.vx += (Math.random() - 0.5) * thermal;
+          this.vy += (Math.random() - 0.5) * thermal;
 
           /* mouse repulsion — scales with cursor speed */
           const dx = this.x - mouse.x;
@@ -1225,9 +1241,26 @@
           const r = Math.round(255 * (1 - t) + 213 * t);
           const g = Math.round(145 * (1 - t) + 200 * t);
           const b = Math.round(105 * (1 - t) + 184 * t);
+          /* edge alpha fade — smoothstep from 1 (interior) to 0 (at wall) over
+             EDGE_FADE px. Hides the boundary artifact without affecting the
+             particle physics: particles still swirl, they just don't paint
+             where they accumulate against the wall. */
+          const distLeft = this.x;
+          const distRight = width - this.x;
+          const distTop = this.y;
+          const distBottom = height - this.y;
+          let edgeAlpha = 1;
+          if (distLeft < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distLeft / EDGE_FADE);
+          if (distRight < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distRight / EDGE_FADE);
+          if (distTop < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distTop / EDGE_FADE);
+          if (distBottom < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distBottom / EDGE_FADE);
+          /* quadratic for smoother falloff */
+          edgeAlpha = edgeAlpha * edgeAlpha * (3 - 2 * edgeAlpha);
+          const finalAlpha = this.alpha * this.life * edgeAlpha;
+          if (finalAlpha < 0.01) return;
           ctx.beginPath();
           ctx.arc(this.x, drawY, this.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.alpha * this.life})`;
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${finalAlpha})`;
           ctx.fill();
         }
       }
