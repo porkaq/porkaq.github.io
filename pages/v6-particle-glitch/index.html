@@ -41,6 +41,7 @@
       color: var(--bone-text);
       letter-spacing: 0;
       min-height: 100vh;
+      position: relative;        /* anchor for absolute-positioned particles canvas */
     }
     a { color: inherit; text-decoration: none; }
     a:hover { color: var(--terracotta-signal); }
@@ -133,22 +134,28 @@
       padding: 56px 0 64px;
     }
 
-    /* particle canvas — fixed-largest viewport, behind content.
-       100lvh = viewport height when browser UI is fully collapsed (largest).
-       Yandex Browser / Android Chrome collapse the URL toolbar on scroll, so
-       canvas height stays at the 'largest' size even when toolbar is visible.
-       Bottom particles are simply clipped by the toolbar; they appear as the
-       toolbar hides. This avoids canvas-height resize events firing on
-       toolbar show/hide, which was the root cause of the 'particle jump'. */
+    /* particle canvas — sized to the full document so particles are distributed
+       across the whole page (not just the hero). On mobile we keep the
+       old fixed/viewport behavior so the toolbar-show/hide Yandex Browser
+       bug stays fixed. On desktop we use position:absolute and a CSS height
+       matching JS canvas.height so the buffer renders 1:1 (no stretching)
+       and scrolls naturally with the page content. */
     canvas.particles-canvas {
-      position: fixed;
+      position: absolute;
       left: 0;
       top: 0;
       width: 100vw;
-      height: 100lvh;
+      height: 100%;        /* JS sets canvas.height = scrollHeight on desktop */
       pointer-events: none;
       z-index: 0;
       opacity: 0.85;
+    }
+    @media (max-width: 768px) {
+      canvas.particles-canvas {
+        /* Mobile: revert to fixed viewport so toolbar-resize doesn't break. */
+        position: fixed;
+        height: 100lvh;
+      }
     }
 
     .hero .left {
@@ -806,6 +813,8 @@
   </style>
 </head>
 <body>
+  <canvas class="particles-canvas" aria-hidden="true"></canvas>
+
   <div class="wrap">
     <nav>
       <div class="brand"><span>●</span>porkaq / ai services</div>
@@ -818,7 +827,6 @@
 
     <!-- HERO -->
     <section class="hero" data-particles>
-      <canvas class="particles-canvas" aria-hidden="true"></canvas>
 
       <button type="button" class="pause-toggle" aria-pressed="false" data-pause-toggle>motion / pause</button>
 
@@ -1219,9 +1227,13 @@
         }
 
         draw() {
-          const screenY = this.y - window.scrollY;
-          if (!isMobile && (screenY < -10 || screenY > window.innerHeight + 10)) return;
-          const drawY = isMobile ? this.y : screenY;
+          /* No viewport filter — particles are drawn regardless of scrollY
+             because canvas is fixed-position. Without filtering, particles
+             outside the current viewport are still drawn but they composite
+             outside the visible area (no perf cost beyond draw). With the
+             filter, scrolling shows a moving band of particles but the
+             region outside the band looks empty — confusing. */
+          const drawY = this.y;
           /* mouse.y is in page-space (desktop) or viewport-space (mobile);
              this.y is in the same space, so direct subtraction works. */
           const dy = this.y - mouse.y;
@@ -1235,8 +1247,7 @@
           const b = Math.round(105 * (1 - t) + 184 * t);
           /* edge alpha fade — smoothstep from 1 (interior) to 0 (at wall) over
              EDGE_FADE px. Hides the boundary artifact without affecting the
-             particle physics: particles still swirl, they just don't paint
-             where they accumulate against the wall. */
+             particle physics. */
           const distLeft = this.x;
           const distRight = width - this.x;
           const distTop = this.y;
@@ -1246,7 +1257,6 @@
           if (distRight < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distRight / EDGE_FADE);
           if (distTop < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distTop / EDGE_FADE);
           if (distBottom < EDGE_FADE) edgeAlpha = Math.min(edgeAlpha, distBottom / EDGE_FADE);
-          /* quadratic for smoother falloff */
           edgeAlpha = edgeAlpha * edgeAlpha * (3 - 2 * edgeAlpha);
           const finalAlpha = this.alpha * this.life * edgeAlpha;
           if (finalAlpha < 0.01) return;
