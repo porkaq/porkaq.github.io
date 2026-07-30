@@ -1007,36 +1007,28 @@
       let CELL_SIZE; /* assigned below, after SEPARATION_RADIUS is declared */
       const MOBILE_BREAKPOINT = 768;
       const PARTICLE_COUNT_MOBILE = 600;
-      const PARTICLE_COUNT_DESKTOP = 2000;
+      const PARTICLE_COUNT_DESKTOP = 2500;
       let isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
       let particleCount = isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
       const AMBIENT_DRIFT = 0.025;
       const DAMPING = 0.972;
-      /* density repulsion — mild, smooth. Breaks the orbital trap that
-         forms around each fixed vortex center (particles orbit forever if
-         nothing perturbs them). With this small force, particles get
-         nudged out of stable orbits and drift across the field. Force is
-         small enough that it doesn't create a visible band at any edge. */
-      const DENSITY_RADIUS = 50;
+      /* density repulsion — mild, smooth. Prevents orbital traps around
+         vortex centers and keeps particles distributed across the full
+         scrollHeight canvas. Edge alpha fade (below) hides any artifact
+         this might form near the walls. */
+      const DENSITY_RADIUS = 40;
       const DENSITY_STRENGTH = 0.012;
       /* curl-flow: divergence-free field — sum of rotations around fixed
-         centers in a balanced 3x3 grid. With no DC offset and no edge
-         repulsion, the only force is the curl field + soft boundary. */
+         centers in a balanced 3x3 grid (recomputed in resize()). */
       const VORTEX_COUNT = 9;
       const VORTEX_STRENGTH = 0.014;
       const VORTEX_TIME_SCALE = 0.00012;
-      /* tiny thermal jitter — breaks orbits even further so particles don't
-         cohere into visible rings around each vortex center. */
+      /* thermal jitter — keeps particles from settling into orbital traps. */
       const THERMAL = 0.006;
       /* edge alpha fade — particles within EDGE_FADE of any canvas wall fade
-         their alpha smoothly to 0. This hides the div-free field's natural
-         boundary artifact (where tangential vectors point along walls and
-         particles slow down and accumulate) by making those particles
-         invisible. Particles still move and affect density; they just don't
-         render. Combined with small EDGE_THERMAL boost in the fade zone, no
-         visible rim or empty band forms. */
+         their alpha smoothly to 0. */
       const EDGE_FADE = 70;
-      const EDGE_THERMAL = 0.025;
+      const EDGE_THERMAL = 0.030;
       CELL_SIZE = DENSITY_RADIUS;
 
       let width, height;
@@ -1047,26 +1039,28 @@
       let isPaused = false;
       let animId;
       let flowTime = 0;
-      /* vortex centers on a 3×3 normalized grid — perfectly balanced horizontally
-         and vertically so the curl field has zero net drift toward any edge.
-         Each vortex still gets its own phase, freq, and spin direction. */
+      /* vortex centers on a 3×3 grid in absolute pixel coordinates. The grid
+         spans the full canvas (which on desktop equals scrollHeight) so
+         vorticies are evenly distributed across the entire page, not just
+         the hero. Positions are recomputed in resize() so they stay
+         balanced when the document height changes. */
       const vortices = [];
-      const _vortexPositions = [
-        [0.2, 0.2], [0.5, 0.2], [0.8, 0.2],
-        [0.2, 0.5], [0.5, 0.5], [0.8, 0.5],
-        [0.2, 0.8], [0.5, 0.8], [0.8, 0.8],
-      ];
-      for (let i = 0; i < VORTEX_COUNT; i++) {
-        const p = _vortexPositions[i];
-        vortices.push({
-          baseX: p[0],
-          baseY: p[1],
-          nx: p[0],
-          ny: p[1],
-          dir: i % 2 === 0 ? 1 : -1,
-          k: VORTEX_STRENGTH,
-        });
+      function initVortices() {
+        vortices.length = 0;
+        const cols = 3, rows = 5;
+        const margin = 0.1;
+        for (let i = 0; i < VORTEX_COUNT; i++) {
+          const col = i % cols;
+          const row = (i / cols) | 0;
+          vortices.push({
+            nx: margin + (col + 0.5) / cols * (1 - margin * 2),
+            ny: margin + (row + 0.5) / rows * (1 - margin * 2),
+            dir: (col + row) % 2 === 0 ? 1 : -1,  /* chessboard spin */
+            k: VORTEX_STRENGTH,
+          });
+        }
       }
+      initVortices();
 
       /* spatial hash: bucket particles by cell for O(1) neighbor lookup */
       function rebuildGrid() {
@@ -1109,14 +1103,11 @@
           void canvas.offsetHeight;
           height = canvas.height = canvas.clientHeight;
         } else {
-          /* Use viewport height (not full document scrollHeight) so all
-             particles distribute across what's actually visible. With the
-             old scrollHeight = 2311 setting, particles spread across 2.5x
-             viewport area, leaving the visible portion sparse with clumping
-             in the upper third. Vortex centers were normalized to [0,1]
-             across the full canvas — only ~40% of them lived in the visible
-             region. */
-          height = canvas.height = window.innerHeight;
+          /* Desktop: canvas spans the full document height so particles cover
+             the whole page (not just the hero). On scroll, draw() shifts each
+             particle's drawY by scrollY — particles appear glued to page
+             content, not to the viewport. */
+          height = canvas.height = document.body.scrollHeight;
         }
         if (particles.length !== particleCount) {
           particles = Array.from({ length: particleCount }, () => new Particle());
@@ -1161,7 +1152,7 @@
           this.vx += flowX;
           this.vy += flowY;
 
-          /* tiny thermal jitter — breaks orbits even further so particles don't
+          /* thermal jitter — breaks orbits even further so particles don't
              cohere into visible rings around each vortex center. Boosted
              inside the edge fade zone so particles don't linger invisibly
              at the boundary. */
@@ -1194,8 +1185,9 @@
             this.vy -= Math.sin(angle) * force;
           }
 
-          /* density repulsion — gentle smooth push from neighbors, breaks
-             the orbital traps that form around fixed vortex centers. */
+          /* density repulsion — keeps particles spread across the full
+             scrollHeight canvas. Mild strength + small radius prevents
+             clumping without forming visible bands. */
           const densR2 = DENSITY_RADIUS * DENSITY_RADIUS;
           for (const other of neighbors(this)) {
             if (other === this) continue;
